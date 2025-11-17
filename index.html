@@ -160,7 +160,7 @@
         
         .glitch {
             font-family: 'Orbitron', sans-serif;
-            font-size: 4rem;
+            font-size: 5rem;
             font-weight: 900;
             text-transform: uppercase;
             position: relative;
@@ -172,6 +172,16 @@
             animation: glitch 3s infinite;
         }
         
+        @media (min-width: 1400px) {
+            .glitch {
+                font-size: 6rem;
+            }
+            
+            .subtitle {
+                font-size: 2rem;
+            }
+        }
+        
         @keyframes glitch {
             0%, 100% { transform: translate(0); }
             20% { transform: translate(-2px, 2px); }
@@ -181,7 +191,7 @@
         }
         
         .subtitle {
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             margin-top: 1rem;
             color: var(--neon-magenta);
             text-shadow: 0 0 10px var(--neon-magenta);
@@ -224,13 +234,19 @@
         
         .section-title {
             font-family: 'Orbitron', sans-serif;
-            font-size: 3rem;
+            font-size: 3.5rem;
             text-align: center;
             margin-bottom: 3rem;
             background: linear-gradient(45deg, var(--neon-cyan), var(--neon-purple));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             position: relative;
+        }
+        
+        @media (min-width: 1400px) {
+            .section-title {
+                font-size: 4rem;
+            }
         }
         
         .section-title::after {
@@ -256,9 +272,16 @@
         }
         
         .about-content p {
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             margin-bottom: 1rem;
             color: #e0e0e0;
+            line-height: 1.8;
+        }
+        
+        @media (min-width: 1400px) {
+            .about-content p {
+                font-size: 1.4rem;
+            }
         }
         
         .skills-grid {
@@ -448,6 +471,20 @@
         }
         
         /* Responsive Design */
+        @media (min-width: 1600px) {
+            .glitch {
+                font-size: 7rem;
+            }
+            
+            .subtitle {
+                font-size: 2.2rem;
+            }
+            
+            .section-title {
+                font-size: 4.5rem;
+            }
+        }
+        
         @media (max-width: 1200px) {
             .skills-grid {
                 grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
