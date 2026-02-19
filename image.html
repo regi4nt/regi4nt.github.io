@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LuminaEdit AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+        :root {
+            --neon-cyan:   #00fff9;
+            --neon-blue:   #00d9ff;
+            --neon-purple: #a855f7;
+            --neon-pink:   #ff6ec7;
+            --deep-space:  #0a0a14;
+            --void-dark:   #13131f;
+            --nebula:      #1a1a2e;
+            /* aliases used in JS inline styles */
+            --bg:     #0a0a14;
+            --panel:  rgba(19,19,31,0.92);
+            --card:   rgba(26,26,46,0.7);
+            --border: rgba(0,217,255,0.18);
+            --hi:     #00d9ff;
+            --text:   #f0f4ff;
+            --muted:  rgba(168,85,247,0.6);
+            --green:  #00fff9;
+            --amber:  #f59e0b;
+            --pink:   #ff6ec7;
+            --orange: #ff6ec7;
+            --red:    #ef4444;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--deep-space);
+            color: var(--text);
+            overflow: hidden;
+            height: 100vh;
+            font-size: 15px;
+        }
+
+        h1, .brand, .logo-text { font-family: 'Orbitron', sans-serif; }
+        .sec-label-font { font-family: 'Space Mono', monospace; }
+
+        /* ── Animated universe background ── */
+        #universe-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 0;
+            background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+        }
+        #stars-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 0;
+        }
+        .star { position: absolute; background: white; border-radius: 50%; animation: twinkle 4s infinite ease-in-out; }
+        @keyframes twinkle { 0%,100%{opacity:.25;transform:scale(1)} 50%{opacity:1;transform:scale(1.3)} }
+        .shooting-star {
+            position: absolute; width: 2px; height: 2px; background: white; border-radius: 50%;
+            box-shadow: 0 0 8px 2px rgba(255,255,255,0.7);
+            animation: shoot 3s linear infinite; opacity: 0;
+        }
+        @keyframes shoot { 0%{transform:translate(0,0);opacity:1} 70%{opacity:.6} 100%{transform:translate(-180px,180px);opacity:0} }
+        .nebula {
+            position: fixed; width: 500px; height: 500px; border-radius: 50%;
+            filter: blur(80px); opacity: 0.12; animation: floatN 20s infinite ease-in-out; pointer-events: none;
+        }
+        .nebula-1 { background: radial-gradient(circle, var(--neon-purple), transparent); top:5%; left:-8%; }
+        .nebula-2 { background: radial-gradient(circle, var(--neon-blue), transparent); bottom:5%; right:-8%; animation-delay:-10s; }
+        @keyframes floatN { 0%,100%{transform:translate(0,0)} 33%{transform:translate(40px,-40px)} 66%{transform:translate(-40px,40px)} }
+        .grid-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0;
+            background: linear-gradient(90deg,rgba(0,255,249,0.025) 1px,transparent 1px),
+                        linear-gradient(rgba(0,255,249,0.025) 1px,transparent 1px);
+            background-size: 50px 50px; opacity: .4;
+        }
+
+        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar-thumb { background: rgba(168,85,247,0.4); border-radius: 4px; }
+
+        .panel {
+            background: rgba(13,13,24,0.88);
+            border: 1px solid rgba(0,217,255,0.15);
+            backdrop-filter: blur(12px);
+            position: relative; z-index: 1;
+        }
+        .card {
+            background: rgba(26,26,46,0.55);
+            border: 1px solid rgba(0,217,255,0.12);
+            border-radius: 10px;
+        }
+
+        /* Mode toggle */
+        .mode-pill {
+            display: flex; background: rgba(10,10,20,0.8);
+            border: 1px solid rgba(0,217,255,0.2);
+            border-radius: 30px; padding: 3px; gap: 2px;
+        }
+        .mode-pill button {
+            padding: 5px 14px; border-radius: 30px; font-size: 10px; font-weight: 700;
+            font-family: 'Orbitron', sans-serif; letter-spacing: 0.05em; cursor: pointer;
+            border: none; transition: all 0.25s; color: rgba(0,255,249,0.4); background: transparent;
+        }
+        .mode-pill button.active-online  {
+            background: linear-gradient(135deg, #00d9ff, #0090aa);
+            color: #000; box-shadow: 0 0 18px rgba(0,217,255,0.5);
+        }
+        .mode-pill button.active-offline {
+            background: linear-gradient(135deg, #a855f7, #6d28d9);
+            color: #fff; box-shadow: 0 0 18px rgba(168,85,247,0.5);
+        }
+
+        /* Mode banner */
+        #mode-banner {
+            display: flex; align-items: center; justify-content: center;
+            gap: 6px; padding: 4px 0; font-size: 9px; font-weight: 700;
+            font-family: 'Space Mono', monospace; letter-spacing: 0.12em; text-transform: uppercase;
+            transition: all 0.3s; position: relative; z-index: 1;
+        }
+        .banner-online  { background: rgba(0,217,255,0.07); color: var(--neon-blue); border-bottom: 1px solid rgba(0,217,255,0.15) !important; }
+        .banner-offline { background: rgba(168,85,247,0.08); color: var(--neon-purple); border-bottom: 1px solid rgba(168,85,247,0.2) !important; }
+
+        .spin { width: 36px; height: 36px; border: 2px solid var(--neon-cyan); border-bottom-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        #canvas-container {
+            position: relative; display: flex; align-items: center; justify-content: center;
+            background: #03030a; border-radius: 8px; overflow: hidden;
+            box-shadow: 0 0 60px rgba(0,217,255,0.08), 0 24px 80px rgba(0,0,0,0.9);
+            transition: aspect-ratio 0.35s ease; max-height: 72vh;
+            border: 1px solid rgba(0,217,255,0.08);
+        }
+        #image-canvas { display: block; width: 100%; height: 100%; object-fit: contain; position: relative; z-index: 5; transition: filter 0.2s; }
+        .expand-zone {
+            background-color: #05050f;
+            background-image: linear-gradient(45deg,#04040c 25%,transparent 25%),linear-gradient(-45deg,#04040c 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#04040c 75%),linear-gradient(-45deg,transparent 75%,#04040c 75%);
+            background-size: 18px 18px; background-position: 0 0,0 9px,9px -9px,-9px 0;
+            border: 2px dashed var(--neon-cyan);
+        }
+        .img-in-expand { transform: scale(0.88); filter: drop-shadow(0 0 8px var(--neon-purple)); }
+
+        /* Crop overlay */
+        #crop-overlay {
+            position: absolute; z-index: 20; cursor: move; display: none;
+            border: 2px solid var(--neon-cyan);
+            box-shadow: 0 0 0 9999px rgba(0,0,0,0.6), 0 0 20px rgba(0,255,249,0.4);
+            border-radius: 2px;
+        }
+        #crop-overlay::before { content:''; position:absolute; left:33.3%; top:0; width:1px; height:100%; background:rgba(0,255,249,0.15); pointer-events:none; }
+        #crop-overlay::after  { content:''; position:absolute; top:33.3%; left:0; height:1px; width:100%; background:rgba(0,255,249,0.15); pointer-events:none; }
+        .crop-handle { position:absolute; width:12px; height:12px; background:var(--neon-cyan); border-radius:2px; z-index:25; box-shadow:0 0 8px var(--neon-cyan); }
+        .crop-handle.tl{top:-6px;left:-6px;cursor:nwse-resize} .crop-handle.tr{top:-6px;right:-6px;cursor:nesw-resize}
+        .crop-handle.bl{bottom:-6px;left:-6px;cursor:nesw-resize} .crop-handle.br{bottom:-6px;right:-6px;cursor:nwse-resize}
+        .crop-label {
+            position:absolute; top:-26px; left:50%; transform:translateX(-50%);
+            background: var(--neon-cyan); color:#000; font-size:8px; font-weight:700;
+            padding:2px 8px; border-radius:3px; white-space:nowrap;
+            font-family:'Orbitron',sans-serif; letter-spacing:0.1em;
+        }
+
+        .task-btn.active-tool { border-color: var(--neon-cyan) !important; background: rgba(0,217,255,0.08) !important; box-shadow: 0 0 12px rgba(0,217,255,0.2) !important; }
+        .ratio-btn.active { background: rgba(0,255,249,0.15) !important; border-color: var(--neon-cyan) !important; color: var(--neon-cyan) !important; font-weight: 700; box-shadow: 0 0 10px rgba(0,255,249,0.3); }
+        .scale-btn.active { background: rgba(0,217,255,0.15) !important; border-color: var(--neon-blue) !important; color: var(--neon-cyan) !important; box-shadow: 0 0 10px rgba(0,217,255,0.3); }
+        .tab-btn.active { background: rgba(0,217,255,0.1) !important; color: var(--neon-cyan) !important; }
+
+        .prompt-box {
+            background: rgba(26,26,46,0.5); border: 1px solid rgba(0,217,255,0.15);
+            border-radius: 8px; padding: 10px 12px; transition: border-color 0.2s;
+        }
+        .prompt-box:focus-within { border-color: var(--neon-cyan); box-shadow: 0 0 12px rgba(0,255,249,0.15); }
+        #ai-prompt {
+            background: transparent; border: none; width: 100%; color: var(--text);
+            font-size: 0.8rem; resize: none; outline: none; height: 60px;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .apikey-box {
+            background: rgba(26,26,46,0.5); border: 1px solid rgba(168,85,247,0.2);
+            border-radius: 8px; padding: 7px 10px; display: flex; align-items: center;
+            gap: 8px; transition: border-color 0.2s;
+        }
+        .apikey-box:focus-within { border-color: var(--neon-purple); box-shadow: 0 0 10px rgba(168,85,247,0.2); }
+        .apikey-box input { background: transparent; border: none; outline: none; color: var(--text); font-size: 0.72rem; font-family: 'Rajdhani', sans-serif; flex: 1; min-width: 0; }
+
+        .sel {
+            background: rgba(26,26,46,0.6); border: 1px solid rgba(0,217,255,0.15);
+            border-radius: 7px; color: var(--text); font-size: 0.72rem; padding: 6px 8px;
+            outline: none; cursor: pointer; font-family: 'Rajdhani', sans-serif; width: 100%;
+            transition: border-color 0.2s;
+        }
+        .sel:focus { border-color: var(--neon-cyan); }
+        .sel option { background: #13131f; }
+
+        .shimmer {
+            background: linear-gradient(90deg, rgba(26,26,46,0.5) 25%, rgba(168,85,247,0.08) 50%, rgba(26,26,46,0.5) 75%);
+            background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 7px;
+        }
+        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+        .locked { pointer-events: none; opacity: 0.5; }
+
+        input[type=range] { -webkit-appearance:none; appearance:none; height:3px; border-radius:3px; background:rgba(0,217,255,0.15); outline:none; cursor:pointer; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:12px; height:12px; border-radius:50%; background:var(--neon-cyan); cursor:pointer; border:2px solid #13131f; box-shadow:0 0 6px var(--neon-cyan); }
+
+        .tab-strip { display:flex; gap:2px; background:rgba(10,10,20,0.6); padding:3px; border-radius:7px; border:1px solid rgba(0,217,255,0.08); }
+        .tab-btn {
+            flex:1; padding:5px 4px; font-size:8px; font-weight:700; border-radius:5px;
+            color: rgba(0,255,249,0.35); cursor:pointer; border:none; background:transparent;
+            transition:all 0.2s; letter-spacing:0.08em; text-transform:uppercase;
+            font-family:'Space Mono',monospace;
+        }
+
+        .sec-label {
+            font-size: 8px; font-weight: 700; color: rgba(168,85,247,0.7);
+            text-transform: uppercase; letter-spacing: 0.16em;
+            font-family: 'Space Mono', monospace;
+        }
+        .sub-panel { border-radius: 10px; padding: 11px; border: 1px solid; }
+
+        #draw-canvas { position:absolute; top:0; left:0; width:100%; height:100%; z-index:10; cursor:crosshair; display:none; border-radius:8px; }
+        #text-overlays { position:absolute; top:0; left:0; width:100%; height:100%; z-index:15; pointer-events:none; }
+        .text-overlay-item { position:absolute; cursor:move; pointer-events:all; user-select:none; display:flex; align-items:center; gap:4px; }
+        .text-overlay-item span { font-weight:bold; text-shadow:0 1px 6px rgba(0,0,0,0.95); }
+        .text-overlay-item .del-text { width:14px; height:14px; background:rgba(239,68,68,0.9); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:7px; color:white; cursor:pointer; opacity:0; transition:opacity 0.2s; }
+        .text-overlay-item:hover .del-text { opacity:1; }
+
+        .tool-cat {
+            display:flex; flex-direction:column; align-items:center; gap:2px;
+            padding:8px 4px; border-radius:8px; cursor:pointer; transition:all 0.25s;
+            border:1px solid rgba(0,217,255,0.1); font-family:'Rajdhani',sans-serif;
+            background: rgba(26,26,46,0.3);
+        }
+        .tool-cat:hover { border-color: rgba(0,217,255,0.4); background: rgba(0,217,255,0.06); box-shadow: 0 0 10px rgba(0,217,255,0.1); }
+        .tool-cat.active-tool { border-color: var(--neon-cyan) !important; background: rgba(0,217,255,0.1) !important; box-shadow: 0 0 14px rgba(0,255,249,0.25) !important; }
+
+        .pbadge { display:inline-flex; align-items:center; gap:3px; padding:2px 8px; border-radius:20px; font-size:8px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; font-family:'Space Mono',monospace; }
+        .pbadge-gemini    { background:rgba(0,217,255,0.1); color:var(--neon-blue); border:1px solid rgba(0,217,255,0.3); }
+        .pbadge-openai    { background:rgba(16,185,129,0.1); color:#34d399; border:1px solid rgba(16,185,129,0.25); }
+        .pbadge-anthropic { background:rgba(168,85,247,0.12); color:#c4b5fd; border:1px solid rgba(168,85,247,0.3); }
+        .pbadge-custom    { background:rgba(255,110,199,0.1); color:var(--neon-pink); border:1px solid rgba(255,110,199,0.25); }
+        .pbadge-offline   { background:rgba(168,85,247,0.12); color:var(--neon-purple); border:1px solid rgba(168,85,247,0.3); }
+
+        .offline-btn { border:1px solid rgba(0,255,249,0.2) !important; }
+        .offline-btn:hover { border-color: var(--neon-cyan) !important; background: rgba(0,255,249,0.05) !important; box-shadow: 0 0 10px rgba(0,255,249,0.1) !important; }
+
+        /* Neon button base */
+        .neon-btn {
+            background: transparent; border: 1px solid var(--neon-cyan); color: var(--neon-cyan);
+            position: relative; overflow: hidden; transition: all 0.3s;
+            font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+        }
+        .neon-btn::before { content:''; position:absolute; top:0; left:-100%; width:100%; height:100%; background:var(--neon-cyan); transition:left 0.3s; z-index:-1; }
+        .neon-btn:hover { color:#000; box-shadow:0 0 18px var(--neon-cyan); }
+        .neon-btn:hover::before { left:0; }
+
+        .fade-in { animation: fadeIn 0.2s ease; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+
+        /* Glow text */
+        .glow-cyan { color: var(--neon-cyan); text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px rgba(0,255,249,0.4); }
+        .glow-pink  { color: var(--neon-pink); text-shadow: 0 0 10px var(--neon-pink); }
+        .glow-purple{ color: var(--neon-purple); text-shadow: 0 0 10px var(--neon-purple); }
+    </style>
+</head>
+<body class="flex flex-col">
+
+<!-- ── UNIVERSE BACKGROUND ── -->
+<div id="universe-bg"></div>
+<div class="nebula nebula-1"></div>
+<div class="nebula nebula-2"></div>
+<div class="grid-bg"></div>
+<div id="stars-layer"></div>
+
+<!-- ── HEADER ── -->
+<header class="panel border-b flex items-center justify-between px-4 py-2 z-50 flex-shrink-0">
+    <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#00d9ff,#a855f7);box-shadow:0 0 14px rgba(0,217,255,0.4)">
+            <i class="fas fa-wand-magic-sparkles text-black text-sm"></i>
+        </div>
+        <div class="hidden sm:block">
+            <h1 class="brand text-sm font-black tracking-widest leading-none" style="background:linear-gradient(135deg,var(--neon-cyan),var(--neon-purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:3px">LUMINA<span style="font-weight:400">EDIT</span></h1>
+            <p class="sec-label mt-0.5" style="color:rgba(255,110,199,0.7)">◆ Image Studio ◆</p>
+        </div>
+    </div>
+
+    <!-- Mode Toggle -->
+    <div class="mode-pill">
+        <button id="btn-mode-online"  onclick="switchMode('online')"  class="active-online">
+            <i class="fas fa-wifi mr-1.5"></i>Online · AI
+        </button>
+        <button id="btn-mode-offline" onclick="switchMode('offline')">
+            <i class="fas fa-plug-circle-xmark mr-1.5"></i>Offline · Lokal
+        </button>
+    </div>
+
+    <div id="action-header" class="hidden items-center gap-2">
+        <div id="active-badge" class="pbadge pbadge-gemini"><i class="fas fa-circle text-[6px]"></i> <span id="badge-text">GEMINI</span></div>
+        <div class="flex items-center gap-1 panel rounded-lg p-1">
+            <select id="export-format" class="bg-transparent text-xs font-semibold px-2 focus:outline-none cursor-pointer" style="color:var(--neon-cyan);font-family:'Space Mono',monospace;font-size:9px">
+                <option value="image/png">PNG</option>
+                <option value="image/jpeg">JPG</option>
+                <option value="image/webp">WEBP</option>
+            </select>
+            <button id="download-btn" class="text-black px-4 py-1.5 rounded text-xs font-bold transition-all flex items-center gap-2 shadow-lg" style="background:linear-gradient(135deg,var(--neon-cyan),#0090aa);font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:0.06em;box-shadow:0 0 14px rgba(0,217,255,0.4)">
+                <i class="fas fa-download"></i> UNDUH
+            </button>
+        </div>
+        <button onclick="resetEditor()" class="w-8 h-8 flex items-center justify-center rounded border transition-all" style="background:transparent;border-color:rgba(239,68,68,0.3);color:rgba(239,68,68,0.6)" onmouseover="this.style.borderColor='#ef4444';this.style.color='#ef4444';this.style.boxShadow='0 0 10px rgba(239,68,68,0.3)'" onmouseout="this.style.borderColor='rgba(239,68,68,0.3)';this.style.color='rgba(239,68,68,0.6)';this.style.boxShadow=''">
+            <i class="fas fa-trash-can text-sm"></i>
+        </button>
+    </div>
+</header>
+
+<!-- ── MODE BANNER ── -->
+<div id="mode-banner" class="panel border-b banner-online" style="border-top:none">
+    <i class="fas fa-wifi"></i> <span id="banner-text">MODE ONLINE — Fitur AI Aktif: Edit, Generate, Swap menggunakan AI Provider</span>
+</div>
+
+<!-- ── MAIN ── -->
+<main class="flex flex-1 overflow-hidden" style="height:calc(100vh - 80px)">
+
+    <!-- ── SIDEBAR ── -->
+    <aside id="sidebar-panel" class="w-72 panel border-r flex flex-col flex-shrink-0 overflow-hidden">
+        <div class="flex-1 overflow-y-auto p-3.5 space-y-3">
+
+            <!-- ━━━ ONLINE PANEL ━━━ -->
+            <div id="online-panel" class="space-y-3 fade-in">
+
+                <!-- Provider -->
+                <div class="space-y-2">
+                    <label class="sec-label flex items-center gap-1.5"><i class="fas fa-robot" style="color:var(--amber)"></i> Provider AI</label>
+                    <select id="ai-provider" class="sel" onchange="onProviderChange()">
+                        <option value="gemini">🔵 Google Gemini</option>
+                        <option value="openai">🟢 OpenAI</option>
+                        <option value="anthropic">🟣 Anthropic (Claude)</option>
+                        <option value="custom">🟠 Custom Endpoint</option>
+                    </select>
+                    <div id="custom-url-wrap" class="hidden">
+                        <div class="apikey-box"><i class="fas fa-link text-orange-400 text-xs"></i><input id="custom-url-input" type="text" placeholder="https://your-api.com/v1/..."></div>
+                    </div>
+                    <div>
+                        <p class="sec-label mb-1">Model</p>
+                        <select id="ai-model" class="sel" style="border-color:rgba(79,124,255,0.3)"></select>
+                    </div>
+                    <!-- Anthropic limitation note -->
+                    <div id="anthropic-note" class="hidden text-[9px] rounded-lg p-2 border" style="color:rgba(168,85,247,0.9);background:rgba(168,85,247,0.07);border-color:rgba(168,85,247,0.25)">
+                        <i class="fas fa-circle-info mr-1"></i><strong>Claude</strong>: Hanya mendukung <strong>analisis teks & prompt</strong>. Untuk edit/generate gambar, gunakan <strong>Gemini</strong> atau <strong>OpenAI</strong>.
+                    </div>
+                    <div>
+                        <p class="sec-label flex items-center gap-1 mb-1"><i class="fas fa-key text-amber-400 text-[9px]"></i> API Key</p>
+                        <div class="apikey-box">
+                            <input id="api-key-input" type="password" placeholder="Masukkan API Key..." autocomplete="off">
+                            <button onclick="toggleApiKey()" id="btn-eye" class="text-slate-500 hover:text-slate-300 text-xs w-5"><i class="fas fa-eye"></i></button>
+                            <button onclick="saveApiKey()" class="text-amber-400 hover:text-amber-300 text-xs font-bold" title="Simpan"><i class="fas fa-floppy-disk"></i></button>
+                        </div>
+                        <p id="api-status" class="text-[9px] mt-1 text-amber-500">⚠ Masukkan API Key untuk mulai</p>
+                    </div>
+                </div>
+
+                <!-- Prompt -->
+                <div class="space-y-1.5">
+                    <div class="flex justify-between items-center">
+                        <label class="sec-label flex items-center gap-1.5"><i class="fas fa-comment-dots" style="color:var(--hi)"></i> Prompt</label>
+                        <button onclick="clearPrompt()" class="text-[9px] text-slate-500 hover:text-white transition">Hapus</button>
+                    </div>
+                    <div class="prompt-box">
+                        <textarea id="ai-prompt" placeholder="Contoh: Ganti latar dengan pantai saat sunset..."></textarea>
+                        <div class="flex justify-end mt-1">
+                            <button id="btn-send-prompt" onclick="executeAI('direct-prompt')" class="text-white px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 disabled:opacity-40" style="background:linear-gradient(135deg,var(--neon-cyan),#0090aa);color:#000;font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:0.05em">
+                                KIRIM <i class="fas fa-paper-plane text-[9px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-[9px] font-bold uppercase tracking-wider flex items-center gap-1" style="color:var(--hi)"><i class="fas fa-brain animate-pulse"></i> Saran AI</span>
+                            <button onclick="analyzeImage()" id="refresh-suggestions" class="hidden text-slate-500 hover:text-blue-400 p-1"><i class="fas fa-rotate text-[9px]"></i></button>
+                        </div>
+                        <div id="suggestions-container" class="space-y-1">
+                            <div class="text-[10px] text-slate-600 bg-zinc-900/50 p-2.5 rounded-lg border border-zinc-800/50 italic">Unggah gambar untuk memulai...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Tools -->
+                <div class="space-y-2">
+                    <label class="sec-label flex items-center gap-1.5"><i class="fas fa-wand-magic-sparkles text-slate-500"></i> Alat AI</label>
+                    <div class="grid grid-cols-3 gap-1.5">
+                        <button onclick="prepareAITask('pose')"  id="aibtn-pose"  class="tool-cat panel text-center">
+                            <i class="fas fa-person-rays text-blue-400 text-sm"></i><span class="text-[8.5px] font-semibold">Pose</span></button>
+                        <button onclick="prepareAITask('face')"  id="aibtn-face"  class="tool-cat panel">
+                            <i class="fas fa-face-smile text-pink-400 text-sm"></i><span class="text-[8.5px] font-semibold">Wajah</span></button>
+                        <button onclick="prepareAITask('bg')"    id="aibtn-bg"    class="tool-cat panel">
+                            <i class="fas fa-image text-purple-400 text-sm"></i><span class="text-[8.5px] font-semibold">Latar</span></button>
+                        <button onclick="prepareAITask('resize-ai')" id="aibtn-resize-ai" class="tool-cat panel">
+                            <i class="fas fa-expand text-emerald-400 text-sm"></i><span class="text-[8.5px] font-semibold">Perluas</span></button>
+                        <button onclick="prepareAITask('style')" id="aibtn-style" class="tool-cat panel">
+                            <i class="fas fa-palette text-amber-400 text-sm"></i><span class="text-[8.5px] font-semibold">Gaya</span></button>
+                        <button onclick="prepareAITask('retouch')" id="aibtn-retouch" class="tool-cat panel">
+                            <i class="fas fa-star-half-stroke text-rose-400 text-sm"></i><span class="text-[8.5px] font-semibold">Retouch</span></button>
+                    </div>
+
+                    <div id="ai-controls" class="space-y-2">
+                        <!-- BG Panel -->
+                        <div id="aipanel-bg" class="hidden sub-panel border-purple-500/20 space-y-2" style="background:rgba(139,92,246,0.05)">
+                            <div class="tab-strip">
+                                <button onclick="bgMode='change';updateBgTabs()" id="tab-bg-change" class="tab-btn active">Ganti</button>
+                                <button onclick="bgMode='remove';updateBgTabs()" id="tab-bg-remove" class="tab-btn">Hapus</button>
+                            </div>
+                            <button onclick="executeAI('bg')" class="w-full py-2 rounded-lg text-xs font-bold" style="background:rgba(168,85,247,0.25);border:1px solid rgba(168,85,247,0.5);color:var(--neon-purple)">Proses Latar (AI)</button>
+                        </div>
+                        <!-- Face Panel -->
+                        <div id="aipanel-face" class="hidden sub-panel border-pink-500/20 space-y-2" style="background:rgba(236,72,153,0.05)">
+                            <div onclick="document.getElementById('face-input').click()" class="h-14 border-2 border-dashed border-zinc-700 rounded-lg flex flex-col items-center justify-center cursor-pointer relative overflow-hidden hover:border-pink-500/50 transition">
+                                <img id="face-preview" class="hidden absolute inset-0 w-full h-full object-cover">
+                                <i class="fas fa-camera text-slate-600 text-sm mb-0.5"></i><p class="text-[9px] text-slate-500">Wajah Referensi</p>
+                            </div>
+                            <input type="file" id="face-input" class="hidden" accept="image/*">
+                            <div class="grid grid-cols-5 gap-1">
+                                <button onclick="setFacePreset('senang',this)" class="preset-btn p-1 panel rounded-lg text-sm hover:bg-zinc-700 transition" title="Senang">😊</button>
+                                <button onclick="setFacePreset('marah',this)"  class="preset-btn p-1 panel rounded-lg text-sm hover:bg-zinc-700 transition" title="Marah">😠</button>
+                                <button onclick="setFacePreset('sedih',this)"  class="preset-btn p-1 panel rounded-lg text-sm hover:bg-zinc-700 transition" title="Sedih">😢</button>
+                                <button onclick="setFacePreset('terkejut',this)" class="preset-btn p-1 panel rounded-lg text-sm hover:bg-zinc-700 transition" title="Terkejut">😮</button>
+                                <button onclick="setFacePreset('tertawa',this)" class="preset-btn p-1 panel rounded-lg text-sm hover:bg-zinc-700 transition" title="Tertawa">😂</button>
+                            </div>
+                            <button onclick="executeAI('face')" class="w-full py-2 rounded-lg text-xs font-bold" style="background:rgba(255,110,199,0.15);border:1px solid rgba(255,110,199,0.4);color:var(--neon-pink)">Proses Wajah (AI)</button>
+                        </div>
+                        <!-- Pose Panel -->
+                        <div id="aipanel-pose" class="hidden sub-panel border-blue-500/20 space-y-2" style="background:rgba(79,124,255,0.05)">
+                            <div onclick="document.getElementById('pose-input').click()" class="h-14 border-2 border-dashed border-zinc-700 rounded-lg flex flex-col items-center justify-center cursor-pointer relative overflow-hidden hover:border-blue-500/50 transition">
+                                <img id="pose-preview" class="hidden absolute inset-0 w-full h-full object-cover">
+                                <i class="fas fa-person-walking text-slate-600 text-sm mb-0.5"></i><p class="text-[9px] text-slate-500">Pose Referensi</p>
+                            </div>
+                            <input type="file" id="pose-input" class="hidden" accept="image/*">
+                            <div class="grid grid-cols-5 gap-1">
+                                <button onclick="setPosePreset('berdiri formal',this)" class="preset-btn p-1 panel rounded-lg text-sm hover:bg-zinc-700 transition">👤</button>
+                                <button onclick="setPosePreset('duduk santai',this)"   class="preset-btn p-1 panel rounded-lg text-sm hover:bg-zinc-700 transition">🪑</button>
+                                <button onclick="setPosePreset('berlari',this)"         class="preset-btn p-1 panel rounded-lg text-sm hover:bg-zinc-700 transition">🏃</button>
+                                <button onclick="setPosePreset('melompat',this)"        class="preset-btn p-1 panel rounded-lg text-sm hover:bg-zinc-700 transition">🤸</button>
+                                <button onclick="setPosePreset('berpose',this)"         class="preset-btn p-1 panel rounded-lg text-sm hover:bg-zinc-700 transition">🧍</button>
+                            </div>
+                            <button onclick="executeAI('pose')" class="w-full py-2 rounded-lg text-xs font-bold" style="background:rgba(0,217,255,0.12);border:1px solid rgba(0,217,255,0.35);color:var(--neon-cyan)">Ubah Pose (AI)</button>
+                        </div>
+                        <!-- Resize/Outpaint Panel -->
+                        <div id="aipanel-resize-ai" class="hidden sub-panel border-emerald-500/20 space-y-2" style="background:rgba(34,211,165,0.04)">
+                            <p class="sec-label">Rasio Output</p>
+                            <div class="grid grid-cols-2 gap-1.5">
+                                <button onclick="setAiRatio('1/1')" class="ai-ratio-btn py-1.5 text-[10px] border border-zinc-700 rounded-lg bg-zinc-800" data-r="1/1">1:1 Square</button>
+                                <button onclick="setAiRatio('16/9')" class="ai-ratio-btn py-1.5 text-[10px] border border-zinc-700 rounded-lg bg-zinc-800" data-r="16/9">16:9 Wide</button>
+                                <button onclick="setAiRatio('4/5')" class="ai-ratio-btn py-1.5 text-[10px] border border-zinc-700 rounded-lg bg-zinc-800" data-r="4/5">4:5 Portrait</button>
+                                <button onclick="setAiRatio('9/16')" class="ai-ratio-btn py-1.5 text-[10px] border border-zinc-700 rounded-lg bg-zinc-800" data-r="9/16">9:16 Story</button>
+                            </div>
+                            <div class="text-[9px] rounded-lg p-2 border" style="color:rgba(79,124,255,0.9);background:rgba(79,124,255,0.06);border-color:rgba(79,124,255,0.2)">
+                                <i class="fas fa-info-circle mr-1"></i>Gambar asli dipertahankan di tengah. Area kosong diisi AI.
+                            </div>
+                            <button onclick="executeAI('outpaint')" class="w-full py-2 rounded-lg text-xs font-bold text-black" style="background:linear-gradient(135deg,var(--neon-cyan),#009999);color:#000;font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:0.05em">Perluas Gambar (AI)</button>
+                        </div>
+                        <!-- Style Panel -->
+                        <div id="aipanel-style" class="hidden sub-panel border-amber-500/20 space-y-2" style="background:rgba(245,158,11,0.04)">
+                            <p class="sec-label">Preset Gaya</p>
+                            <div class="grid grid-cols-2 gap-1.5">
+                                <button onclick="setStylePrompt('cinematic film look, dramatic lighting')" class="py-1.5 panel rounded-lg text-[9px] hover:border-amber-500/40 transition">🎬 Sinematik</button>
+                                <button onclick="setStylePrompt('anime art style, vibrant colors')" class="py-1.5 panel rounded-lg text-[9px] hover:border-amber-500/40 transition">🎌 Anime</button>
+                                <button onclick="setStylePrompt('oil painting style, artistic brushwork')" class="py-1.5 panel rounded-lg text-[9px] hover:border-amber-500/40 transition">🖌️ Lukisan</button>
+                                <button onclick="setStylePrompt('pencil sketch, black and white drawing')" class="py-1.5 panel rounded-lg text-[9px] hover:border-amber-500/40 transition">✏️ Sketsa</button>
+                                <button onclick="setStylePrompt('vintage retro photo, grain texture')" class="py-1.5 panel rounded-lg text-[9px] hover:border-amber-500/40 transition">📷 Retro</button>
+                                <button onclick="setStylePrompt('cyberpunk neon style, futuristic')" class="py-1.5 panel rounded-lg text-[9px] hover:border-amber-500/40 transition">🌆 Cyberpunk</button>
+                            </div>
+                            <button onclick="executeAI('style')" class="w-full py-2 rounded-lg text-xs font-bold text-white" style="background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.4);color:#f59e0b">Terapkan Gaya (AI)</button>
+                        </div>
+                        <!-- Retouch Panel -->
+                        <div id="aipanel-retouch" class="hidden sub-panel border-rose-500/20 space-y-2" style="background:rgba(244,63,94,0.04)">
+                            <div class="grid grid-cols-1 gap-1.5">
+                                <button onclick="executeAI('retouch-portrait')" class="py-2 panel rounded-lg text-[10px] hover:border-rose-500/40 transition text-left px-3"><i class="fas fa-user-check text-rose-400 mr-2"></i>Retouch Potret (Kulit, mata, dll)</button>
+                                <button onclick="executeAI('retouch-denoise')"  class="py-2 panel rounded-lg text-[10px] hover:border-rose-500/40 transition text-left px-3"><i class="fas fa-wind text-rose-400 mr-2"></i>Kurangi Noise / Grain</button>
+                                <button onclick="executeAI('retouch-sharp')"    class="py-2 panel rounded-lg text-[10px] hover:border-rose-500/40 transition text-left px-3"><i class="fas fa-eye text-rose-400 mr-2"></i>Pertajam Detail</button>
+                                <button onclick="executeAI('retouch-color')"    class="py-2 panel rounded-lg text-[10px] hover:border-rose-500/40 transition text-left px-3"><i class="fas fa-droplet text-rose-400 mr-2"></i>Koreksi Warna Otomatis</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ━━━ OFFLINE PANEL ━━━ -->
+            <div id="offline-panel" class="hidden space-y-3 fade-in">
+
+                <!-- Crop & Rasio -->
+                <div class="space-y-2">
+                    <label class="sec-label flex items-center gap-1.5"><i class="fas fa-crop-simple" style="color:var(--green)"></i> Crop & Rasio</label>
+                    <div class="grid grid-cols-2 gap-1.5">
+                        <button onclick="setOfflineRatio('free')" class="off-ratio-btn py-1.5 text-[10px] border border-zinc-700 rounded-lg bg-zinc-800 offline-btn hover:border-emerald-500/40 transition" data-r="free">🔓 Bebas</button>
+                        <button onclick="setOfflineRatio('1/1')"  class="off-ratio-btn py-1.5 text-[10px] border border-zinc-700 rounded-lg bg-zinc-800 offline-btn hover:border-emerald-500/40 transition" data-r="1/1">1:1 Square</button>
+                        <button onclick="setOfflineRatio('16/9')" class="off-ratio-btn py-1.5 text-[10px] border border-zinc-700 rounded-lg bg-zinc-800 offline-btn hover:border-emerald-500/40 transition" data-r="16/9">16:9 Wide</button>
+                        <button onclick="setOfflineRatio('4/5')"  class="off-ratio-btn py-1.5 text-[10px] border border-zinc-700 rounded-lg bg-zinc-800 offline-btn hover:border-emerald-500/40 transition" data-r="4/5">4:5 Portrait</button>
+                        <button onclick="setOfflineRatio('9/16')" class="off-ratio-btn py-1.5 text-[10px] border border-zinc-700 rounded-lg bg-zinc-800 offline-btn hover:border-emerald-500/40 transition" data-r="9/16">9:16 Story</button>
+                        <button onclick="setOfflineRatio('3/2')"  class="off-ratio-btn py-1.5 text-[10px] border border-zinc-700 rounded-lg bg-zinc-800 offline-btn hover:border-emerald-500/40 transition" data-r="3/2">3:2 Photo</button>
+                    </div>
+                    <div class="text-[9px] rounded-lg p-2 border" style="color:rgba(34,211,165,0.8);background:rgba(34,211,165,0.05);border-color:rgba(34,211,165,0.15)">
+                        <i class="fas fa-hand-pointer mr-1"></i><strong>Geser & resize</strong> kotak hijau di gambar, lalu tekan Potong.
+                    </div>
+                    <button onclick="applyCrop()" class="w-full py-2 rounded-lg text-xs font-bold text-black transition" style="background:linear-gradient(135deg,var(--neon-cyan),#009999);color:#000;font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:0.05em">✂ Potong Gambar</button>
+                </div>
+
+                <!-- Flip & Rotate -->
+                <div class="space-y-1.5">
+                    <label class="sec-label flex items-center gap-1.5"><i class="fas fa-rotate" style="color:var(--amber)"></i> Flip & Putar</label>
+                    <div class="grid grid-cols-4 gap-1.5">
+                        <button onclick="flipImage('h')" class="py-2 panel rounded-lg text-[9px] font-bold offline-btn transition flex flex-col items-center gap-1"><i class="fas fa-arrows-left-right text-amber-400"></i>Flip H</button>
+                        <button onclick="flipImage('v')" class="py-2 panel rounded-lg text-[9px] font-bold offline-btn transition flex flex-col items-center gap-1"><i class="fas fa-arrows-up-down text-amber-400"></i>Flip V</button>
+                        <button onclick="rotateImage(-90)" class="py-2 panel rounded-lg text-[9px] font-bold offline-btn transition flex flex-col items-center gap-1"><i class="fas fa-rotate-left text-amber-400"></i>-90°</button>
+                        <button onclick="rotateImage(90)"  class="py-2 panel rounded-lg text-[9px] font-bold offline-btn transition flex flex-col items-center gap-1"><i class="fas fa-rotate-right text-amber-400"></i>+90°</button>
+                    </div>
+                </div>
+
+                <!-- Adjustments -->
+                <div class="space-y-2">
+                    <label class="sec-label flex items-center gap-1.5"><i class="fas fa-sliders" style="color:var(--hi)"></i> Penyesuaian</label>
+                    <div class="space-y-2">
+                        <div><div class="flex justify-between mb-1"><span class="text-[9px] text-slate-400">Kecerahan</span><span id="val-brightness" class="text-[9px] font-bold" style="color:var(--hi)">100%</span></div>
+                        <input type="range" id="sl-brightness" min="0" max="200" value="100" class="w-full" oninput="applyFilters()"></div>
+                        <div><div class="flex justify-between mb-1"><span class="text-[9px] text-slate-400">Kontras</span><span id="val-contrast" class="text-[9px] font-bold" style="color:var(--hi)">100%</span></div>
+                        <input type="range" id="sl-contrast" min="0" max="200" value="100" class="w-full" oninput="applyFilters()"></div>
+                        <div><div class="flex justify-between mb-1"><span class="text-[9px] text-slate-400">Saturasi</span><span id="val-saturation" class="text-[9px] font-bold" style="color:var(--hi)">100%</span></div>
+                        <input type="range" id="sl-saturation" min="0" max="300" value="100" class="w-full" oninput="applyFilters()"></div>
+                        <div><div class="flex justify-between mb-1"><span class="text-[9px] text-slate-400">Ketajaman</span><span id="val-sharpen" class="text-[9px] font-bold" style="color:var(--hi)">0</span></div>
+                        <input type="range" id="sl-sharpen" min="0" max="10" value="0" step="0.5" class="w-full" oninput="applyFilters()"></div>
+                        <div><div class="flex justify-between mb-1"><span class="text-[9px] text-slate-400">Blur</span><span id="val-blur" class="text-[9px] font-bold" style="color:var(--hi)">0</span></div>
+                        <input type="range" id="sl-blur" min="0" max="10" value="0" step="0.5" class="w-full" oninput="applyFilters()"></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-1.5 pt-1">
+                        <button onclick="resetFilters()" class="py-1.5 panel rounded-lg text-[10px] font-bold text-slate-400 hover:text-white transition">Reset Filter</button>
+                        <button onclick="bakeEdits()" class="py-1.5 rounded-lg text-[10px] font-bold text-black transition" style="background:linear-gradient(135deg,var(--neon-cyan),#0090aa);color:#000;font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:0.05em">Simpan Edit</button>
+                    </div>
+                </div>
+
+                <!-- Color Filters -->
+                <div class="space-y-1.5">
+                    <label class="sec-label flex items-center gap-1.5"><i class="fas fa-palette" style="color:var(--pink)"></i> Filter Warna</label>
+                    <div class="grid grid-cols-3 gap-1.5">
+                        <button onclick="applyColorFilter('none')"       class="py-1.5 panel rounded-lg text-[9px] offline-btn transition">Normal</button>
+                        <button onclick="applyColorFilter('grayscale')"  class="py-1.5 panel rounded-lg text-[9px] offline-btn transition">B&W</button>
+                        <button onclick="applyColorFilter('sepia')"      class="py-1.5 panel rounded-lg text-[9px] offline-btn transition">Sepia</button>
+                        <button onclick="applyColorFilter('warm')"       class="py-1.5 panel rounded-lg text-[9px] offline-btn transition">🌅 Warm</button>
+                        <button onclick="applyColorFilter('cool')"       class="py-1.5 panel rounded-lg text-[9px] offline-btn transition">❄️ Cool</button>
+                        <button onclick="applyColorFilter('vivid')"      class="py-1.5 panel rounded-lg text-[9px] offline-btn transition">🌈 Vivid</button>
+                        <button onclick="applyColorFilter('fade')"       class="py-1.5 panel rounded-lg text-[9px] offline-btn transition">Fade</button>
+                        <button onclick="applyColorFilter('dramatic')"   class="py-1.5 panel rounded-lg text-[9px] offline-btn transition">Dramatic</button>
+                        <button onclick="applyColorFilter('invert')"     class="py-1.5 panel rounded-lg text-[9px] offline-btn transition">Invert</button>
+                    </div>
+                </div>
+
+                <!-- Upscale -->
+                <div class="space-y-1.5">
+                    <label class="sec-label flex items-center gap-1.5"><i class="fas fa-expand-arrows-alt" style="color:var(--amber)"></i> Upscale Lokal</label>
+                    <div class="grid grid-cols-4 gap-1.5">
+                        <button onclick="setScale('2x')" id="scale-2x" class="scale-btn py-1.5 text-[10px] border border-zinc-700 rounded-lg bg-zinc-800 active">2x</button>
+                        <button onclick="setScale('4x')" id="scale-4x" class="scale-btn py-1.5 text-[10px] border border-zinc-700 rounded-lg bg-zinc-800">4x</button>
+                        <button onclick="setScale('6x')" id="scale-6x" class="scale-btn py-1.5 text-[10px] border border-zinc-700 rounded-lg bg-zinc-800">6x</button>
+                        <button onclick="setScale('8x')" id="scale-8x" class="scale-btn py-1.5 text-[10px] border border-zinc-700 rounded-lg bg-zinc-800">8x</button>
+                    </div>
+                    <button onclick="doUpscale()" class="w-full py-2 rounded-lg text-xs font-bold text-black transition" style="background:linear-gradient(135deg,#f59e0b,#b45309);color:#000;font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:0.05em">Upscale Resolusi</button>
+                </div>
+
+                <!-- Brush Draw -->
+                <div class="space-y-1.5">
+                    <label class="sec-label flex items-center gap-1.5"><i class="fas fa-paintbrush" style="color:var(--orange)"></i> Kuas Gambar</label>
+                    <div class="grid grid-cols-2 gap-1.5">
+                        <div><span class="text-[9px] text-slate-400">Warna Kuas</span><input type="color" id="brush-color" value="#ff5500" class="w-full h-7 rounded cursor-pointer border-0 bg-transparent mt-0.5"></div>
+                        <div><span class="text-[9px] text-slate-400">Ukuran</span><input type="range" id="brush-size" min="2" max="80" value="14" class="w-full mt-2"></div>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-[9px] text-slate-400">Mode</span>
+                            <select id="brush-mode" class="sel text-[10px] py-1 flex-1">
+                                <option value="source-over">Normal</option>
+                                <option value="multiply">Multiply</option>
+                                <option value="screen">Screen</option>
+                                <option value="overlay">Overlay</option>
+                                <option value="destination-out">Hapus (Eraser)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-1.5">
+                        <button onclick="toggleDraw(true)"  id="btn-draw"     class="py-1.5 panel rounded-lg text-[10px] font-bold offline-btn transition" style="color:var(--orange)"><i class="fas fa-paintbrush mr-1"></i>Aktif</button>
+                        <button onclick="toggleDraw(false)" id="btn-draw-off" class="py-1.5 panel rounded-lg text-[10px] font-bold text-slate-400 transition"><i class="fas fa-ban mr-1"></i>Nonaktif</button>
+                    </div>
+                    <button onclick="clearDrawings()" class="w-full py-1.5 panel rounded-lg text-[10px] font-bold text-red-400 hover:border-red-500/40 transition"><i class="fas fa-eraser mr-1"></i>Hapus Coretan</button>
+                </div>
+
+                <!-- Text Overlay -->
+                <div class="space-y-1.5">
+                    <label class="sec-label flex items-center gap-1.5"><i class="fas fa-font" style="color:var(--hi)"></i> Tambah Teks</label>
+                    <input id="text-input" type="text" placeholder="Tulis teks..." class="w-full rounded-lg px-3 py-1.5 text-xs text-white outline-none" style="background:var(--card);border:1px solid var(--border)">
+                    <div class="grid grid-cols-2 gap-1.5">
+                        <div><span class="text-[9px] text-slate-400">Warna</span><input type="color" id="text-color" value="#ffffff" class="w-full h-7 rounded cursor-pointer border-0 bg-transparent mt-0.5"></div>
+                        <div><span class="text-[9px] text-slate-400">Ukuran</span>
+                            <select id="text-size" class="sel py-1 mt-0.5 text-[10px]">
+                                <option value="14">Kecil</option><option value="22" selected>Sedang</option><option value="32">Besar</option><option value="48">XL</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button onclick="addTextOverlay()" class="w-full py-1.5 rounded-lg text-[10px] font-bold text-black transition" style="background:rgba(255,110,199,0.15);border:1px solid rgba(255,110,199,0.35);color:var(--neon-pink)"><i class="fas fa-plus mr-1"></i>Tambah Teks</button>
+                    <button onclick="bakeEdits()" class="w-full py-1 panel rounded-lg text-[10px] font-bold text-slate-400 hover:text-white transition">Gabung Teks ke Gambar</button>
+                </div>
+
+            </div>
+        </div>
+    </aside>
+
+    <!-- ── PREVIEW ── -->
+    <section class="flex-1 flex flex-col items-center justify-center relative overflow-hidden p-6" style="background:transparent">
+        <!-- Dropzone -->
+        <div id="main-dropzone" onclick="document.getElementById('main-input').click()"
+            class="w-full max-w-xs aspect-square border-2 border-dashed rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all group"
+            style="border-color:rgba(0,217,255,0.25);background:rgba(0,217,255,0.02)"
+            onmouseover="this.style.borderColor='var(--neon-cyan)';this.style.boxShadow='0 0 30px rgba(0,255,249,0.12)'"
+            onmouseout="this.style.borderColor='rgba(0,217,255,0.25)';this.style.boxShadow=''">
+            <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4 shadow-xl group-hover:scale-110 transition" style="background:rgba(0,217,255,0.08);border:1px solid rgba(0,217,255,0.3);box-shadow:0 0 20px rgba(0,217,255,0.15)">
+                <i class="fas fa-upload text-2xl" style="color:var(--neon-cyan)"></i>
+            </div>
+            <h3 class="text-base font-black text-slate-300" style="font-family:'Orbitron',sans-serif;font-size:13px;letter-spacing:2px;color:var(--neon-cyan)">UPLOAD IMAGE</h3>
+            <p class="text-xs mt-2" style="color:rgba(168,85,247,0.6);font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px">◆ CLICK OR DRAG & DROP ◆</p>
+            <input type="file" id="main-input" class="hidden" accept="image/*">
+        </div>
+
+        <!-- Canvas View -->
+        <div id="canvas-view" class="hidden relative w-full h-full flex items-center justify-center">
+            <div id="canvas-container" class="w-full h-full">
+                <img id="image-canvas" src="" alt="Preview">
+                <canvas id="draw-canvas"></canvas>
+                <div id="text-overlays"></div>
+                <!-- Crop overlay -->
+                <div id="crop-overlay">
+                    <div class="crop-label" id="crop-label">Bebas</div>
+                    <button onclick="dismissCrop()" title="Tutup crop" style="position:absolute;top:-26px;right:-6px;width:18px;height:18px;background:#ef4444;border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:30;font-size:9px;color:white;padding:0;">✕</button>
+                    <div class="crop-handle tl" data-handle="tl"></div>
+                    <div class="crop-handle tr" data-handle="tr"></div>
+                    <div class="crop-handle bl" data-handle="bl"></div>
+                    <div class="crop-handle br" data-handle="br"></div>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div id="loading-overlay" class="hidden absolute inset-0 backdrop-blur-md flex flex-col items-center justify-center z-50 rounded-xl" style="background:rgba(7,8,14,0.92)">
+                <div style="width:44px;height:44px;border:2px solid var(--neon-cyan);border-bottom-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;box-shadow:0 0 20px rgba(0,255,249,0.4)" class="mb-4"></div>
+                <p id="loading-text" class="font-black animate-pulse uppercase tracking-widest" style="color:var(--neon-cyan);font-family:'Orbitron',sans-serif;font-size:11px;text-shadow:0 0 14px var(--neon-cyan)">MEMPROSES...</p>
+                <p id="loading-sub" class="mt-2" style="color:rgba(168,85,247,0.6);font-family:'Space Mono',monospace;font-size:8px;letter-spacing:0.1em"></p>
+            </div>
+        </div>
+
+        <!-- Toast -->
+        <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 px-5 py-2 rounded text-xs font-bold shadow-2xl opacity-0 translate-y-10 transition-all duration-300 z-[100]" style="background:linear-gradient(135deg,rgba(0,217,255,0.15),rgba(168,85,247,0.15));border:1px solid rgba(0,217,255,0.4);color:var(--neon-cyan);font-family:'Space Mono',monospace;letter-spacing:0.08em;backdrop-filter:blur(10px);box-shadow:0 0 20px rgba(0,217,255,0.3)">
+            <span id="toast-msg"></span>
+        </div>
+    </section>
+</main>
+
+<script>
+// ─── STATE ─────────────────────────────────────────────
+let appMode = 'online'; // 'online' | 'offline'
+let apiKey = localStorage.getItem('lumina_api_key') || '';
+let currentProvider = localStorage.getItem('lumina_provider') || 'gemini';
+let customUrl = localStorage.getItem('lumina_custom_url') || '';
+let currentImage = null;
+let faceRef = null, poseRef = null;
+let activeAITask = '';
+let aiRatio = 'auto';
+let offlineRatio = 'free';
+let bgMode = 'change';
+let currentScale = '2x';
+let activeFacePreset = null, activePosePreset = null;
+let currentColorFilter = 'none';
+let manualFilters = { brightness:100, contrast:100, saturation:100, sharpen:0, blur:0 };
+let drawActive = false, isDrawing = false, lastX=0, lastY=0;
+let isProcessing = false;
+let analysisController = null;
+let stylePrompt = '';
+
+// Crop state
+let cropBox = { x:0, y:0, w:0, h:0 };
+let cropDragging = false, cropResizing = false;
+let cropDragStart = { mx:0, my:0, bx:0, by:0, bw:0, bh:0 };
+let cropHandleActive = '';
+
+// ─── PROVIDER MODELS ───────────────────────────────────
+const MODELS = {
+    gemini: [
+        { value:'gemini-2.0-flash-exp',            label:'Gemini 2.0 Flash Exp ✦ Image Gen' },
+        { value:'gemini-2.5-flash-preview-05-20',  label:'Gemini 2.5 Flash ✦ Image I/O' },
+        { value:'gemini-1.5-flash',                label:'Gemini 1.5 Flash (Analisis saja)' },
+    ],
+    openai: [
+        { value:'gpt-image-1',  label:'GPT-Image-1 ✦ Edit & Gen' },
+        { value:'dall-e-3',     label:'DALL-E 3 ✦ Generation' },
+        { value:'gpt-4o',       label:'GPT-4o (Analisis + Edit)' },
+    ],
+    anthropic: [
+        { value:'claude-sonnet-4-6',          label:'Claude Sonnet 4.6 (Analisis Teks)' },
+        { value:'claude-opus-4-6',            label:'Claude Opus 4.6 (Analisis Teks)' },
+        { value:'claude-haiku-4-5-20251001',  label:'Claude Haiku 4.5 (Analisis Teks)' },
+    ],
+    custom:[{ value:'custom', label:'Custom Model (Gemini-compatible)' }]
+};
+
+// ─── DOM ───────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const mainDropzone    = $('main-dropzone');
+const canvasView      = $('canvas-view');
+const canvasContainer = $('canvas-container');
+const imageCanvas     = $('image-canvas');
+const drawCanvas      = $('draw-canvas');
+const textOverlaysDiv = $('text-overlays');
+const loadingOverlay  = $('loading-overlay');
+const cropOverlay     = $('crop-overlay');
+
+// ─── MODE SWITCH ───────────────────────────────────────
+function switchMode(mode) {
+    appMode = mode;
+    $('online-panel').classList.toggle('hidden', mode !== 'online');
+    $('offline-panel').classList.toggle('hidden', mode !== 'offline');
+    $('btn-mode-online').className  = `${mode === 'online'  ? 'active-online' : ''}`;
+    $('btn-mode-offline').className = `${mode === 'offline' ? 'active-offline' : ''}`;
+
+    const banner = $('mode-banner');
+    if (mode === 'online') {
+        banner.className = 'panel border-b banner-online';
+        $('banner-text').textContent = 'MODE ONLINE — Fitur AI Aktif: Edit, Generate, Style Transfer menggunakan AI Provider';
+        $('mode-banner').querySelector('i').className = 'fas fa-wifi';
+        updateBadge();
+    } else {
+        banner.className = 'panel border-b banner-offline';
+        $('banner-text').textContent = 'MODE OFFLINE — Semua proses berjalan lokal di browser, tanpa internet';
+        $('mode-banner').querySelector('i').className = 'fas fa-plug-circle-xmark';
+        $('active-badge').className = 'pbadge pbadge-offline';
+        $('badge-text').textContent = 'OFFLINE';
+        // Crop NOT auto-shown — user must pick ratio first
+    }
+
+    if (mode === 'online') { hideCropOverlay(); clearDrawings(); toggleDraw(false); }
+    // Don't auto-show crop in offline mode — user must select ratio first
+}
+
+function updateBadge() {
+    const map = { gemini:'pbadge-gemini', openai:'pbadge-openai', anthropic:'pbadge-anthropic', custom:'pbadge-custom' };
+    const label = { gemini:'GEMINI', openai:'OPENAI', anthropic:'ANTHROPIC', custom:'CUSTOM' };
+    $('active-badge').className = `pbadge ${map[currentProvider] || 'pbadge-custom'}`;
+    $('badge-text').textContent = label[currentProvider] || 'CUSTOM';
+}
+
+// ─── PROVIDER ──────────────────────────────────────────
+function onProviderChange() {
+    currentProvider = $('ai-provider').value;
+    $('custom-url-wrap').classList.toggle('hidden', currentProvider !== 'custom');
+    const sel = $('ai-model'); sel.innerHTML = '';
+    (MODELS[currentProvider]||[]).forEach(m => { const o=document.createElement('option'); o.value=m.value; o.textContent=m.label; sel.appendChild(o); });
+    // Show/hide Anthropic info note
+    const noteEl = $('anthropic-note');
+    if (noteEl) noteEl.classList.toggle('hidden', currentProvider !== 'anthropic');
+    updateBadge();
+}
+
+function saveApiKey() {
+    const val = $('api-key-input').value.trim();
+    if (!val) { showToast('API Key kosong!'); return; }
+    apiKey = val;
+    localStorage.setItem('lumina_api_key', val);
+    currentProvider = $('ai-provider').value;
+    localStorage.setItem('lumina_provider', currentProvider);
+    customUrl = $('custom-url-input').value.trim();
+    if (customUrl) localStorage.setItem('lumina_custom_url', customUrl);
+    $('api-status').textContent = `✓ Tersimpan — ${currentProvider}`;
+    $('api-status').className = 'text-[9px] mt-1 text-emerald-500';
+    updateBadge();
+    showToast('API Key disimpan!');
+}
+
+function toggleApiKey() {
+    const inp = $('api-key-input'), ico = $('btn-eye').querySelector('i');
+    if (inp.type==='password') { inp.type='text'; ico.className='fas fa-eye-slash'; }
+    else { inp.type='password'; ico.className='fas fa-eye'; }
+}
+
+function clearPrompt() { $('ai-prompt').value=''; }
+
+// ─── FETCH HELPERS ─────────────────────────────────────
+async function apiFetch(url, payload, type) {
+    const headers = {'Content-Type':'application/json'};
+    if (type==='openai')    headers['Authorization'] = `Bearer ${apiKey}`;
+    if (type==='anthropic') {
+        headers['x-api-key'] = apiKey;
+        headers['anthropic-version'] = '2023-06-01';
+        headers['anthropic-dangerous-direct-browser-ipc'] = 'true';
+    }
+    const r = await fetch(url, {method:'POST', headers, body:JSON.stringify(payload)});
+    if (!r.ok) {
+        let errText = '';
+        try { errText = await r.text(); } catch(e) { errText = r.statusText; }
+        throw new Error(`${r.status}: ${errText.substring(0,300)}`);
+    }
+    return r.json();
+}
+
+// ─── AI ANALYSIS ───────────────────────────────────────
+async function analyzeImage() {
+    if (!currentImage || !apiKey) {
+        renderSuggestions(['Sesuaikan kecerahan', 'Ubah latar belakang', 'Tambah efek gaya']);
+        $('refresh-suggestions').classList.remove('hidden');
+        return;
+    }
+    if (isProcessing) return;
+    if (analysisController) analysisController.abort();
+    analysisController = new AbortController();
+    $('suggestions-container').innerHTML = Array(3).fill(`<div class="shimmer h-7 w-full rounded-lg mb-1"></div>`).join('');
+    $('refresh-suggestions').classList.add('hidden');
+    try {
+        const b64 = currentImage.split(',')[1];
+        const prompt = `Analisis gambar ini. Berikan 3 saran pengeditan singkat (maks 6 kata). Jawab HANYA dengan JSON valid: {"suggestions":["saran1","saran2","saran3"]}`;
+        let ideas = [];
+
+        if (currentProvider === 'gemini') {
+            const modelId = $('ai-model').value;
+            const d = await apiFetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`,
+                {
+                    contents:[{parts:[
+                        {text: prompt},
+                        {inlineData:{mimeType:'image/jpeg',data:b64}}
+                    ]}],
+                    generationConfig:{responseMimeType:'application/json'}
+                }, 'gemini');
+            try {
+                const raw = d.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+                const cleaned = raw.replace(/```json|```/g,'').trim();
+                ideas = JSON.parse(cleaned).suggestions || [];
+            } catch(pe) { ideas = ['Edit pencahayaan','Gaya sinematik','Perbaiki komposisi']; }
+
+        } else if (currentProvider === 'openai') {
+            const modelId = $('ai-model').value;
+            // gpt-image-1 dan dall-e-3 tidak bisa analisis, fallback ke gpt-4o
+            const analysisModel = (modelId === 'dall-e-3' || modelId === 'gpt-image-1') ? 'gpt-4o' : modelId;
+            const d = await apiFetch('https://api.openai.com/v1/chat/completions',
+                {
+                    model: analysisModel,
+                    response_format:{type:'json_object'},
+                    messages:[{role:'user',content:[
+                        {type:'text',text:prompt},
+                        {type:'image_url',image_url:{url:`data:image/jpeg;base64,${b64}`}}
+                    ]}]
+                }, 'openai');
+            try {
+                ideas = JSON.parse(d.choices[0].message.content).suggestions || [];
+            } catch(pe) { ideas = ['Edit pencahayaan','Gaya sinematik','Perbaiki komposisi']; }
+
+        } else if (currentProvider === 'anthropic') {
+            const modelId = $('ai-model').value;
+            const d = await apiFetch('https://api.anthropic.com/v1/messages',
+                {
+                    model: modelId,
+                    max_tokens: 300,
+                    messages:[{role:'user',content:[
+                        {type:'image',source:{type:'base64',media_type:'image/jpeg',data:b64}},
+                        {type:'text',text:prompt}
+                    ]}]
+                }, 'anthropic');
+            try {
+                const raw = d.content?.[0]?.text || '{}';
+                const m = raw.match(/\{[\s\S]*\}/);
+                ideas = m ? JSON.parse(m[0]).suggestions : [];
+                if (!Array.isArray(ideas) || ideas.length === 0) ideas = ['Edit pencahayaan','Gaya sinematik','Perbaiki komposisi'];
+            } catch(pe) { ideas = ['Edit pencahayaan','Gaya sinematik','Perbaiki komposisi']; }
+
+        } else if (currentProvider === 'custom') {
+            renderSuggestions(['Edit pencahayaan','Gaya sinematik','Perbaiki komposisi']);
+            $('refresh-suggestions').classList.remove('hidden');
+            return;
+        }
+
+        renderSuggestions(Array.isArray(ideas) && ideas.length ? ideas : ['Edit pencahayaan','Gaya sinematik','Perbaiki komposisi']);
+    } catch(e) {
+        if (e.name !== 'AbortError') {
+            console.warn('Analyze error:', e.message);
+            renderSuggestions(['Edit pencahayaan','Gaya sinematik','Perbaiki komposisi']);
+        }
+    } finally {
+        $('refresh-suggestions').classList.remove('hidden');
+    }
+}
+
+function renderSuggestions(list) {
+    $('suggestions-container').innerHTML = '';
+    list.forEach(item => {
+        const btn = document.createElement('button');
+        btn.className = 'w-full text-left p-2 rounded-lg text-[10px] text-slate-300 transition border border-zinc-800/30 truncate';
+        btn.style.background = 'rgba(79,124,255,0.05)';
+        btn.textContent = `• ${item}`;
+        btn.onmouseover=()=>btn.style.background='var(--hi)';
+        btn.onmouseout=()=>btn.style.background='rgba(79,124,255,0.05)';
+        btn.onclick=()=>{ $('ai-prompt').value=item; showToast('Saran diterapkan'); };
+        $('suggestions-container').appendChild(btn);
+    });
+}
+
+// ─── AI TASKS ──────────────────────────────────────────
+function prepareAITask(task) {
+    if (isProcessing) return;
+    activeAITask = task;
+    document.querySelectorAll('[id^="aibtn-"]').forEach(b=>b.classList.remove('active-tool'));
+    document.querySelectorAll('[id^="aipanel-"]').forEach(p=>p.classList.add('hidden'));
+    $(`aibtn-${task}`)?.classList.add('active-tool');
+    $(`aipanel-${task}`)?.classList.remove('hidden');
+    // Warn if Anthropic selected for image generation tasks
+    if (currentProvider === 'anthropic' && task !== 'direct-prompt') {
+        showToast('⚠ Claude tidak bisa generate gambar. Ganti ke Gemini/OpenAI.');
+    }
+}
+
+function setAiRatio(r) {
+    aiRatio = r;
+    document.querySelectorAll('.ai-ratio-btn').forEach(b=>b.classList.remove('active','!text-black','!font-bold'));
+    const btn = [...document.querySelectorAll('.ai-ratio-btn')].find(b=>b.dataset.r===r);
+    if (btn) { btn.classList.add('active'); }
+}
+
+function updateBgTabs() {
+    $('tab-bg-change').className = `tab-btn${bgMode==='change'?' active':''}`;
+    $('tab-bg-remove').className = `tab-btn${bgMode==='remove'?' active':''}`;
+}
+
+function setFacePreset(label, el) {
+    activeFacePreset=label; faceRef=null;
+    $('face-preview').classList.add('hidden');
+    document.querySelectorAll('#aipanel-face .preset-btn').forEach(b=>b.style.outline='');
+    if (el) el.style.outline='2px solid var(--pink)';
+}
+
+function setPosePreset(label, el) {
+    activePosePreset=label; poseRef=null;
+    $('pose-preview').classList.add('hidden');
+    document.querySelectorAll('#aipanel-pose .preset-btn').forEach(b=>b.style.outline='');
+    if (el) el.style.outline='2px solid var(--hi)';
+}
+
+function setStylePrompt(p) { stylePrompt=p; $('ai-prompt').value=p; }
+
+// ─── EXECUTE AI ────────────────────────────────────────
+async function executeAI(type) {
+    if (!currentImage || isProcessing) return;
+    if (!apiKey) { showToast('⚠ Masukkan API Key terlebih dahulu!'); return; }
+    if (currentProvider === 'anthropic' && type !== 'direct-prompt') {
+        showToast('Claude hanya bisa digunakan via prompt teks. Gunakan Gemini/OpenAI untuk fitur visual.');
+        return;
+    }
+
+    let prompt = $('ai-prompt').value.trim();
+    let images = [currentImage.split(',')[1]];
+    let msg = 'Memproses dengan AI...';
+    let ratioInstr = aiRatio!=='auto' ? ` Output aspect ratio MUST be ${aiRatio.replace('/',':')} exactly.` : '';
+
+    if (type==='direct-prompt') {
+        if (!prompt) return showToast('Ketik prompt dulu!');
+        msg = 'Menjalankan prompt AI...';
+        prompt += ratioInstr;
+        if (currentProvider === 'anthropic') {
+            // For Anthropic, we can only do text analysis/description, not image generation
+            showToast('Claude sedang menganalisis gambar...');
+            setLoading(true, 'Menganalisis dengan Claude...', 'Anthropic • Text Only');
+            try {
+                const b64 = currentImage.split(',')[1];
+                const d = await apiFetch('https://api.anthropic.com/v1/messages', {
+                    model: $('ai-model').value,
+                    max_tokens: 1024,
+                    messages:[{role:'user',content:[
+                        {type:'image',source:{type:'base64',media_type:'image/jpeg',data:b64}},
+                        {type:'text',text:prompt}
+                    ]}]
+                }, 'anthropic');
+                const reply = d.content?.[0]?.text || 'Tidak ada respons';
+                showToast('Claude: ' + reply.substring(0, 80));
+                $('ai-prompt').value = reply.substring(0, 500);
+            } catch(err) {
+                showToast('Error: ' + err.message.substring(0, 60));
+            } finally { setLoading(false); }
+            return;
+        }
+    } else if (type==='bg') {
+        prompt = bgMode==='remove' ? `Remove the background completely, make it transparent or white.` : `Replace the background with: ${prompt||'clean studio background'}. Keep the subject exactly the same.`;
+        msg = bgMode==='remove' ? 'Menghapus latar...' : 'Mengganti latar...';
+    } else if (type==='face') {
+        if (faceRef) { prompt=`FACE SWAP: Replace the face in the first image with the face from the second image. Keep hair, clothes, and background the same.`; images.push(faceRef.split(',')[1]); msg='Menukar wajah...'; }
+        else if (activeFacePreset) { prompt=`Change the facial expression of the person to look "${activeFacePreset}". Keep everything else the same.`; msg=`Ekspresi ${activeFacePreset}...`; }
+        else return showToast('Pilih referensi wajah atau ekspresi!');
+    } else if (type==='pose') {
+        if (poseRef) { prompt=`POSE CHANGE: Change the body pose to match the pose in the second reference image. Keep the face and clothing the same.`; images.push(poseRef.split(',')[1]); msg='Mengubah pose...'; }
+        else if (activePosePreset) { prompt=`Change the body pose of the person to "${activePosePreset}". Keep the face and clothing.`; msg=`Pose: ${activePosePreset}...`; }
+        else return showToast('Pilih referensi pose!');
+    } else if (type==='outpaint') {
+        if (aiRatio==='auto') return showToast('Pilih rasio target terlebih dahulu!');
+        const [rw,rh] = aiRatio.split('/').map(Number);
+        prompt = `OUTPAINTING: Extend this image to fill a ${rw}:${rh} aspect ratio canvas. Keep the original image centered. Intelligently fill the new empty areas with content that matches the scene naturally.${ratioInstr} ${prompt}`;
+        msg = `Memperluas ke ${rw}:${rh}...`;
+    } else if (type==='style') {
+        const s = stylePrompt || prompt;
+        if (!s) return showToast('Pilih gaya atau tulis prompt!');
+        prompt = `Apply this artistic style to the image: ${s}. Keep the main subject, composition, and lighting structure intact, only change the visual style.`;
+        msg = 'Menerapkan gaya...';
+    } else if (type==='retouch-portrait') {
+        prompt='Professional portrait retouching: smooth skin texture, enhance eye clarity, balance lighting, natural look. Do not alter face structure.'; msg='Retouching potret...';
+    } else if (type==='retouch-denoise') {
+        prompt='Reduce digital noise and grain while preserving fine image details and sharpness.'; msg='Mengurangi noise...';
+    } else if (type==='retouch-sharp') {
+        prompt='Enhance image sharpness and fine detail clarity without over-sharpening or creating halos.'; msg='Mempertajam detail...';
+    } else if (type==='retouch-color') {
+        prompt='Auto color correction: fix exposure levels, correct white balance, remove color cast, enhance overall color accuracy.'; msg='Koreksi warna...';
+    }
+
+    setLoading(true, msg, `${currentProvider.toUpperCase()} • ${$('ai-model').value}`);
+    try {
+        let resultUrl = await callAIEdit(images, prompt);
+        if (aiRatio!=='auto' && type==='outpaint') resultUrl = await cropToRatio(resultUrl, ...aiRatio.split('/').map(Number));
+        currentImage = resultUrl;
+        imageCanvas.src = currentImage;
+        applyFilters();
+        clearDrawings(); textOverlaysDiv.innerHTML='';
+        showToast('✓ Selesai!');
+        analyzeImage();
+    } catch(err) {
+        console.error('executeAI error:', err);
+        const errMsg = err.message || 'Terjadi kesalahan';
+        showToast('✗ ' + errMsg.substring(0, 80));
+    } finally { setLoading(false); }
+}
+
+async function callAIEdit(imgs, promptText) {
+    const provider = currentProvider;
+    const model = $('ai-model').value;
+
+    if (provider === 'gemini') {
+        // Models that support native image generation
+        const imgGenModels = ['gemini-2.0-flash-exp', 'gemini-2.5-flash-preview-05-20'];
+        if (!imgGenModels.includes(model)) {
+            throw new Error(`Model ${model} tidak mendukung generasi gambar. Gunakan Gemini 2.0 Flash Exp atau 2.5 Flash.`);
+        }
+        const parts = [{text: promptText}];
+        imgs.forEach(img => parts.push({inlineData:{mimeType:'image/png', data:img}}));
+        const d = await apiFetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+            {
+                contents: [{parts}],
+                generationConfig: { responseModalities: ['TEXT', 'IMAGE'] }
+            }, 'gemini');
+        // Try to find image part
+        const allParts = d.candidates?.[0]?.content?.parts || [];
+        const imgPart = allParts.find(p => p.inlineData?.data);
+        if (!imgPart) {
+            // Check if there's an error message in text parts
+            const textPart = allParts.find(p => p.text);
+            const errMsg = textPart ? textPart.text.substring(0, 100) : 'AI tidak menghasilkan gambar';
+            throw new Error(errMsg);
+        }
+        const mimeType = imgPart.inlineData.mimeType || 'image/png';
+        return `data:${mimeType};base64,${imgPart.inlineData.data}`;
+    }
+
+    if (provider === 'openai') {
+        // Use gpt-image-1 for edits (dall-e-3 only supports generation, not edits)
+        const editModel = (model === 'gpt-4o') ? 'gpt-image-1' : model;
+        const blob = b64toBlob(imgs[0], 'image/png');
+        const fd = new FormData();
+        fd.append('image', blob, 'image.png');
+        if (imgs[1]) { const b2 = b64toBlob(imgs[1], 'image/png'); fd.append('mask', b2, 'ref.png'); }
+        fd.append('prompt', promptText);
+        fd.append('model', editModel);
+        fd.append('n', '1');
+        fd.append('response_format', 'b64_json');
+        const r = await fetch('https://api.openai.com/v1/images/edits', {
+            method:'POST',
+            headers:{'Authorization':`Bearer ${apiKey}`},
+            body:fd
+        });
+        if (!r.ok) { const errText = await r.text(); throw new Error(`OpenAI Error: ${errText.substring(0,200)}`); }
+        const d = await r.json();
+        const imgData = d.data?.[0]?.b64_json;
+        if (!imgData) throw new Error('OpenAI tidak mengembalikan gambar');
+        return `data:image/png;base64,${imgData}`;
+    }
+
+    if (provider === 'anthropic') {
+        throw new Error('Claude (Anthropic) tidak mendukung generasi/edit gambar. Gunakan Gemini atau OpenAI untuk fitur ini.');
+    }
+
+    if (provider === 'custom') {
+        const url = $('custom-url-input').value.trim() || customUrl;
+        if (!url) throw new Error('Custom URL belum diisi');
+        const parts = [{text: promptText}];
+        imgs.forEach(img => parts.push({inlineData:{mimeType:'image/png', data:img}}));
+        const d = await apiFetch(url, {
+            contents:[{parts}],
+            generationConfig:{responseModalities:['TEXT','IMAGE']}
+        }, 'custom');
+        const allParts = d.candidates?.[0]?.content?.parts || [];
+        const imgPart = allParts.find(p => p.inlineData?.data);
+        if (!imgPart) throw new Error('Tidak ada gambar dari endpoint');
+        return `data:image/png;base64,${imgPart.inlineData.data}`;
+    }
+
+    throw new Error('Provider tidak dikenal');
+}
+
+function b64toBlob(b64, type='') {
+    const bc=atob(b64), ba=[];
+    for (let i=0;i<bc.length;i+=512) { const s=bc.slice(i,i+512); ba.push(new Uint8Array([...s].map(c=>c.charCodeAt(0)))); }
+    return new Blob(ba,{type});
+}
+
+// ─── OFFLINE TOOLS ─────────────────────────────────────
+
+// — Filters
+function applyFilters() {
+    const b=$('sl-brightness').value, c=$('sl-contrast').value, s=$('sl-saturation').value;
+    const sh=parseFloat($('sl-sharpen').value), bl=parseFloat($('sl-blur').value);
+    $('val-brightness').textContent=b+'%'; $('val-contrast').textContent=c+'%';
+    $('val-saturation').textContent=s+'%'; $('val-sharpen').textContent=sh;
+    $('val-blur').textContent=bl;
+    manualFilters={brightness:+b,contrast:+c,saturation:+s,sharpen:sh,blur:bl};
+    let f=`brightness(${b}%) contrast(${c}%) saturate(${s}%)`;
+    if (bl>0) f+=` blur(${bl}px)`;
+    // Apply color filter preset on top
+    f += getColorFilterCSS();
+    imageCanvas.style.filter=f;
+}
+
+function getColorFilterCSS() {
+    switch(currentColorFilter) {
+        case 'grayscale': return ' grayscale(100%)';
+        case 'sepia':     return ' sepia(80%)';
+        case 'warm':      return ' sepia(30%) saturate(150%) hue-rotate(-10deg)';
+        case 'cool':      return ' saturate(90%) hue-rotate(20deg) brightness(105%)';
+        case 'vivid':     return ' saturate(180%) contrast(110%)';
+        case 'fade':      return ' brightness(115%) contrast(80%) saturate(70%)';
+        case 'dramatic':  return ' contrast(140%) saturate(120%) brightness(90%)';
+        case 'invert':    return ' invert(100%)';
+        default: return '';
+    }
+}
+
+function applyColorFilter(f) { currentColorFilter=f; applyFilters(); showToast('Filter: '+f); }
+
+function resetFilters() {
+    ['sl-brightness','sl-contrast','sl-saturation','sl-sharpen','sl-blur'].forEach(id=>{ const el=$(id); el.value=el.id==='sl-brightness'||el.id==='sl-contrast'?100:el.id==='sl-saturation'?100:0; });
+    currentColorFilter='none'; applyFilters();
+}
+
+function bakeEdits() {
+    if (!currentImage) return;
+    const img=new Image();
+    img.onload=()=>{
+        const cvs=document.createElement('canvas');
+        cvs.width=img.naturalWidth; cvs.height=img.naturalHeight;
+        const ctx=cvs.getContext('2d');
+        ctx.filter=imageCanvas.style.filter||'none';
+        ctx.drawImage(img,0,0);
+        if (drawCanvas.width>0){ctx.filter='none';ctx.drawImage(drawCanvas,0,0,img.naturalWidth,img.naturalHeight);}
+        // Bake text overlays
+        [...textOverlaysDiv.children].forEach(item=>{
+            const span=item.querySelector('span');
+            if (!span) return;
+            const rect=item.getBoundingClientRect();
+            const cRect=canvasContainer.getBoundingClientRect();
+            const sx=(rect.left-cRect.left)/imageCanvas.getBoundingClientRect().width*img.naturalWidth;
+            const sy=(rect.top-cRect.top)/imageCanvas.getBoundingClientRect().height*img.naturalHeight;
+            ctx.font=`bold ${parseInt(span.style.fontSize)*img.naturalWidth/imageCanvas.getBoundingClientRect().width}px Syne, sans-serif`;
+            ctx.fillStyle=span.style.color;
+            ctx.shadowColor='rgba(0,0,0,0.8)'; ctx.shadowBlur=4;
+            ctx.fillText(span.textContent, sx, sy+parseInt(span.style.fontSize)*img.naturalWidth/imageCanvas.getBoundingClientRect().width);
+        });
+        currentImage=cvs.toDataURL('image/png');
+        imageCanvas.src=currentImage;
+        currentColorFilter='none'; resetFilters(); clearDrawings(); textOverlaysDiv.innerHTML='';
+        showToast('Edit disimpan ke gambar!');
+    };
+    img.src=currentImage;
+}
+
+// — Flip & Rotate
+function flipImage(dir) {
+    const img=new Image();
+    img.onload=()=>{
+        const cvs=document.createElement('canvas');
+        cvs.width=img.naturalWidth; cvs.height=img.naturalHeight;
+        const ctx=cvs.getContext('2d');
+        if (dir==='h') { ctx.translate(img.naturalWidth,0); ctx.scale(-1,1); }
+        else           { ctx.translate(0,img.naturalHeight); ctx.scale(1,-1); }
+        ctx.drawImage(img,0,0);
+        currentImage=cvs.toDataURL('image/png');
+        imageCanvas.src=currentImage;
+        showToast(dir==='h'?'Flip Horizontal!':'Flip Vertical!');
+    };
+    img.src=currentImage;
+}
+
+function rotateImage(deg) {
+    const img=new Image();
+    img.onload=()=>{
+        const rad=deg*Math.PI/180;
+        const cvs=document.createElement('canvas');
+        cvs.width=img.naturalHeight; cvs.height=img.naturalWidth;
+        const ctx=cvs.getContext('2d');
+        ctx.translate(cvs.width/2, cvs.height/2);
+        ctx.rotate(rad);
+        ctx.drawImage(img,-img.naturalWidth/2,-img.naturalHeight/2);
+        currentImage=cvs.toDataURL('image/png');
+        imageCanvas.src=currentImage;
+        showToast(`Rotasi ${deg}°!`);
+    };
+    img.src=currentImage;
+}
+
+// — Upscale
+function setScale(s) {
+    currentScale=s;
+    document.querySelectorAll('.scale-btn').forEach(b=>b.classList.remove('active'));
+    $(`scale-${s}`).classList.add('active');
+}
+
+function doUpscale() {
+    if (!currentImage) return;
+    const factor={  '2x':2,'4x':4,'6x':6,'8x':8 }[currentScale]||2;
+    setLoading(true,`Upscale ${currentScale} (lokal)...`,'Canvas API');
+    setTimeout(()=>{
+        const img=new Image();
+        img.onload=()=>{
+            const cvs=document.createElement('canvas');
+            cvs.width=img.naturalWidth*factor; cvs.height=img.naturalHeight*factor;
+            const ctx=cvs.getContext('2d');
+            ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
+            ctx.drawImage(img,0,0,cvs.width,cvs.height);
+            currentImage=cvs.toDataURL('image/png');
+            imageCanvas.src=currentImage;
+            setLoading(false);
+            showToast(`Upscale ${currentScale} selesai!`);
+        };
+        img.src=currentImage;
+    },100);
+}
+
+// ─── CROP (Offline) ────────────────────────────────────
+function setOfflineRatio(r) {
+    offlineRatio=r;
+    document.querySelectorAll('.off-ratio-btn').forEach(b=>b.classList.remove('active'));
+    const btn=[...document.querySelectorAll('.off-ratio-btn')].find(b=>b.dataset.r===r);
+    if (btn) btn.classList.add('active');
+    if (currentImage) { setTimeout(()=>initOfflineCrop(),100); }
+    else { showToast('Unggah gambar dulu!'); }
+    showToast(`Rasio: ${r==='free'?'Bebas':r.replace('/',':')}`);
+}
+
+function dismissCrop() {
+    hideCropOverlay();
+    offlineRatio='free';
+    document.querySelectorAll('.off-ratio-btn').forEach(b=>b.classList.remove('active'));
+    showToast('Crop ditutup');
+}
+
+function initOfflineCrop() {
+    const containerRect = canvasContainer.getBoundingClientRect();
+    const imgRect = imageCanvas.getBoundingClientRect();
+    const imgOffX = imgRect.left - containerRect.left;
+    const imgOffY = imgRect.top - containerRect.top;
+    const imgW = imgRect.width, imgH = imgRect.height;
+
+    let cw, ch;
+    if (offlineRatio==='free') { cw=imgW*0.8; ch=imgH*0.8; }
+    else {
+        const [rw,rh]=offlineRatio.split('/').map(Number);
+        const tr=rw/rh;
+        if (imgW/imgH>tr) { ch=imgH*0.85; cw=ch*tr; }
+        else { cw=imgW*0.85; ch=cw/tr; }
+    }
+    cropBox.x=imgOffX+(imgW-cw)/2; cropBox.y=imgOffY+(imgH-ch)/2;
+    cropBox.w=cw; cropBox.h=ch;
+    applyCropBoxStyle();
+    cropOverlay.style.display='block';
+    $('crop-label').textContent = offlineRatio==='free'?'Bebas':offlineRatio.replace('/',':');
+}
+
+function hideCropOverlay() { cropOverlay.style.display='none'; }
+
+function applyCropBoxStyle() {
+    cropOverlay.style.left=cropBox.x+'px'; cropOverlay.style.top=cropBox.y+'px';
+    cropOverlay.style.width=cropBox.w+'px'; cropOverlay.style.height=cropBox.h+'px';
+}
+
+async function applyCrop() {
+    if (!currentImage) return;
+    setLoading(true,'Memotong gambar...','Lokal');
+    try {
+        const img = await loadImage(currentImage);
+        const containerRect=canvasContainer.getBoundingClientRect();
+        const imgRect=imageCanvas.getBoundingClientRect();
+        const scaleX=img.naturalWidth/imgRect.width;
+        const scaleY=img.naturalHeight/imgRect.height;
+        const imgOffX=imgRect.left-containerRect.left;
+        const imgOffY=imgRect.top-containerRect.top;
+        let bx=cropBox.x-imgOffX, by=cropBox.y-imgOffY;
+        let bw=cropBox.w, bh=cropBox.h;
+        bx=Math.max(0,bx); by=Math.max(0,by);
+        if (bx+bw>imgRect.width)  bw=imgRect.width-bx;
+        if (by+bh>imgRect.height) bh=imgRect.height-by;
+        const sx=Math.round(bx*scaleX), sy=Math.round(by*scaleY);
+        const sw=Math.round(bw*scaleX), sh=Math.round(bh*scaleY);
+        const cvs=document.createElement('canvas');
+        cvs.width=sw; cvs.height=sh;
+        cvs.getContext('2d').drawImage(img,sx,sy,sw,sh,0,0,sw,sh);
+        currentImage=cvs.toDataURL('image/png');
+        imageCanvas.src=currentImage;
+        hideCropOverlay();
+        // Reset ratio selection so user re-picks if needed
+        offlineRatio='free';
+        document.querySelectorAll('.off-ratio-btn').forEach(b=>b.classList.remove('active'));
+        showToast('Berhasil dipotong!');
+    } catch(e){ showToast('Gagal crop.'); }
+    finally { setLoading(false); }
+}
+
+// Crop overlay drag & resize
+cropOverlay.addEventListener('mousedown',(e)=>{
+    if (e.target.classList.contains('crop-handle')) { cropResizing=true; cropHandleActive=e.target.dataset.handle; }
+    else if (!e.target.classList.contains('crop-label')) { cropDragging=true; }
+    cropDragStart={mx:e.clientX,my:e.clientY,bx:cropBox.x,by:cropBox.y,bw:cropBox.w,bh:cropBox.h};
+    e.preventDefault();
+});
+
+document.addEventListener('mousemove',(e)=>{
+    if (cropDragging) {
+        const dx=e.clientX-cropDragStart.mx, dy=e.clientY-cropDragStart.my;
+        const cr=canvasContainer.getBoundingClientRect();
+        cropBox.x=Math.max(0,Math.min(cropDragStart.bx+dx,cr.width-cropBox.w));
+        cropBox.y=Math.max(0,Math.min(cropDragStart.by+dy,cr.height-cropBox.h));
+        applyCropBoxStyle();
+    }
+    if (cropResizing) {
+        const dx=e.clientX-cropDragStart.mx, dy=e.clientY-cropDragStart.my;
+        const minSize=40;
+        const {bx,by,bw,bh}=cropDragStart;
+        const locked=offlineRatio!=='free';
+        const ratio=locked?(() => { const[rw,rh]=offlineRatio.split('/').map(Number); return rw/rh; })():null;
+        let nw=bw, nh=bh;
+        if (cropHandleActive==='br') {
+            nw=Math.max(minSize,bw+dx);
+            nh=locked?nw/ratio:Math.max(minSize,bh+dy);
+        } else if (cropHandleActive==='bl') {
+            nw=Math.max(minSize,bw-dx); cropBox.x=bx+(bw-nw);
+            nh=locked?nw/ratio:Math.max(minSize,bh+dy);
+        } else if (cropHandleActive==='tr') {
+            nw=Math.max(minSize,bw+dx);
+            nh=locked?nw/ratio:Math.max(minSize,bh-dy);
+            cropBox.y=by+(bh-nh);
+        } else if (cropHandleActive==='tl') {
+            nw=Math.max(minSize,bw-dx); cropBox.x=bx+(bw-nw);
+            nh=locked?nw/ratio:Math.max(minSize,bh-dy);
+            cropBox.y=by+(bh-nh);
+        }
+        cropBox.w=nw; cropBox.h=nh;
+        applyCropBoxStyle();
+    }
+});
+document.addEventListener('mouseup',()=>{ cropDragging=false; cropResizing=false; });
+
+function cropToRatio(dataUrl, rw, rh) {
+    return new Promise(res=>{
+        const img=new Image();
+        img.onload=()=>{
+            const tr=rw/rh, ir=img.naturalWidth/img.naturalHeight;
+            let sw,sh,sx=0,sy=0;
+            if(ir>tr){sh=img.naturalHeight;sw=Math.round(sh*tr);sx=Math.round((img.naturalWidth-sw)/2);}
+            else{sw=img.naturalWidth;sh=Math.round(sw/tr);sy=Math.round((img.naturalHeight-sh)/2);}
+            const cvs=document.createElement('canvas'); cvs.width=sw; cvs.height=sh;
+            cvs.getContext('2d').drawImage(img,sx,sy,sw,sh,0,0,sw,sh);
+            res(cvs.toDataURL('image/png'));
+        };
+        img.src=dataUrl;
+    });
+}
+
+// ─── DRAW (shared) ─────────────────────────────────────
+function syncDrawCanvas() { const r=imageCanvas.getBoundingClientRect(); drawCanvas.width=r.width; drawCanvas.height=r.height; }
+function toggleDraw(active) {
+    drawActive=active; drawCanvas.style.display=active?'block':'none';
+    if(active){syncDrawCanvas();showToast('Kuas aktif');}
+    $('btn-draw').classList.toggle('active-tool',active);
+    $('btn-draw-off').classList.toggle('active-tool',!active);
+}
+function clearDrawings(){const ctx=drawCanvas.getContext('2d');ctx.clearRect(0,0,drawCanvas.width,drawCanvas.height);}
+
+function doDraw(x,y){
+    const ctx=drawCanvas.getContext('2d');
+    ctx.strokeStyle=$('brush-color').value;
+    ctx.lineWidth=$('brush-size').value;
+    ctx.lineCap='round'; ctx.lineJoin='round';
+    ctx.globalAlpha=0.85;
+    ctx.globalCompositeOperation=$('brush-mode').value;
+    ctx.beginPath(); ctx.moveTo(lastX,lastY); ctx.lineTo(x,y); ctx.stroke();
+    lastX=x; lastY=y;
+}
+
+drawCanvas.addEventListener('mousedown',(e)=>{
+    if(!drawActive)return; isDrawing=true;
+    const r=drawCanvas.getBoundingClientRect(); lastX=e.clientX-r.left; lastY=e.clientY-r.top;
+});
+drawCanvas.addEventListener('mousemove',(e)=>{if(!isDrawing||!drawActive)return;const r=drawCanvas.getBoundingClientRect();doDraw(e.clientX-r.left,e.clientY-r.top);});
+drawCanvas.addEventListener('mouseup',()=>isDrawing=false);
+drawCanvas.addEventListener('mouseleave',()=>isDrawing=false);
+drawCanvas.addEventListener('touchstart',(e)=>{e.preventDefault();if(!drawActive)return;isDrawing=true;const r=drawCanvas.getBoundingClientRect();lastX=e.touches[0].clientX-r.left;lastY=e.touches[0].clientY-r.top;},{passive:false});
+drawCanvas.addEventListener('touchmove',(e)=>{e.preventDefault();if(!isDrawing||!drawActive)return;const r=drawCanvas.getBoundingClientRect();doDraw(e.touches[0].clientX-r.left,e.touches[0].clientY-r.top);},{passive:false});
+drawCanvas.addEventListener('touchend',()=>isDrawing=false);
+
+// ─── TEXT OVERLAY ──────────────────────────────────────
+function addTextOverlay() {
+    const text=$('text-input').value.trim();
+    if(!text){showToast('Tulis teks dulu!');return;}
+    const color=$('text-color').value, size=$('text-size').value;
+    const item=document.createElement('div');
+    item.className='text-overlay-item';
+    item.style.left='25%'; item.style.top='40%';
+    item.innerHTML=`<span style="color:${color};font-size:${size}px;font-family:'Syne',sans-serif">${text}</span><div class="del-text" onclick="this.parentElement.remove()"><i class="fas fa-times" style="font-size:7px"></i></div>`;
+    let ox=0,oy=0,mx=0,my=0,dr=false;
+    item.addEventListener('mousedown',(e)=>{if(e.target.closest('.del-text'))return;dr=true;ox=e.clientX;oy=e.clientY;mx=item.offsetLeft;my=item.offsetTop;e.preventDefault();});
+    document.addEventListener('mousemove',(e)=>{if(!dr)return;item.style.left=(mx+e.clientX-ox)+'px';item.style.top=(my+e.clientY-oy)+'px';});
+    document.addEventListener('mouseup',()=>dr=false);
+    textOverlaysDiv.appendChild(item);
+    $('text-input').value='';
+    showToast('Teks ditambahkan!');
+}
+
+// ─── LOADING ───────────────────────────────────────────
+function setLoading(s,text='',sub=''){
+    isProcessing=s;
+    loadingOverlay.classList.toggle('hidden',!s);
+    $('sidebar-panel').classList.toggle('locked',s);
+    const btn=$('btn-send-prompt'); if(btn)btn.disabled=s;
+    if(s){$('loading-text').textContent=text;$('loading-sub').textContent=sub;}
+}
+
+let toastTimer;
+function showToast(m){
+    $('toast-msg').textContent=m;
+    const t=$('toast');
+    t.classList.remove('opacity-0','translate-y-10');
+    clearTimeout(toastTimer);
+    toastTimer=setTimeout(()=>t.classList.add('opacity-0','translate-y-10'),2800);
+}
+
+// ─── FILE INPUT ────────────────────────────────────────
+$('main-input').onchange=(e)=>{
+    const file=e.target.files[0]; if(!file)return;
+    const reader=new FileReader();
+    reader.onload=(ev)=>{
+        currentImage=ev.target.result;
+        imageCanvas.src=currentImage;
+        mainDropzone.classList.add('hidden');
+        canvasView.classList.remove('hidden');
+        $('action-header').classList.remove('hidden');
+        $('action-header').classList.add('flex');
+        resetFilters();
+        if(appMode==='online')  analyzeImage();
+    };
+    reader.readAsDataURL(file);
+};
+
+$('face-input').onchange=(e)=>{
+    const file=e.target.files[0]; if(!file)return;
+    const reader=new FileReader();
+    reader.onload=(ev)=>{faceRef=ev.target.result;activeFacePreset=null;document.querySelectorAll('#aipanel-face .preset-btn').forEach(b=>b.style.outline='');$('face-preview').src=faceRef;$('face-preview').classList.remove('hidden');};
+    reader.readAsDataURL(file);
+};
+$('pose-input').onchange=(e)=>{
+    const file=e.target.files[0]; if(!file)return;
+    const reader=new FileReader();
+    reader.onload=(ev)=>{poseRef=ev.target.result;activePosePreset=null;document.querySelectorAll('#aipanel-pose .preset-btn').forEach(b=>b.style.outline='');$('pose-preview').src=poseRef;$('pose-preview').classList.remove('hidden');};
+    reader.readAsDataURL(file);
+};
+
+// Drag & drop on dropzone
+mainDropzone.addEventListener('dragover',(e)=>{e.preventDefault();mainDropzone.style.borderColor='var(--hi)';});
+mainDropzone.addEventListener('dragleave',()=>mainDropzone.style.borderColor='');
+mainDropzone.addEventListener('drop',(e)=>{e.preventDefault();mainDropzone.style.borderColor='';const f=e.dataTransfer.files[0];if(f&&f.type.startsWith('image/')){const r=new FileReader();r.onload=(ev)=>$('main-input').onchange({target:{files:[f]}});r.readAsDataURL(f);}});
+
+// ─── DOWNLOAD ──────────────────────────────────────────
+$('download-btn').onclick=async()=>{
+    if(!currentImage||isProcessing)return;
+    const format=$('export-format').value;
+    const ext={  'image/png':'png','image/jpeg':'jpg','image/webp':'webp'}[format]||'png';
+    setLoading(true,'Mengekspor...','');
+    try {
+        const img=await loadImage(currentImage);
+        const cvs=document.createElement('canvas');
+        cvs.width=img.naturalWidth; cvs.height=img.naturalHeight;
+        const ctx=cvs.getContext('2d');
+        if(format==='image/jpeg'){ctx.fillStyle='#fff';ctx.fillRect(0,0,cvs.width,cvs.height);}
+        ctx.filter=imageCanvas.style.filter||'none';
+        ctx.drawImage(img,0,0);
+        ctx.filter='none';
+        if(drawCanvas.width>0)ctx.drawImage(drawCanvas,0,0,img.naturalWidth,img.naturalHeight);
+        const link=document.createElement('a');
+        link.href=cvs.toDataURL(format,0.93);
+        link.download=`lumina-${Date.now()}.${ext}`;
+        link.click();
+        showToast('Berhasil diunduh!');
+    } catch(e){showToast('Gagal mengunduh.');}
+    finally{setLoading(false);}
+};
+
+function loadImage(src){ return new Promise((res,rej)=>{const img=new Image();img.onload=()=>res(img);img.onerror=rej;img.src=src;}); }
+
+// ─── RESET ─────────────────────────────────────────────
+function resetEditor(){
+    if(analysisController){analysisController.abort();analysisController=null;}
+    currentImage=null; faceRef=null; poseRef=null;
+    activeAITask=''; aiRatio='auto'; activeFacePreset=null; activePosePreset=null;
+    $('main-input').value=''; imageCanvas.src=''; $('ai-prompt').value='';
+    mainDropzone.classList.remove('hidden');
+    canvasView.classList.add('hidden');
+    $('action-header').classList.add('hidden');
+    $('action-header').classList.remove('flex');
+    document.querySelectorAll('[id^="aibtn-"]').forEach(b=>b.classList.remove('active-tool'));
+    document.querySelectorAll('[id^="aipanel-"]').forEach(p=>p.classList.add('hidden'));
+    document.querySelectorAll('.ai-ratio-btn,.off-ratio-btn,.scale-btn').forEach(b=>b.classList.remove('active'));
+    $('scale-2x').classList.add('active'); currentScale='2x';
+    $('face-preview').classList.add('hidden'); $('pose-preview').classList.add('hidden');
+    hideCropOverlay(); resetFilters(); clearDrawings(); textOverlaysDiv.innerHTML='';
+    toggleDraw(false); currentColorFilter='none';
+    $('suggestions-container').innerHTML='<div class="text-[10px] text-slate-600 bg-zinc-900/50 p-2.5 rounded-lg border border-zinc-800/50 italic">Unggah gambar untuk memulai...</div>';
+    $('refresh-suggestions').classList.add('hidden');
+    showToast('Editor direset');
+}
+
+// ─── INIT ──────────────────────────────────────────────
+(function init(){
+    $('ai-provider').value=currentProvider;
+    if(customUrl)$('custom-url-input').value=customUrl;
+    if(apiKey){$('api-key-input').value=apiKey;$('api-status').textContent=`✓ SAVED — ${currentProvider.toUpperCase()}`;$('api-status').className='text-[9px] mt-1';$('api-status').style.color='var(--neon-cyan)';}
+    onProviderChange();
+    $('tab-bg-change').classList.add('active');
+    $('scale-2x').classList.add('active');
+    switchMode('online');
+    generateStars();
+})();
+
+function generateStars(){
+    const layer = document.getElementById('stars-layer');
+    for(let i=0;i<120;i++){
+        const s=document.createElement('div');
+        s.className='star';
+        const size=Math.random()*2.5+0.5;
+        s.style.cssText=`width:${size}px;height:${size}px;left:${Math.random()*100}%;top:${Math.random()*100}%;animation-delay:${Math.random()*4}s;animation-duration:${3+Math.random()*4}s`;
+        layer.appendChild(s);
+    }
+    for(let i=0;i<5;i++){
+        const s=document.createElement('div');
+        s.className='shooting-star';
+        s.style.cssText=`left:${20+Math.random()*60}%;top:${Math.random()*40}%;animation-delay:${Math.random()*8}s;animation-duration:${2+Math.random()*2}s`;
+        layer.appendChild(s);
+    }
+}
+</script>
+</body>
+</html>
