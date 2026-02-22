@@ -525,13 +525,99 @@
             color: var(--neon-cyan);
         }
         
-        /* Projects Section */
-        .projects-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2.5rem;
+        /* Projects Section - Slider */
+        .projects-slider-wrapper {
+            position: relative;
             max-width: 1400px;
             margin: 0 auto;
+        }
+
+        .projects-slider-track-outer {
+            overflow: hidden;
+            border-radius: 10px;
+        }
+
+        .projects-grid {
+            display: flex;
+            gap: 2.5rem;
+            transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            will-change: transform;
+        }
+
+        .projects-grid > a {
+            flex: 0 0 calc((100% - 5rem) / 3);
+            min-width: calc((100% - 5rem) / 3);
+        }
+
+        @media (max-width: 992px) {
+            .projects-grid > a {
+                flex: 0 0 calc((100% - 2.5rem) / 2);
+                min-width: calc((100% - 2.5rem) / 2);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .projects-grid > a {
+                flex: 0 0 100%;
+                min-width: 100%;
+            }
+        }
+
+        .slider-nav {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1.5rem;
+            margin-top: 2.5rem;
+        }
+
+        .slider-btn {
+            width: 50px;
+            height: 50px;
+            border: 2px solid var(--neon-cyan);
+            background: rgba(0,217,255,0.08);
+            color: var(--neon-cyan);
+            border-radius: 50%;
+            font-size: 1.4rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .slider-btn:hover {
+            background: rgba(0,217,255,0.25);
+            box-shadow: 0 0 20px rgba(0,217,255,0.4);
+            transform: scale(1.1);
+        }
+
+        .slider-btn:disabled {
+            opacity: 0.3;
+            cursor: default;
+            transform: none;
+        }
+
+        .slider-dots {
+            display: flex;
+            gap: 0.6rem;
+        }
+
+        .slider-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(0,217,255,0.25);
+            border: 1px solid var(--neon-cyan);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .slider-dot.active {
+            background: var(--neon-cyan);
+            box-shadow: 0 0 10px var(--neon-cyan);
+            transform: scale(1.3);
         }
         
         .project-card {
@@ -1008,59 +1094,108 @@
                     Eksperimen teknologi masa depan yang menggabungkan Kecerdasan Buatan dengan pengalaman interaktif.
                 </p>
             </div>
-            <div class="projects-grid">
-                
-                <a href="chat.html" style="text-decoration: none; color: inherit;">
-                    <div class="project-card">
-                        <div class="project-image">01</div>
-                        <div class="project-content">
-                            <h3 class="project-title">Atma Aura: Soul Explorer</h3>
-                            <p class="project-description">
-                                Sistem percakapan mendalam menggunakan <strong>Gemini AI</strong> untuk eksplorasi diri. Mampu menganalisis "peta jiwa" pengguna melalui dialog interaktif dan algoritma <em>personality assessment</em>.
-                            </p>
-                            <div class="project-tags">
-                                <span class="tag">Gemini API</span>
-                                <span class="tag">Sentiment Analysis</span>
-                                <span class="tag">AI Soul Map</span>
+            <div class="projects-slider-wrapper">
+                <div class="projects-slider-track-outer">
+                    <div class="projects-grid" id="projectsSlider">
+                        
+                        <a href="chat.html" style="text-decoration: none; color: inherit;">
+                            <div class="project-card">
+                                <div class="project-image">01</div>
+                                <div class="project-content">
+                                    <h3 class="project-title">Atma Aura: Soul Explorer</h3>
+                                    <p class="project-description">
+                                        Sistem percakapan mendalam menggunakan <strong>Gemini AI</strong> untuk eksplorasi diri. Mampu menganalisis "peta jiwa" pengguna melalui dialog interaktif dan algoritma <em>personality assessment</em>.
+                                    </p>
+                                    <div class="project-tags">
+                                        <span class="tag">Gemini API</span>
+                                        <span class="tag">Sentiment Analysis</span>
+                                        <span class="tag">AI Soul Map</span>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                </a>
-    
-                <a href="image.html" style="text-decoration: none; color: inherit;">
-                    <div class="project-card">
-                        <div class="project-image">02</div>
-                        <div class="project-content">
-                            <h3 class="project-title">LuminaEdit AI</h3>
-                            <p class="project-description">
-                                Platform pengolahan citra berbasis AI yang mendukung <strong>Inpainting, Upscaling, dan Background Removal</strong>. Terintegrasi dengan berbagai provider AI untuk transformasi visual tingkat lanjut.
-                            </p>
-                            <div class="project-tags">
-                                <span class="tag">Computer Vision</span>
-                                <span class="tag">Image AI</span>
-                                <span class="tag">Neural Networks</span>
+                        </a>
+            
+                        <a href="image.html" style="text-decoration: none; color: inherit;">
+                            <div class="project-card">
+                                <div class="project-image">02</div>
+                                <div class="project-content">
+                                    <h3 class="project-title">LuminaEdit AI</h3>
+                                    <p class="project-description">
+                                        Platform pengolahan citra berbasis AI yang mendukung <strong>Inpainting, Upscaling, dan Background Removal</strong>. Terintegrasi dengan berbagai provider AI untuk transformasi visual tingkat lanjut.
+                                    </p>
+                                    <div class="project-tags">
+                                        <span class="tag">Computer Vision</span>
+                                        <span class="tag">Image AI</span>
+                                        <span class="tag">Neural Networks</span>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                </a>
-    
-                <a href="game.html" style="text-decoration: none; color: inherit;">
-                    <div class="project-card">
-                        <div class="project-image">03</div>
-                        <div class="project-content">
-                            <h3 class="project-title">Aetheria: Dreamspace</h3>
-                            <p class="project-description">
-                                Game 3D eksperimental menggunakan <strong>Three.js</strong> yang tidak hanya menguji ketangkasan, tapi juga melakukan <strong>Analisis Psikometrik</strong> terhadap gaya bermain pengguna secara real-time.
-                            </p>
-                            <div class="project-tags">
-                                <span class="tag">Three.js</span>
-                                <span class="tag">Psychometric AI</span>
-                                <span class="tag">3D Engine</span>
+                        </a>
+            
+                        <a href="game.html" style="text-decoration: none; color: inherit;">
+                            <div class="project-card">
+                                <div class="project-image">03</div>
+                                <div class="project-content">
+                                    <h3 class="project-title">Aetheria: Dreamspace</h3>
+                                    <p class="project-description">
+                                        Game 3D eksperimental menggunakan <strong>Three.js</strong> yang tidak hanya menguji ketangkasan, tapi juga melakukan <strong>Analisis Psikometrik</strong> terhadap gaya bermain pengguna secara real-time.
+                                    </p>
+                                    <div class="project-tags">
+                                        <span class="tag">Three.js</span>
+                                        <span class="tag">Psychometric AI</span>
+                                        <span class="tag">3D Engine</span>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        </a>
+
+                        <a href="Waktu.html" style="text-decoration: none; color: inherit;">
+                            <div class="project-card">
+                                <div class="project-image" style="background: linear-gradient(135deg, #a855f7, #ff6ec7);">04</div>
+                                <div class="project-content">
+                                    <h3 class="project-title">Rasi Keluarga</h3>
+                                    <p class="project-description">
+                                        Aplikasi <strong>Family Constellation</strong> interaktif untuk memetakan dinamika hubungan keluarga secara visual. Menggunakan pendekatan sistemik untuk memahami pola dan koneksi antar anggota keluarga.
+                                    </p>
+                                    <div class="project-tags">
+                                        <span class="tag">Family System</span>
+                                        <span class="tag">Interactive Map</span>
+                                        <span class="tag">PDF Export</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+
+                        <a href="child.html" style="text-decoration: none; color: inherit;">
+                            <div class="project-card">
+                                <div class="project-image" style="background: linear-gradient(135deg, #00d9ff, #4ADE80);">05</div>
+                                <div class="project-content">
+                                    <h3 class="project-title">LUMIVOX: Perburuan Huruf</h3>
+                                    <p class="project-description">
+                                        Game edukasi anak bertema <strong>petualangan ajaib</strong> untuk belajar huruf dengan cara yang menyenangkan. Dirancang khusus dengan visual cerah dan mekanisme gamifikasi yang mendorong eksplorasi anak.
+                                    </p>
+                                    <div class="project-tags">
+                                        <span class="tag">Edu-Game</span>
+                                        <span class="tag">Gamification</span>
+                                        <span class="tag">Kids Learning</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+        
                     </div>
-                </a>
-    
+                </div>
+
+                <!-- Slider Navigation -->
+                <div class="slider-nav">
+                    <button class="slider-btn" id="sliderPrev" onclick="slideProjects(-1)" aria-label="Previous">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <div class="slider-dots" id="sliderDots"></div>
+                    <button class="slider-btn" id="sliderNext" onclick="slideProjects(1)" aria-label="Next">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </section>
@@ -1087,7 +1222,7 @@
                     <a href="https://www.linkedin.com/in/regi4nt" target="_blank" class="social-link" title="LinkedIn">
                         <i class="bi bi-linkedin"></i>
                     </a>
-                    <a href="mailto:regiant2012@gmail.com" class="social-link" title="Email">
+                    <a href="/cdn-cgi/l/email-protection#354750525c545b4107050407755258545c591b565a58" class="social-link" title="Email">
                         <i class="bi bi-envelope-fill"></i>
                     </a>
                     <a href="https://www.instagram.com/regi4nt/" target="_blank" class="social-link" title="Instagram">
@@ -1109,7 +1244,7 @@
         </div>
     </footer>
     
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Generate stars
         const starsContainer = document.getElementById('stars');
@@ -1226,6 +1361,78 @@
             el.style.transition = 'all 0.6s ease';
             observer.observe(el);
         });
+
+        // ── Projects Slider ──────────────────────────────────────
+        (function() {
+            const slider  = document.getElementById('projectsSlider');
+            const prevBtn = document.getElementById('sliderPrev');
+            const nextBtn = document.getElementById('sliderNext');
+            const dotsEl  = document.getElementById('sliderDots');
+
+            let currentIndex = 0;
+
+            function getVisible() {
+                const w = window.innerWidth;
+                if (w <= 640)  return 1;
+                if (w <= 992)  return 2;
+                return 3;
+            }
+
+            const totalItems = slider.children.length; // 5
+
+            function maxIndex() {
+                return Math.max(0, totalItems - getVisible());
+            }
+
+            // Build dots
+            function buildDots() {
+                dotsEl.innerHTML = '';
+                const count = maxIndex() + 1;
+                for (let i = 0; i < count; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'slider-dot' + (i === currentIndex ? ' active' : '');
+                    dot.addEventListener('click', () => goTo(i));
+                    dotsEl.appendChild(dot);
+                }
+            }
+
+            function goTo(index) {
+                currentIndex = Math.min(Math.max(index, 0), maxIndex());
+                const vis     = getVisible();
+                const gap     = 40; // 2.5rem = 40px
+                const trackW  = slider.parentElement.offsetWidth;
+                const cardW   = (trackW - gap * (vis - 1)) / vis;
+                const offset  = currentIndex * (cardW + gap);
+
+                slider.style.transform = `translateX(-${offset}px)`;
+                prevBtn.disabled = currentIndex === 0;
+                nextBtn.disabled = currentIndex >= maxIndex();
+
+                dotsEl.querySelectorAll('.slider-dot').forEach((d, i) => {
+                    d.classList.toggle('active', i === currentIndex);
+                });
+            }
+
+            window.slideProjects = function(dir) {
+                goTo(currentIndex + dir);
+            };
+
+            window.addEventListener('resize', () => {
+                buildDots();
+                goTo(Math.min(currentIndex, maxIndex()));
+            });
+
+            // Touch/swipe support
+            let touchStartX = 0;
+            slider.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+            slider.addEventListener('touchend',   e => {
+                const diff = touchStartX - e.changedTouches[0].clientX;
+                if (Math.abs(diff) > 50) slideProjects(diff > 0 ? 1 : -1);
+            });
+
+            buildDots();
+            goTo(0);
+        })();
     </script>
 </body>
 </html> {
@@ -1327,10 +1534,3 @@
             .hero-subtitle {
                 font-size: 2.2rem;
             }
-            
-            .section-title {
-                font-size: 4.5rem;
-            }
-            
-            .about-card-text,
-            .skill-item
