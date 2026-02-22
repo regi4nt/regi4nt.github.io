@@ -1,0 +1,1901 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LUMIVOX – Perburuan Huruf Ajaib</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ─── RESET ──────────────────────────────────────────────── */
+*{margin:0;padding:0;box-sizing:border-box;}
+
+/* ─── NEXUS THEME VARIABLES ──────────────────────────────── */
+:root{
+  --neon-cyan:#00fff9; --neon-purple:#a855f7; --neon-pink:#ff6ec7;
+  --neon-blue:#00d9ff; --deep-space:#0a0a14; --void-dark:#13131f;
+  --nebula-purple:#1a1a2e; --star-white:#f0f4ff;
+  /* legacy aliases */
+  --bg:#0a0a14; --glow:#00fff9; --coral:#ff6ec7;
+  --gold:#f0c040; --ok:#4ADE80; --purple:#a855f7; --orange:#F97316;
+}
+
+html,body{width:100%;height:100%;overflow:hidden;background:var(--deep-space);font-family:'Rajdhani',sans-serif;}
+canvas{position:fixed;inset:0;z-index:0;cursor:crosshair;}
+
+/* ─── NEXUS BACKGROUND LAYERS ────────────────────────────── */
+.universe-bg{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse at bottom,#1b2735 0%,#090a0f 100%);}
+.grid-bg{
+  position:fixed;inset:0;z-index:1;pointer-events:none;opacity:0.3;
+  background:linear-gradient(90deg,rgba(0,255,249,0.03) 1px,transparent 1px),
+             linear-gradient(rgba(0,255,249,0.03) 1px,transparent 1px);
+  background-size:50px 50px;
+}
+.nebula{position:fixed;width:500px;height:500px;border-radius:50%;filter:blur(80px);opacity:0.12;
+  pointer-events:none;z-index:1;animation:floatNebula 20s infinite ease-in-out;}
+.nebula-1{background:radial-gradient(circle,var(--neon-purple),transparent);top:5%;left:-8%;}
+.nebula-2{background:radial-gradient(circle,var(--neon-cyan),transparent);bottom:5%;right:-8%;animation-delay:-10s;}
+@keyframes floatNebula{0%,100%{transform:translate(0,0)}33%{transform:translate(40px,-40px)}66%{transform:translate(-40px,40px)}}
+
+/* ─── SCREENS ────────────────────────────────────────────── */
+.screen{
+  position:fixed;inset:0;z-index:20;
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  padding:16px;
+}
+.screen.on{display:flex;}
+
+/* ─── INTRO ──────────────────────────────────────────────── */
+#s-intro{background:transparent;}
+
+/* Desktop layout: logo kiri, card kanan */
+.intro-layout{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:40px;
+  max-width:960px;
+  width:100%;
+  align-items:center;
+}
+.intro-left{display:flex;flex-direction:column;align-items:flex-start;gap:10px;}
+
+/* Logo + glitch */
+.logo-wrap{text-align:left;}
+.logo{
+  font-family:'Orbitron',monospace;font-weight:900;font-size:clamp(1.8rem,4vw,3rem);
+  color:var(--neon-cyan);letter-spacing:3px;
+  text-shadow:0 0 10px var(--neon-cyan),0 0 20px var(--neon-cyan),0 0 40px var(--neon-cyan);
+  animation:glitch 4s infinite;
+}
+@keyframes glitch{
+  0%,95%,100%{transform:translate(0);text-shadow:0 0 10px var(--neon-cyan),0 0 20px var(--neon-cyan),0 0 40px var(--neon-cyan);}
+  96%{transform:translate(-2px,2px);text-shadow:2px -2px 0 var(--neon-pink),-2px 2px 0 var(--neon-blue),0 0 30px var(--neon-cyan);}
+  97%{transform:translate(2px,-2px);}
+  98%{transform:translate(-2px,2px);}
+  99%{transform:translate(2px,2px);}
+}
+.tagline{
+  font-family:'Space Mono',monospace;font-size:0.65rem;letter-spacing:3px;
+  color:var(--neon-pink);text-transform:uppercase;
+  text-shadow:0 0 10px rgba(255,110,199,0.5);
+}
+.intro-desc{
+  font-size:0.9rem;color:rgba(240,244,255,0.75);line-height:1.7;max-width:360px;margin-top:4px;
+}
+.start-btn{
+  margin-top:8px;padding:11px 32px;border-radius:4px;cursor:pointer;
+  font-family:'Orbitron',monospace;font-size:0.8rem;font-weight:700;letter-spacing:2px;
+  background:transparent;border:2px solid var(--neon-cyan);color:var(--neon-cyan);
+  position:relative;overflow:hidden;transition:all 0.3s ease;text-transform:uppercase;
+  box-shadow:0 0 15px rgba(0,255,249,0.3);
+}
+.start-btn::before{
+  content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+  background:var(--neon-cyan);transition:left 0.3s;z-index:0;
+}
+.start-btn span{position:relative;z-index:1;}
+.start-btn:hover{color:var(--deep-space);box-shadow:0 0 30px var(--neon-cyan);transform:translateY(-2px);}
+.start-btn:hover::before{left:0;}
+
+/* Intro card (kanan) */
+.intro-card{
+  background:rgba(26,26,46,0.55);border:1px solid rgba(0,255,249,0.2);
+  border-radius:15px;padding:20px 22px;width:100%;
+  backdrop-filter:blur(12px);transition:all 0.4s ease;
+}
+.intro-card:hover{border-color:var(--neon-purple);box-shadow:0 10px 40px rgba(168,85,247,0.25);}
+.how-title{
+  font-family:'Space Mono',monospace;font-size:0.62rem;letter-spacing:3px;
+  color:var(--neon-pink);text-transform:uppercase;margin-bottom:14px;font-weight:700;
+}
+.step-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;}
+.step-num{
+  width:26px;height:26px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--neon-cyan),var(--neon-purple));
+  color:var(--deep-space);font-weight:900;font-size:0.72rem;
+  display:flex;align-items:center;justify-content:center;
+}
+.step-text{font-size:0.8rem;color:rgba(240,244,255,0.8);line-height:1.6;padding-top:3px;}
+.step-text strong{color:var(--neon-cyan);}
+
+.mini-demo{
+  margin-top:12px;background:rgba(0,0,0,0.4);border-radius:10px;border:1px solid rgba(0,255,249,0.1);
+  padding:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+}
+.demo-word{font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:900;color:rgba(255,255,255,0.2);letter-spacing:0.2em;}
+.demo-word span.lit{color:var(--ok);text-shadow:0 0 12px var(--ok);}
+.demo-arrow{color:rgba(255,255,255,0.3);font-size:1.2rem;}
+.demo-bubble{
+  width:36px;height:36px;border-radius:50%;border:2px solid var(--neon-cyan);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',monospace;font-weight:900;font-size:0.9rem;color:#fff;
+  background:radial-gradient(circle at 35% 35%,rgba(0,255,249,0.5),rgba(0,255,249,0.1));
+  box-shadow:0 0 16px rgba(0,255,249,0.5);animation:demoBounce 1.5s ease-in-out infinite;
+}
+@keyframes demoBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.demo-caption{font-size:0.68rem;color:rgba(255,255,255,0.4);margin-top:5px;text-align:center;width:100%;}
+
+.mode-preview{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;}
+.mode-preview-label{
+  width:100%;font-family:'Space Mono',monospace;font-size:0.6rem;
+  color:rgba(255,255,255,0.3);letter-spacing:2px;text-transform:uppercase;
+}
+.mode-tag{
+  padding:3px 10px;border-radius:4px;font-size:0.65rem;font-weight:700;font-family:'Orbitron',monospace;
+  border:1px solid;display:flex;align-items:center;gap:4px;letter-spacing:1px;
+}
+.mt-hunt{color:var(--neon-cyan);border-color:rgba(0,255,249,0.4);background:rgba(0,255,249,0.07);}
+.mt-mirror{color:var(--neon-purple);border-color:rgba(168,85,247,0.4);background:rgba(168,85,247,0.07);}
+.mt-echo{color:#60A5FA;border-color:rgba(96,165,250,0.4);background:rgba(96,165,250,0.07);}
+.mt-storm{color:var(--orange);border-color:rgba(249,115,22,0.4);background:rgba(249,115,22,0.07);}
+
+/* ─── MODE TRANSITION ────────────────────────────────────── */
+#s-mode{background:rgba(10,10,20,0.92);backdrop-filter:blur(20px);}
+.mode-big-emoji{font-size:3.2rem;margin-bottom:10px;animation:modePop 0.5s cubic-bezier(0.34,1.56,0.64,1);}
+@keyframes modePop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.mode-big-title{
+  font-family:'Orbitron',monospace;font-size:clamp(1.2rem,4vw,2rem);font-weight:900;
+  color:var(--neon-cyan);margin-bottom:8px;letter-spacing:3px;
+  animation:modePop 0.5s 0.08s both cubic-bezier(0.34,1.56,0.64,1);
+  text-shadow:0 0 20px currentColor;
+}
+.mode-explain{
+  max-width:380px;text-align:center;font-size:0.85rem;color:rgba(240,244,255,0.65);
+  line-height:1.6;animation:modePop 0.5s 0.16s both cubic-bezier(0.34,1.56,0.64,1);
+}
+.mode-tip{
+  margin-top:10px;background:rgba(26,26,46,0.6);border:1px solid rgba(0,255,249,0.15);
+  border-radius:8px;padding:8px 16px;font-size:0.75rem;
+  color:rgba(240,244,255,0.5);font-family:'Space Mono',monospace;
+  animation:modePop 0.5s 0.24s both cubic-bezier(0.34,1.56,0.64,1);
+}
+.mode-timer-track{
+  width:min(240px,60vw);height:3px;background:rgba(255,255,255,0.07);
+  border-radius:99px;margin-top:20px;overflow:hidden;
+}
+.mode-timer-fill{height:100%;border-radius:99px;transition:width 60ms linear;}
+
+/* ─── HUD ────────────────────────────────────────────────── */
+#hud{
+  position:fixed;inset:0;z-index:10;pointer-events:none;
+  display:none;flex-direction:column;align-items:center;
+  padding:10px 14px 10px;
+}
+#target-area{
+  background:rgba(13,13,26,0.7);backdrop-filter:blur(14px);
+  border:1px solid rgba(0,255,249,0.2);border-radius:10px;
+  padding:8px 18px;text-align:center;margin-bottom:6px;min-width:200px;
+  box-shadow:0 0 20px rgba(0,255,249,0.08);
+}
+#instruction-line{
+  font-family:'Space Mono',monospace;font-size:0.58rem;color:rgba(255,255,255,0.35);
+  letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;
+}
+#target-word{
+  font-family:'Orbitron',monospace;font-size:clamp(1rem,3.5vw,1.4rem);font-weight:900;
+  letter-spacing:0.2em;display:flex;gap:5px;justify-content:center;align-items:center;flex-wrap:wrap;
+}
+.tw-slot{
+  width:30px;height:34px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+  font-size:1rem;font-weight:900;transition:all 0.3s;
+  border:1px solid rgba(0,255,249,0.15);background:rgba(0,255,249,0.03);
+  color:rgba(255,255,255,0.12);
+}
+.tw-slot.done{border-color:var(--ok);background:rgba(74,222,128,0.1);color:var(--ok);text-shadow:0 0 10px var(--ok);}
+.tw-slot.next{
+  border-color:var(--neon-cyan);background:rgba(0,255,249,0.1);color:#fff;
+  animation:nextPulse 1s ease-in-out infinite;box-shadow:0 0 16px rgba(0,255,249,0.4);
+}
+@keyframes nextPulse{0%,100%{box-shadow:0 0 10px rgba(0,255,249,0.3)}50%{box-shadow:0 0 26px rgba(0,255,249,0.7)}}
+
+#next-banner{
+  background:rgba(0,255,249,0.08);border:1px solid rgba(0,255,249,0.25);
+  border-radius:8px;padding:4px 12px;display:flex;align-items:center;gap:6px;
+  font-family:'Space Mono',monospace;font-size:0.65rem;font-weight:700;
+  color:var(--neon-cyan);margin-bottom:auto;
+  animation:bannerPulse 1.5s ease-in-out infinite;
+}
+@keyframes bannerPulse{0%,100%{opacity:0.75}50%{opacity:1}}
+#next-letter-badge{
+  width:24px;height:24px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',monospace;font-weight:900;font-size:0.8rem;
+  border:1.5px solid;color:#fff;
+}
+
+#mode-badge{
+  font-family:'Orbitron',monospace;font-size:0.52rem;font-weight:700;letter-spacing:2px;
+  padding:3px 12px;border-radius:4px;border:1px solid rgba(0,255,249,0.2);
+  background:rgba(0,255,249,0.05);backdrop-filter:blur(8px);
+  color:rgba(0,255,249,0.6);margin-bottom:5px;text-transform:uppercase;
+}
+#mode-badge.m-mirror{color:var(--neon-purple);border-color:rgba(168,85,247,0.4);background:rgba(168,85,247,0.08);}
+#mode-badge.m-echo{color:#60A5FA;border-color:rgba(96,165,250,0.4);background:rgba(96,165,250,0.08);}
+#mode-badge.m-storm{color:var(--orange);border-color:rgba(249,115,22,0.4);background:rgba(249,115,22,0.08);}
+
+#bottom-hud{
+  display:flex;align-items:center;
+  background:rgba(13,13,26,0.75);backdrop-filter:blur(16px);
+  border:1px solid rgba(0,255,249,0.12);border-radius:8px;overflow:hidden;
+}
+.bhud-item{
+  padding:5px 14px;font-size:0.74rem;font-weight:700;
+  color:rgba(240,244,255,0.6);display:flex;align-items:center;gap:5px;
+  font-family:'Space Mono',monospace;
+}
+.bhud-sep{width:1px;height:20px;background:rgba(0,255,249,0.1);}
+#lives-val{color:var(--neon-pink);}
+#score-val{color:var(--gold);}
+#round-val{color:var(--neon-cyan);}
+#combo-val{color:var(--ok);}
+
+#hint{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  z-index:30;pointer-events:none;font-family:'Orbitron',monospace;
+  font-size:1.1rem;font-weight:900;text-align:center;
+  opacity:0;transition:opacity 0.2s;text-shadow:0 0 24px currentColor;
+}
+
+/* ─── RESULTS ────────────────────────────────────────────── */
+#s-results{
+  background:radial-gradient(ellipse at 50% 30%,rgba(0,255,249,0.04),transparent 60%),var(--deep-space);
+  overflow:hidden;padding:12px 16px;align-items:center;justify-content:center;
+}
+.results-card{
+  width:100%;max-width:900px;
+  background:rgba(26,26,46,0.6);border:1px solid rgba(0,255,249,0.2);
+  border-radius:16px;padding:18px 22px;backdrop-filter:blur(12px);
+  box-shadow:0 10px 40px rgba(0,255,249,0.08);
+}
+.results-header{text-align:center;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
+.results-title{
+  font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:900;
+  color:var(--neon-cyan);margin-bottom:3px;letter-spacing:3px;
+  text-shadow:0 0 15px var(--neon-cyan);
+}
+.results-sub{
+  font-family:'Space Mono',monospace;font-size:0.65rem;letter-spacing:2px;
+  color:rgba(255,255,255,0.3);text-transform:uppercase;
+}
+.ring-outer{display:flex;justify-content:center;position:relative;}
+.ring-outer svg{transform:rotate(-90deg);}
+.ring-label{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.ring-pct{font-family:'Orbitron',monospace;font-size:1.5rem;font-weight:900;}
+.ring-sub{font-family:'Space Mono',monospace;font-size:0.5rem;letter-spacing:2px;color:rgba(255,255,255,0.3);text-transform:uppercase;}
+.risk-chip{
+  display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:4px;
+  font-family:'Orbitron',monospace;font-weight:800;font-size:0.65rem;
+  margin:0 auto;border:1px solid;letter-spacing:1px;
+}
+.chip-low{color:var(--ok);border-color:rgba(74,222,128,0.5);background:rgba(74,222,128,0.08);}
+.chip-med{color:var(--gold);border-color:rgba(240,192,64,0.5);background:rgba(240,192,64,0.08);}
+.chip-high{color:var(--neon-pink);border-color:rgba(255,110,199,0.5);background:rgba(255,110,199,0.08);}
+.section-label{
+  font-family:'Space Mono',monospace;font-size:0.58rem;letter-spacing:2px;
+  text-transform:uppercase;color:var(--neon-pink);margin:8px 0 5px;
+}
+.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.pc{
+  background:rgba(26,26,46,0.5);border:1px solid rgba(168,85,247,0.2);
+  border-radius:8px;padding:8px 10px;transition:all 0.3s;
+}
+.pc:hover{border-color:var(--neon-purple);box-shadow:0 4px 16px rgba(168,85,247,0.2);}
+.pc-lbl{font-family:'Space Mono',monospace;font-size:0.55rem;color:rgba(255,255,255,0.35);letter-spacing:2px;text-transform:uppercase;margin-bottom:2px;}
+.pc-val{font-family:'Orbitron',monospace;font-size:0.9rem;font-weight:700;}
+.pc-bar{height:3px;background:rgba(255,255,255,0.07);border-radius:99px;margin-top:7px;overflow:hidden;}
+.pc-fill{height:100%;border-radius:99px;}
+.interv-box{
+  background:rgba(26,26,46,0.4);border:1px solid rgba(0,255,249,0.1);
+  border-radius:10px;padding:8px 12px;
+}
+.interv-item{display:flex;gap:8px;align-items:flex-start;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+.interv-item:last-child{border-bottom:none;}
+.interv-dot{width:6px;height:6px;border-radius:50%;margin-top:6px;flex-shrink:0;}
+.interv-text{font-size:0.7rem;color:rgba(240,244,255,0.65);line-height:1.45;}
+.disc-box{
+  background:rgba(168,85,247,0.05);border:1px solid rgba(168,85,247,0.25);
+  border-radius:8px;padding:6px 12px;font-family:'Space Mono',monospace;
+  font-size:0.6rem;color:rgba(240,192,64,0.75);line-height:1.5;margin-top:8px;
+}
+.res-btns{display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap;}
+.btn-primary{
+  padding:9px 28px;border-radius:4px;border:1px solid var(--neon-cyan);
+  background:rgba(0,255,249,0.1);color:var(--neon-cyan);cursor:pointer;
+  font-family:'Orbitron',monospace;font-size:0.72rem;font-weight:700;letter-spacing:2px;
+  transition:all 0.2s;text-transform:uppercase;
+}
+.btn-primary:hover{background:rgba(0,255,249,0.22);box-shadow:0 0 20px rgba(0,255,249,0.3);transform:translateY(-1px);}
+
+/* ─── GLOBAL SESSION TIMER ──────────────────────────────── */
+#session-timer{
+  position:fixed;top:10px;right:14px;z-index:15;
+  display:none;flex-direction:column;align-items:flex-end;gap:2px;
+  pointer-events:none;
+}
+#session-digits{
+  font-family:'Orbitron',monospace;font-weight:900;font-size:1.1rem;
+  color:var(--neon-cyan);letter-spacing:3px;
+  text-shadow:0 0 12px var(--neon-cyan);
+  transition:color 0.4s,text-shadow 0.4s;
+}
+#session-label{
+  font-family:'Space Mono',monospace;font-size:0.5rem;letter-spacing:2px;
+  color:rgba(255,255,255,0.3);text-transform:uppercase;text-align:right;
+}
+#session-bar-track{
+  width:90px;height:3px;background:rgba(255,255,255,0.08);
+  border-radius:99px;overflow:hidden;
+}
+#session-bar-fill{
+  height:100%;border-radius:99px;background:var(--neon-cyan);
+  transition:width 1s linear,background 0.5s;
+}
+#session-urgent{
+  display:none;position:fixed;inset:0;z-index:5;pointer-events:none;
+  border:3px solid rgba(255,107,157,0.35);
+  animation:urgentFlash 0.6s ease-in-out infinite;
+}
+@keyframes urgentFlash{0%,100%{opacity:0}50%{opacity:1}}
+
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  pointer-events:none;margin-bottom:4px;
+}
+#timer-bar-track{
+  width:min(320px,70vw);height:5px;background:rgba(255,255,255,0.07);
+  border-radius:99px;overflow:hidden;
+}
+#timer-bar-fill{
+  height:100%;border-radius:99px;transition:width 0.25s linear,background 0.5s;
+  background:var(--neon-cyan);
+}
+#timer-label{
+  font-family:'Space Mono',monospace;font-size:0.6rem;letter-spacing:2px;
+  color:rgba(255,255,255,0.4);text-transform:uppercase;
+}
+#timer-digits{
+  font-family:'Orbitron',monospace;font-weight:900;font-size:0.85rem;
+  color:var(--neon-cyan);transition:color 0.3s;letter-spacing:2px;
+}
+
+/* ─── HEALTH ORB (floating special creature) ──────────────── */
+
+/* ─── PHASE BADGE ─────────────────────────────────────── */
+#phase-badge{
+  font-family:'Orbitron',monospace;font-size:0.52rem;font-weight:900;letter-spacing:3px;
+  padding:3px 14px;border-radius:4px;border:1px solid;
+  backdrop-filter:blur(8px);color:var(--neon-cyan);
+  border-color:rgba(0,255,249,0.4);background:rgba(0,255,249,0.07);
+  margin-bottom:4px;text-transform:uppercase;transition:all 0.5s ease;
+  text-shadow:0 0 10px currentColor;
+}
+#perf-bar-track{
+  width:min(200px,45vw);height:3px;background:rgba(255,255,255,0.06);
+  border-radius:99px;overflow:hidden;margin-top:2px;margin-bottom:3px;
+}
+#perf-bar-fill{
+  height:100%;border-radius:99px;transition:width 0.6s ease, background 0.5s;
+  background:var(--neon-cyan);
+}
+
+/* ─── PHASE TRANSITION SCREEN ────────────────────────── */
+#s-phase{background:rgba(10,10,20,0.95);backdrop-filter:blur(24px);}
+.phase-icon{font-size:3.5rem;margin-bottom:10px;animation:phasePop 0.5s cubic-bezier(0.34,1.56,0.64,1);}
+@keyframes phasePop{from{transform:scale(0) rotate(-20deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+.phase-name{
+  font-family:'Orbitron',monospace;font-size:clamp(1.4rem,5vw,2.4rem);font-weight:900;
+  letter-spacing:4px;margin-bottom:8px;animation:phasePop 0.5s 0.1s both cubic-bezier(0.34,1.56,0.64,1);
+  text-shadow:0 0 20px currentColor;
+}
+.phase-dir{
+  font-family:'Space Mono',monospace;font-size:0.75rem;letter-spacing:3px;
+  color:rgba(240,244,255,0.5);margin-bottom:6px;text-transform:uppercase;
+  animation:phasePop 0.5s 0.2s both cubic-bezier(0.34,1.56,0.64,1);
+}
+.phase-explain{
+  max-width:340px;text-align:center;font-size:0.82rem;color:rgba(240,244,255,0.6);
+  line-height:1.6;animation:phasePop 0.5s 0.25s both cubic-bezier(0.34,1.56,0.64,1);
+}
+.phase-stat-row{
+  display:flex;gap:20px;margin-top:14px;
+  animation:phasePop 0.5s 0.3s both cubic-bezier(0.34,1.56,0.64,1);
+}
+.phase-stat{
+  text-align:center;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
+  border-radius:8px;padding:8px 16px;
+}
+.phase-stat-val{font-family:'Orbitron',monospace;font-size:1rem;font-weight:900;color:var(--neon-cyan);}
+.phase-stat-lbl{font-family:'Space Mono',monospace;font-size:0.58rem;color:rgba(255,255,255,0.35);letter-spacing:1px;margin-top:2px;}
+.phase-timer-track{
+  width:min(240px,60vw);height:3px;background:rgba(255,255,255,0.07);
+  border-radius:99px;margin-top:18px;overflow:hidden;
+  animation:phasePop 0.5s 0.35s both cubic-bezier(0.34,1.56,0.64,1);
+}
+</style>
+</head>
+<body>
+<div class="universe-bg"></div>
+<div class="nebula nebula-1"></div>
+<div class="nebula nebula-2"></div>
+<div class="grid-bg"></div>
+<canvas id="c"></canvas>
+
+<!-- ─── SCREEN: INTRO ─────────────────────────────────── -->
+<div id="s-intro" class="screen on">
+  <div class="intro-layout">
+    <!-- LEFT: logo + desc + button -->
+    <div class="intro-left">
+      <div class="logo-wrap">
+        <div class="logo">LUMIVOX</div>
+      </div>
+      <div class="tagline">// Deteksi Disleksia Dini via Permainan</div>
+      <div class="intro-desc">
+        Permainan berbasis neurosains untuk mendeteksi tanda-tanda disleksia sejak dini melalui 4 mode tantangan yang adaptif dan menyenangkan.
+      </div>
+      <div class="mode-preview">
+        <div class="mode-preview-label">// 4 mode tantangan</div>
+        <span class="mode-tag mt-hunt">🌌 Normal</span>
+        <span class="mode-tag mt-mirror">🔮 Terbalik</span>
+        <span class="mode-tag mt-echo">👻 Menghilang</span>
+        <span class="mode-tag mt-storm">⚡ Badai</span>
+      </div>
+      <button class="start-btn" onclick="startGame()"><span>◆ MULAI SEKARANG</span></button>
+    </div>
+
+    <!-- RIGHT: cara bermain card -->
+    <div class="intro-card">
+      <div class="how-title">// CARA BERMAIN</div>
+      <div class="step-row">
+        <div class="step-num">1</div>
+        <div class="step-text">Lihat <strong>kata target</strong> di atas layar. Kata akan dieja huruf per huruf.</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">2</div>
+        <div class="step-text"><strong>Klik gelembung huruf</strong> yang bercahaya sesuai urutan. Huruf berikutnya selalu <strong>berkedip cyan</strong>.</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">3</div>
+        <div class="step-text">Salah klik = <strong>nyawa berkurang</strong>. Benar = <strong>poin bertambah</strong>. Selesaikan semua kata!</div>
+      </div>
+      <div class="mini-demo">
+        <div style="width:100%;font-size:0.62rem;color:rgba(255,255,255,0.3);margin-bottom:5px;font-family:'Space Mono',monospace;letter-spacing:1px;">// CONTOH: KATA TARGET "IBU"</div>
+        <div class="demo-word"><span class="lit">I</span><span>_</span><span>_</span></div>
+        <div class="demo-arrow">→</div>
+        <div class="demo-bubble">I</div>
+        <div class="demo-caption">I sudah diklik → sekarang klik B, lalu U</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── SCREEN: PHASE TRANSITION ──────────────────────── -->
+<div id="s-phase" class="screen">
+  <div class="phase-icon" id="ph-icon">🌟</div>
+  <div class="phase-dir" id="ph-dir">NAIK FASE</div>
+  <div class="phase-name" id="ph-name">SEDANG</div>
+  <div class="phase-explain" id="ph-explain"></div>
+  <div class="phase-stat-row">
+    <div class="phase-stat"><div class="phase-stat-val" id="ph-spd">–</div><div class="phase-stat-lbl">⚡ KECEPATAN</div></div>
+    <div class="phase-stat"><div class="phase-stat-val" id="ph-time">–</div><div class="phase-stat-lbl">⏱ WAKTU</div></div>
+    <div class="phase-stat"><div class="phase-stat-val" id="ph-dist">–</div><div class="phase-stat-lbl">🎭 DISTRACTOR</div></div>
+  </div>
+  <div class="phase-timer-track"><div class="mode-timer-fill" id="ph-fill" style="width:100%"></div></div>
+</div>
+
+<!-- ─── SCREEN: MODE TRANSITION ───────────────────────── -->
+<div id="s-mode" class="screen">
+  <div class="mode-big-emoji" id="m-emoji">🌌</div>
+  <div class="mode-big-title" id="m-title" style="text-align:center"></div>
+  <div class="mode-explain" id="m-explain"></div>
+  <div class="mode-tip" id="m-tip"></div>
+  <div class="mode-timer-track"><div class="mode-timer-fill" id="m-fill" style="width:100%"></div></div>
+</div>
+
+<!-- ─── HUD (during gameplay) ─────────────────────────── -->
+<div id="hud">
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;">
+    <div id="phase-badge">FASE 1 · MUDAH</div>
+    <div id="mode-badge">🌌 MODE NORMAL</div>
+  </div>
+  <div id="perf-bar-track"><div id="perf-bar-fill" style="width:50%"></div></div>
+
+  <!-- Timer -->
+  <div id="timer-wrap">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span id="timer-label">⏱ WAKTU</span>
+      <span id="timer-digits">00</span>
+    </div>
+    <div id="timer-bar-track"><div id="timer-bar-fill" style="width:100%"></div></div>
+  </div>
+
+  <div id="target-area">
+    <div id="instruction-line">Eja huruf-huruf ini dalam urutan yang benar</div>
+    <div id="target-word"></div>
+  </div>
+
+  <div id="next-banner">
+    <div id="next-letter-badge" style="background:rgba(0,212,255,0.2);border-color:var(--glow);">?</div>
+    <span id="next-label">Ketuk huruf ini berikutnya!</span>
+  </div>
+
+  <div id="bottom-hud">
+    <div class="bhud-item" id="lives-item">❤️ <span id="lives-val">3</span><span id="max-lives-val" style="font-size:0.6rem;opacity:0.45">/5</span></div>
+    <div class="bhud-sep"></div>
+    <div class="bhud-item">⭐ <span id="score-val">0</span></div>
+    <div class="bhud-sep"></div>
+    <div class="bhud-item">📖 Kata #<span id="round-val">1</span></div>
+    <div class="bhud-sep"></div>
+    <div class="bhud-item">🔥 x<span id="combo-val">0</span></div>
+  </div>
+</div>
+
+<!-- ─── HINT POPUP ─────────────────────────────────────── -->
+<div id="hint"></div>
+
+<!-- ─── SESSION TIMER (pojok kanan atas) ──────────────── -->
+<div id="session-timer">
+  <div id="session-digits">5:00</div>
+  <div id="session-label">⏱ sisa waktu</div>
+  <div id="session-bar-track"><div id="session-bar-fill" style="width:100%"></div></div>
+</div>
+<div id="session-urgent"></div>
+
+<!-- ─── SCREEN: RESULTS ────────────────────────────────── -->
+<div id="s-results" class="screen">
+  <div class="results-card">
+    <!-- Header spans both columns -->
+    <div class="results-header">
+      <div>
+        <div class="results-title">✦ LAPORAN AKHIR</div>
+        <div class="results-sub">SESI 5 MENIT · PROFIL KOGNITIF & RISIKO DISLEKSIA</div>
+      </div>
+    </div>
+
+    <!-- Two-column body -->
+    <div style="display:grid;grid-template-columns:180px 1fr;gap:20px;align-items:start;">
+      <!-- Left: ring + chip -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+        <div class="ring-outer">
+          <svg width="100" height="100" viewBox="0 0 160 160">
+            <circle cx="80" cy="80" r="66" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="12"/>
+            <circle id="riskArc" cx="80" cy="80" r="66" fill="none" stroke-width="12"
+              stroke-linecap="round" stroke-dasharray="415" stroke-dashoffset="415"
+              style="transition:stroke-dashoffset 2s ease,stroke 0.5s"/>
+          </svg>
+          <div class="ring-label">
+            <div class="ring-pct" id="riskPct">0%</div>
+            <div class="ring-sub">Risiko Disleksia</div>
+          </div>
+        </div>
+        <div class="risk-chip" id="riskChip">?</div>
+        <div style="font-family:'Space Mono',monospace;font-size:0.55rem;letter-spacing:1px;color:rgba(255,255,255,0.25);text-align:center;line-height:1.5;margin-top:4px;">Berbasis analisis<br>pola kesalahan<br>& kecepatan respon</div>
+      </div>
+
+      <!-- Right: profile + intervensi -->
+      <div style="display:flex;flex-direction:column;gap:0;">
+        <div class="section-label">Profil Kognitif</div>
+        <div class="profile-grid" id="profileGrid"></div>
+
+        <div class="section-label" style="margin-top:10px;">Rekomendasi Intervensi</div>
+        <div class="interv-box" id="intervBox"></div>
+      </div>
+    </div>
+
+    <div class="disc-box" style="margin-top:10px;">⚠️ Tes ini bersifat skrining awal berbasis permainan, <strong>bukan pengganti diagnosis profesional</strong>. Konsultasikan hasil ini dengan psikolog atau neurolog anak.</div>
+
+    <div class="res-btns">
+      <button class="btn-primary" onclick="location.reload()">↺ Main Lagi</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+// ============================================================
+//  LUMIVOX — ENGINE
+// ============================================================
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+let W, H;
+function resize(){ W=canvas.width=window.innerWidth; H=canvas.height=window.innerHeight; }
+resize(); window.addEventListener('resize', resize);
+
+// ── SAFE DRAWING HELPERS ──────────────────────────────────
+function safeArc(x,y,r){ ctx.arc(x,y,Math.max(0.001,r),0,Math.PI*2); }
+
+// ── WORD / MODE LIST ──────────────────────────────────────
+// ── WORD POOLS PER FASE — 100+ kata KBBI ─────────────────
+const WORD_POOLS = {
+  1: [ // MUDAH: 2–3 huruf, vokal dominan, familiar anak kecil
+    {w:'APA',  hint:'Kata tanya dasar 🤔'},
+    {w:'IBU',  hint:'Orang tua perempuan 👩'},
+    {w:'API',  hint:'Panas dan menyala 🔥'},
+    {w:'AKU',  hint:'Kata ganti orang pertama'},
+    {w:'DIA',  hint:'Kata ganti orang ketiga'},
+    {w:'ESA',  hint:'Satu — angka pertama'},
+    {w:'BAU',  hint:'Aroma yang menyengat 👃'},
+    {w:'CAT',  hint:'Cairan pewarna dinding 🎨'},
+    {w:'DAU',  hint:'Satuan daun — menurun'},
+    {w:'TAU',  hint:'Sudah mengetahui sesuatu'},
+    {w:'UBI',  hint:'Umbi yang bisa dimakan 🍠'},
+    {w:'OBI',  hint:'Ikat pinggang kimono'},
+    {w:'ABI',  hint:'Panggilan ayah dalam Arab'},
+    {w:'ACI',  hint:'Tepung tapioka'},
+    {w:'EDO',  hint:'Nama kota di Jepang'},
+    {w:'EBA',  hint:'Melambaikan tangan'},
+    {w:'ODA',  hint:'Syair pujian'},
+    {w:'IDA',  hint:'Nama perempuan umum'},
+    {w:'AGI',  hint:'Sedang berlangsung (lagi)'},
+    {w:'AYU',  hint:'Cantik dan anggun'},
+    {w:'BISU', hint:'Tidak bisa berbicara'},
+    {w:'DADU', hint:'Mainan bermata enam 🎲'},
+    {w:'BUDI', hint:'Kebaikan hati dan pikiran'},
+    {w:'BATU', hint:'Benda keras dari alam 🪨'},
+  ],
+
+  2: [ // SEDANG: 4–5 huruf, kosakata umum anak SD
+    {w:'BUKU',  hint:'Tempat menyimpan ilmu 📚'},
+    {w:'BOLA',  hint:'Bundar dan menggelinding ⚽'},
+    {w:'KUDA',  hint:'Hewan tunggang berbulu 🐴'},
+    {w:'BULAN', hint:'Bersinar di malam hari 🌙'},
+    {w:'DAPUR', hint:'Ruang tempat memasak 🍳'},
+    {w:'BUNGA', hint:'Indah dan harum semerbak 🌸'},
+    {w:'APEL',  hint:'Buah merah manis 🍎'},
+    {w:'MEJA',  hint:'Tempat menulis dan belajar 🪑'},
+    {w:'PINTU', hint:'Jalan masuk ke dalam 🚪'},
+    {w:'SALJU', hint:'Butiran es dari langit ❄️'},
+    {w:'PAGI',  hint:'Waktu matahari terbit 🌅'},
+    {w:'BABI',  hint:'Hewan gemuk berbulu 🐷'},
+    {w:'SAPI',  hint:'Hewan penghasil susu 🐮'},
+    {w:'AYAM',  hint:'Unggas berbunyi kukuruyuk 🐓'},
+    {w:'IKAN',  hint:'Hewan air bersisik 🐟'},
+    {w:'GIGI',  hint:'Bagian mulut untuk mengunyah 🦷'},
+    {w:'KAKI',  hint:'Anggota tubuh untuk berjalan 🦶'},
+    {w:'MADU',  hint:'Cairan manis dari lebah 🍯'},
+    {w:'NASI',  hint:'Makanan pokok orang Indonesia 🍚'},
+    {w:'PADI',  hint:'Tanaman sumber nasi 🌾'},
+    {w:'TOPI',  hint:'Penutup kepala 🎩'},
+    {w:'BAJU',  hint:'Pakaian yang dikenakan 👕'},
+    {w:'KOPI',  hint:'Minuman hangat dari biji ☕'},
+    {w:'LAUT',  hint:'Hamparan air asin luas 🌊'},
+    {w:'HUTAN', hint:'Kumpulan pohon lebat 🌲'},
+    {w:'BUKIT', hint:'Gundukan tanah tinggi 🏔️'},
+    {w:'DANAU', hint:'Genangan air besar di darat 🏞️'},
+    {w:'GUBUK', hint:'Rumah kecil sederhana 🛖'},
+    {w:'PEDAS', hint:'Rasa yang membakar lidah 🌶️'},
+    {w:'MANIS', hint:'Rasa seperti gula 🍬'},
+  ],
+
+  3: [ // SULIT: 5–7 huruf, kosakata lebih kaya
+    {w:'KUCING',    hint:'Hewan berbunyi miauw 🐱'},
+    {w:'POHON',     hint:'Tumbuhan menjulang tinggi 🌳'},
+    {w:'TEMAN',     hint:'Sahabat yang setia 👫'},
+    {w:'BEBEK',     hint:'Hewan air berbunyi kwek 🦆'},
+    {w:'SEKOLAH',   hint:'Tempat menuntut ilmu 🏫'},
+    {w:'KELINCI',   hint:'Hewan bertelinga panjang 🐰'},
+    {w:'BINTANG',   hint:'Berkelip di langit malam ⭐'},
+    {w:'MOBIL',     hint:'Kendaraan beroda empat 🚗'},
+    {w:'KAPAL',     hint:'Kendaraan berlayar di laut ⛵'},
+    {w:'DOKTER',    hint:'Penyembuh orang sakit 👨‍⚕️'},
+    {w:'PASAR',     hint:'Tempat jual beli 🛒'},
+    {w:'KEBUN',     hint:'Lahan berisi tanaman 🌱'},
+    {w:'JENDELA',   hint:'Lubang dinding untuk cahaya 🪟'},
+    {w:'BURUNG',    hint:'Hewan bersayap dan bernyanyi 🐦'},
+    {w:'GAJAH',     hint:'Hewan berbelalai besar 🐘'},
+    {w:'HARIMAU',   hint:'Kucing besar bergaris 🐯'},
+    {w:'MONYET',    hint:'Primata suka memanjat 🐒'},
+    {w:'SEMUT',     hint:'Serangga kecil pekerja keras 🐜'},
+    {w:'BUAYA',     hint:'Reptil bergigi tajam 🐊'},
+    {w:'PELANGI',   hint:'Busur warna setelah hujan 🌈'},
+    {w:'LANGIT',    hint:'Hamparan biru di atas 🌤️'},
+    {w:'ANGIN',     hint:'Udara bergerak tak terlihat 💨'},
+    {w:'HUJAN',     hint:'Air turun dari awan 🌧️'},
+    {w:'PETIR',     hint:'Kilat disertai bunyi keras ⚡'},
+    {w:'OMBAK',     hint:'Gerakan naik turun air laut 🌊'},
+    {w:'SAWAH',     hint:'Ladang berair tempat padi 🌾'},
+    {w:'LADANG',    hint:'Lahan pertanian kering 🌽'},
+    {w:'SUNGAI',    hint:'Aliran air memanjang 🏞️'},
+    {w:'GUNUNG',    hint:'Daratan tinggi menjulang 🏔️'},
+    {w:'PULAU',     hint:'Daratan dikelilingi laut 🏝️'},
+    {w:'KAMUS',     hint:'Buku arti kata-kata 📖'},
+    {w:'PENSIL',    hint:'Alat tulis dari kayu ✏️'},
+    {w:'KERTAS',    hint:'Lembaran tipis untuk menulis 📄'},
+    {w:'MEWARNAI',  hint:'Memberi warna pada gambar 🖍️'},
+  ],
+
+  4: [ // SANGAT SULIT: 7–9 huruf, kata kompleks
+    {w:'DINOSAURUS',   hint:'Reptil purba raksasa 🦕'},
+    {w:'BADMINTON',    hint:'Olahraga raket dan kok 🏸'},
+    {w:'BERDEBAR',     hint:'Jantung berdegup kencang 💓'},
+    {w:'BINATANG',     hint:'Semua jenis hewan 🦁'},
+    {w:'KOMPUTER',     hint:'Mesin pemroses informasi 💻'},
+    {w:'PEMANDANGAN',  hint:'Keindahan alam yang terlihat 🏞️'},
+    {w:'BERKELIP',     hint:'Bersinar berkedip-kedip ✨'},
+    {w:'PERJALANAN',   hint:'Aktivitas berpindah tempat 🧳'},
+    {w:'PELAJARAN',    hint:'Materi yang dipelajari di sekolah 📝'},
+    {w:'PENGARANG',    hint:'Orang yang menulis buku ✍️'},
+    {w:'PERTANIAN',    hint:'Kegiatan bercocok tanam 🌾'},
+    {w:'PELABUHAN',    hint:'Tempat kapal berlabuh ⚓'},
+    {w:'PERPUSTAKAAN', hint:'Gedung koleksi buku 📚'},
+    {w:'PERSAHABATAN', hint:'Hubungan pertemanan yang erat 🤝'},
+    {w:'PERBEDAAN',    hint:'Hal yang membuat tidak sama'},
+    {w:'PENEMUAN',     hint:'Hasil menemukan sesuatu baru 🔭'},
+    {w:'KEBERSIHAN',   hint:'Keadaan bersih dan sehat 🧹'},
+    {w:'KESEHATAN',    hint:'Kondisi tubuh yang baik 💪'},
+    {w:'KEBERANIAN',   hint:'Sifat tidak takut menghadapi bahaya'},
+    {w:'KECANTIKAN',   hint:'Keadaan indah dan cantik 💄'},
+    {w:'KEBEBASAN',    hint:'Keadaan bebas tanpa belenggu 🕊️'},
+    {w:'KEPERCAYAAN',  hint:'Rasa yakin terhadap sesuatu'},
+    {w:'KELEMBUTAN',   hint:'Sifat halus dan lembut 🌷'},
+    {w:'KEBIJAKSANAAN',hint:'Sifat bijak dalam berpikir 🧠'},
+    {w:'PENGHARGAAN',  hint:'Bentuk apresiasi atas prestasi 🏆'},
+    {w:'PENDIDIKAN',   hint:'Proses mendidik dan belajar 🎓'},
+    {w:'PENGALAMAN',   hint:'Hal yang pernah dialami 📘'},
+    {w:'PERUBAHAN',    hint:'Kondisi yang berbeda dari sebelumnya'},
+    {w:'KERJASAMA',    hint:'Bekerja bersama untuk tujuan sama 🤜🤛'},
+    {w:'KEMERDEKAAN',  hint:'Keadaan bebas dari penjajahan 🇮🇩'},
+  ],
+
+  5: [ // MASTER: 9–12 huruf — menantang tapi masih bisa diselesaikan anak
+    {w:'PEMBELAJARAN',    hint:'Proses dan cara belajar 🎓'},
+    {w:'PENGETAHUAN',     hint:'Segala yang diketahui seseorang 🧠'},
+    {w:'PERPISAHAN',      hint:'Saat orang beranjak pergi 👋'},
+    {w:'BERKEMBANG',      hint:'Tumbuh dan maju dari waktu ke waktu 🌱'},
+    {w:'BERKELILING',     hint:'Berjalan mengelilingi suatu tempat 🔄'},
+    {w:'PERSATUAN',       hint:'Keadaan bersatu padu 🤝'},
+    {w:'KEMAKMURAN',      hint:'Keadaan makmur dan sejahtera 🌟'},
+    {w:'KEMANUSIAAN',     hint:'Sifat-sifat yang dimiliki manusia 🫂'},
+    {w:'PENGEMBANGAN',    hint:'Proses mengembangkan sesuatu 🚀'},
+    {w:'PERKEMBANGAN',    hint:'Proses berkembang secara bertahap 📈'},
+    {w:'KESEIMBANGAN',    hint:'Keadaan seimbang dan stabil ⚖️'},
+    {w:'KEBERHASILAN',    hint:'Keadaan berhasil mencapai tujuan 🏆'},
+    {w:'KEISTIMEWAAN',    hint:'Sifat atau keadaan istimewa ✨'},
+    {w:'PERSEPSI',        hint:'Proses memahami melalui indra 👁️'},
+    {w:'KREATIVITAS',     hint:'Kemampuan menciptakan hal baru 🎨'},
+    {w:'INISIATIF',       hint:'Langkah awal yang dilakukan sendiri'},
+    {w:'KOLABORASI',      hint:'Kerjasama antar pihak bersama 🤝'},
+    {w:'PRODUKTIF',       hint:'Menghasilkan banyak hasil nyata'},
+    {w:'PEMBANGUNAN',     hint:'Proses membangun dan memperbaiki 🏗️'},
+    {w:'PENGHORMATAN',    hint:'Sikap menghargai orang lain 🙏'},
+    {w:'KEADILAN',        hint:'Sifat yang adil tanpa memihak ⚖️'},
+    {w:'PEMBERDAYAAN',    hint:'Proses membuat lebih berdaya 💪'},
+    {w:'PENGHARGAAN',     hint:'Bentuk apresiasi atas prestasi 🏆'},
+    {w:'PENDIDIKAN',      hint:'Proses mendidik dan belajar 🎓'},
+    {w:'PENGALAMAN',      hint:'Hal yang pernah dialami 📘'},
+  ],
+};
+
+// ── PHASE CONFIG ──────────────────────────────────────────
+// Kecepatan & timer dirancang agar manusia (termasuk anak) bisa menyelesaikan.
+// Budget minimum: ~1.5 detik/huruf untuk anak usia 6-10 tahun.
+// Kecepatan creature maks aman untuk tracking visual anak: ~2 px/frame.
+const PHASE_CFG = {
+  1:{ name:'MUDAH',        icon:'🌱', color:'#4ADE80',
+      spd:0.5,   timeBase:42, distractors:2,
+      // Kata 2-3 huruf @ 42s → ~14s/huruf. Sangat santai.
+      modes:['hunt'],
+      explain:'Huruf bergerak lambat. Santai dan kenali posisinya!',
+      perfUp:65, perfDown:0
+    },
+  2:{ name:'SEDANG',       icon:'⚡', color:'#00fff9',
+      spd:0.85,  timeBase:32, distractors:2,
+      // Kata 4-5 huruf @ 32s → ~7s/huruf. Nyaman.
+      modes:['hunt','mirror'],
+      explain:'Mulai ada huruf terbalik (b/d/p/q). Perhatikan baik-baik!',
+      perfUp:68, perfDown:28
+    },
+  3:{ name:'SULIT',        icon:'🌀', color:'#a855f7',
+      spd:1.2,   timeBase:26, distractors:3,
+      // Kata 5-7 huruf @ 26s → ~4s/huruf. Menantang tapi bisa.
+      modes:['hunt','mirror','echo'],
+      explain:'Huruf bisa menghilang sementara. Ingat posisinya!',
+      perfUp:70, perfDown:32
+    },
+  4:{ name:'SANGAT SULIT', icon:'🔥', color:'#FFD700',
+      spd:1.7,   timeBase:24, distractors:4,
+      // Kata 7-10 huruf @ 24s → ~2.8s/huruf. Ketat tapi manusiawi.
+      modes:['hunt','mirror','echo','storm'],
+      explain:'Semua mode aktif! Kata lebih panjang dan waktu lebih ketat.',
+      perfUp:72, perfDown:36
+    },
+  5:{ name:'MASTER',       icon:'💀', color:'#FF6B9D',
+      spd:2.2,   timeBase:30, distractors:4,
+      // Kata 9-12 huruf @ 30s → ~3s/huruf. Storm: 30*0.82=24.6s → ~2.5s/huruf. Masih bisa!
+      modes:['mirror','echo','storm'],
+      explain:'MODE MASTER: Kecepatan dan konsentrasi tertinggi. Kamu pasti bisa!',
+      perfUp:999, perfDown:40
+    },
+};
+
+// ── Dinamis: fase & kata aktif ────────────────────────────
+// G.ri tetap sebagai word count, tapi kata & mode dari pool
+// G.phase = 1..5 (adaptif)
+
+
+// ── LETTER COLORS ─────────────────────────────────────────
+const LC = {A:'#FF6B9D',B:'#60A5FA',C:'#6EE7B7',D:'#C084FC',E:'#4ECDC4',
+  F:'#FCA5A5',G:'#86EFAC',H:'#FCA5A5',I:'#FFD700',J:'#DDD6FE',
+  K:'#38BDF8',L:'#67E8F9',M:'#F472B6',N:'#4ADE80',O:'#FF8C42',
+  P:'#34D399',Q:'#FB923C',R:'#FCD34D',S:'#E879F9',T:'#A3E635',
+  U:'#00D4FF',V:'#F9A8D4',W:'#FED7AA',X:'#CBD5E1',Y:'#FEF08A',Z:'#C084FC'};
+function lc(l){ return LC[l]||'#ffffff'; }
+
+// ── AUDIO ─────────────────────────────────────────────────
+let AC;
+function audioCtx(){
+  if(!AC) AC=new(window.AudioContext||window.webkitAudioContext)();
+  if(AC.state==='suspended') AC.resume();
+  return AC;
+}
+function tone(freq,type,dur,vol){
+  try{
+    const ac=audioCtx(); const o=ac.createOscillator(),g=ac.createGain();
+    o.type=type; o.frequency.value=freq;
+    g.gain.setValueAtTime(vol,ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001,ac.currentTime+dur);
+    o.connect(g); g.connect(ac.destination);
+    o.start(); o.stop(ac.currentTime+dur+0.05);
+  }catch(_){}
+}
+function sfxOk(){[392,523,659].forEach((f,i)=>setTimeout(()=>tone(f,'sine',0.18,0.12),i*70));}
+function sfxBad(){tone(130,'sawtooth',0.3,0.18);}
+function sfxWord(){[523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>tone(f,'triangle',0.35,0.18),i*80));setTimeout(()=>tone(2093,'sine',0.5,0.2),460);}
+function sfxLetter(l){ const m={A:440,E:330,I:528,O:396,U:264,B:200,D:210,K:350,M:180,N:220,R:290,S:600,T:300}; tone(m[l]||280,'sine',0.15,0.08); }
+
+// ── PARTICLES ─────────────────────────────────────────────
+const particles=[];
+function mkParticle(x,y,color,vx,vy,life,size){
+  particles.push({x,y,color,vx,vy,life,maxLife:life,size});
+}
+function burst(x,y,color,n=18){
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2,s=1.5+Math.random()*4;
+    mkParticle(x,y,color,Math.cos(a)*s,Math.sin(a)*s-2,35+Math.random()*25,2+Math.random()*3);
+  }
+}
+function fireworks(x,y,color){
+  for(let i=0;i<55;i++){
+    const a=Math.random()*Math.PI*2,s=2+Math.random()*8;
+    mkParticle(x,y,color,Math.cos(a)*s,Math.sin(a)*s-4,55+Math.random()*35,1.5+Math.random()*3.5);
+  }
+}
+function updateParticles(){
+  for(let i=particles.length-1;i>=0;i--){
+    const p=particles[i];
+    p.x+=p.vx; p.y+=p.vy; p.vy+=0.06; p.life--;
+    if(p.life<=0){ particles.splice(i,1); continue; }
+    const a=Math.max(0,p.life/p.maxLife);
+    const r=Math.max(0.01,p.size*a);
+    ctx.save(); ctx.globalAlpha=a*0.9;
+    ctx.shadowColor=p.color; ctx.shadowBlur=6;
+    ctx.fillStyle=p.color;
+    ctx.beginPath(); safeArc(p.x,p.y,r); ctx.fill();
+    ctx.restore();
+  }
+}
+
+// ── BACKGROUND ────────────────────────────────────────────
+const STARS=Array.from({length:180},()=>({x:Math.random(),y:Math.random(),r:0.4+Math.random()*1.6,p:Math.random()*Math.PI*2,s:0.008+Math.random()*0.025}));
+const NEBULAS=Array.from({length:7},()=>({x:Math.random(),y:Math.random(),rx:0.2+Math.random()*0.3,ry:0.15+Math.random()*0.2,p:Math.random()*Math.PI*2,sp:0.003+Math.random()*0.004,col:['#00D4FF','#FF6B9D','#A78BFA','#4ADE80','#FFD700'][Math.floor(Math.random()*5)]}));
+
+function drawBG(mood){
+  ctx.fillStyle='#03091A'; ctx.fillRect(0,0,W,H);
+  // Nebula
+  NEBULAS.forEach(n=>{
+    n.p+=n.sp;
+    const nx=n.x*W+Math.sin(n.p)*25, ny=n.y*H+Math.cos(n.p*0.8)*18;
+    const rx=Math.max(1,n.rx*W), ry=Math.max(1,n.ry*H);
+    const g=ctx.createRadialGradient(nx,ny,0,nx,ny,rx);
+    const al=Math.floor((0.03+mood*0.04)*255).toString(16).padStart(2,'0');
+    g.addColorStop(0,n.col+al); g.addColorStop(1,'transparent');
+    ctx.save(); ctx.scale(1,ry/rx);
+    ctx.beginPath(); safeArc(nx,ny*rx/ry,rx); ctx.fillStyle=g; ctx.fill();
+    ctx.restore();
+  });
+  // Stars
+  STARS.forEach(s=>{
+    s.p+=s.s;
+    const a=0.2+0.8*((Math.sin(s.p)+1)/2);
+    ctx.save(); ctx.globalAlpha=a;
+    ctx.fillStyle='#fff'; ctx.beginPath();
+    safeArc(s.x*W,s.y*H,s.r); ctx.fill(); ctx.restore();
+  });
+}
+
+// ── CURSOR ────────────────────────────────────────────────
+const cursor={x:-999,y:-999};
+const trail=[];
+canvas.addEventListener('mousemove',e=>{cursor.x=e.clientX;cursor.y=e.clientY;});
+canvas.addEventListener('touchmove',e=>{e.preventDefault();cursor.x=e.touches[0].clientX;cursor.y=e.touches[0].clientY;},{passive:false});
+function drawCursor(){
+  trail.unshift({x:cursor.x,y:cursor.y});
+  if(trail.length>18) trail.pop();
+  trail.forEach((p,i)=>{
+    const a=Math.max(0,(1-i/trail.length)*0.45);
+    const r=Math.max(0.01,2.5*(1-i/trail.length));
+    ctx.save(); ctx.globalAlpha=a;
+    ctx.fillStyle='#00D4FF'; ctx.shadowColor='#00D4FF'; ctx.shadowBlur=8;
+    ctx.beginPath(); safeArc(p.x,p.y,r); ctx.fill(); ctx.restore();
+  });
+  if(cursor.x>0){
+    ctx.save(); ctx.fillStyle='#fff'; ctx.shadowColor='#00D4FF'; ctx.shadowBlur=18;
+    ctx.beginPath(); safeArc(cursor.x,cursor.y,4.5); ctx.fill(); ctx.restore();
+  }
+}
+
+// ── GHOST ECHO ────────────────────────────────────────────
+const ghosts=[];
+class Ghost{
+  constructor(c){ this.x=c.x; this.y=c.y; this.l=c.l; this.col=c.col; this.life=this.maxLife=110; this.r=c.r; }
+  update(){ this.life--; }
+  draw(){
+    const a=Math.max(0,(this.life/this.maxLife)*0.55);
+    if(a<0.01) return;
+    const r=Math.max(1,this.r);
+    ctx.save(); ctx.globalAlpha=a;
+    ctx.shadowColor=this.col; ctx.shadowBlur=18;
+    ctx.setLineDash([5,5]);
+    ctx.beginPath(); safeArc(this.x,this.y,r);
+    ctx.strokeStyle=this.col; ctx.lineWidth=1.5; ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.font=`bold ${Math.max(1,r*0.75)}px Orbitron,monospace`;
+    ctx.fillStyle=this.col; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(this.l,this.x,this.y);
+    ctx.restore();
+  }
+  hit(x,y){ return Math.hypot(this.x-x,this.y-y)<this.r+5; }
+  get dead(){ return this.life<=0; }
+}
+
+// ── CREATURE ──────────────────────────────────────────────
+class Creature{
+  constructor(l,x,y,isTarget){
+    this.l=l; this.x=x; this.y=y; this.col=lc(l); this.r=38;
+    this.isTarget=isTarget; this.grabbed=false;
+    this.hp=this.maxHp=1; // heartbeat
+    this.phase=Math.random()*Math.PI*2;
+    this.heartFreq=(['A','I','U','E','O'].includes(l)?2.2:['B','D','P','T','K'].includes(l)?4.0:1.6)*0.025;
+    this.heartPhase=Math.random()*Math.PI*2;
+    // movement — kecepatan dari fase config
+    const baseSpd = G.phaseCfg().spd;
+    // Kecepatan: storm 1.25x (bukan 1.6x), mode lain normal
+    const spd = G.mode==='storm' ? baseSpd*1.25 : baseSpd*(0.85+Math.random()*0.35);
+    const ang=Math.random()*Math.PI*2;
+    this.vx=Math.cos(ang)*spd; this.vy=Math.sin(ang)*spd;
+    // echo visibility
+    this.echoPhase=Math.random()*Math.PI*2;
+    this.echoT=0;
+    this.echoVis=1;
+    // mirror
+    this.mirrored=false;
+    // proximity
+    this.lastTick=0;
+    // shakeFrm: visual shake saat klik salah pada huruf target
+    this.shakeFrm=0;
+  }
+
+  update(frame){
+    this.phase+=0.018;
+    this.heartPhase+=this.heartFreq;
+    this.echoT++;
+    if(this.shakeFrm>0) this.shakeFrm--;
+
+    // Echo visibility cycle — lebih manusiawi:
+    // Siklus 240 frame: muncul (80f) → penuh (60f) → memudar (80f) → redup 20% (20f)
+    // Huruf TIDAK pernah sepenuhnya hilang (min 20%), huruf target berikutnya min 40%
+    if(G.mode==='echo'){
+      const cyc=240, t=this.echoT%cyc;
+      if(t<80)       this.echoVis=0.2+0.8*(t/80);          // fade in: 20%→100%
+      else if(t<140) this.echoVis=1;                         // penuh
+      else if(t<220) this.echoVis=1-0.8*((t-140)/80);       // fade out: 100%→20%
+      else           this.echoVis=0.2;                       // redup tapi tetap terlihat
+      // Huruf yang harus diklik berikutnya: jangan terlalu redup
+      if(this.l===G.nextLetter()&&this.isTarget){
+        this.echoVis=Math.max(0.4,this.echoVis);
+      }
+    } else { this.echoVis=1; }
+
+    // Mirror confusion for b,d,p,q
+    this.mirrored = G.mode==='mirror' && 'BDPQ'.includes(this.l);
+
+    // Move
+    this.x+=this.vx+Math.sin(this.phase)*0.25;
+    this.y+=this.vy+Math.cos(this.phase*0.8)*0.25;
+
+    // Bounds — pastikan creature tidak sembunyi di balik HUD (atas/bawah)
+    const mx=70, myTop=150, myBot=80;
+    if(this.x<mx){this.x=mx;this.vx=Math.abs(this.vx);}
+    if(this.x>W-mx){this.x=W-mx;this.vx=-Math.abs(this.vx);}
+    if(this.y<myTop){this.y=myTop;this.vy=Math.abs(this.vy);}
+    if(this.y>H-myBot){this.y=H-myBot;this.vy=-Math.abs(this.vy);}
+
+    // Proximity sound (target + next expected letter)
+    if(this.isTarget && this.l===G.nextLetter()){
+      const dist=Math.hypot(this.x-cursor.x,this.y-cursor.y);
+      if(dist<90&&Date.now()-this.lastTick>1800){ this.lastTick=Date.now(); sfxLetter(this.l); }
+    }
+  }
+
+  draw(){
+    if(this.grabbed) return;
+    const vis=Math.max(0,Math.min(1,this.echoVis));
+    if(vis<0.01) return;
+
+    const pulse=0.5+0.5*Math.sin(this.heartPhase);
+    const r=Math.max(1,this.r);
+    const isNext=this.l===G.nextLetter()&&this.isTarget;
+    // Shake saat klik salah - huruf bergetar tapi tidak hilang
+    const shakeX=this.shakeFrm>0?(Math.random()-0.5)*10:0;
+    const shakeY=this.shakeFrm>0?(Math.random()-0.5)*10:0;
+    const drawX=this.x+shakeX, drawY=this.y+shakeY;
+
+    ctx.save(); ctx.globalAlpha=vis;
+
+    // Aura for next target
+    if(isNext){
+      const atmR=Math.max(1,r*2.6);
+      const atm=ctx.createRadialGradient(drawX,drawY,0,drawX,drawY,atmR);
+      atm.addColorStop(0,this.col+'18'); atm.addColorStop(1,'transparent');
+      ctx.beginPath(); safeArc(drawX,drawY,atmR);
+      ctx.fillStyle=atm; ctx.fill();
+      // Ring ping
+      const pingR=Math.max(1,r+10+pulse*16);
+      ctx.beginPath(); safeArc(drawX,drawY,pingR);
+      ctx.strokeStyle=this.col+'66'; ctx.lineWidth=1.5; ctx.stroke();
+    }
+
+    // Heartbeat outer ring - merah saat shake (salah klik)
+    const hrR=Math.max(1,r+4+pulse*10);
+    ctx.beginPath(); safeArc(drawX,drawY,hrR);
+    const hrAlpha=Math.floor((30+pulse*60)).toString(16).padStart(2,'0');
+    const hrCol=this.shakeFrm>0?'#FF6B9D':this.col;
+    ctx.strokeStyle=hrCol+hrAlpha; ctx.lineWidth=this.shakeFrm>0?2.5:1.2; ctx.stroke();
+
+    // Glow
+    ctx.shadowColor=this.shakeFrm>0?'#FF6B9D':this.col;
+    ctx.shadowBlur=isNext?30+pulse*20:14+pulse*10;
+
+    // Body
+    const bodyCol=this.shakeFrm>0?'#FF6B9D':this.col;
+    const body=ctx.createRadialGradient(drawX-r*0.28,drawY-r*0.28,0,drawX,drawY,r);
+    body.addColorStop(0,bodyCol+'BB'); body.addColorStop(0.55,bodyCol+'55'); body.addColorStop(1,bodyCol+'18');
+    ctx.beginPath(); safeArc(drawX,drawY,r);
+    ctx.fillStyle=body; ctx.fill();
+
+    // Rim
+    ctx.beginPath(); safeArc(drawX,drawY,r);
+    ctx.strokeStyle=bodyCol+(isNext?'FF':'99'); ctx.lineWidth=isNext?2:1.2; ctx.stroke();
+
+    // Core shine
+    const cR=Math.max(0.5,r*0.3);
+    const shine=ctx.createRadialGradient(drawX,drawY,0,drawX,drawY,cR);
+    shine.addColorStop(0,'rgba(255,255,255,0.85)'); shine.addColorStop(1,'transparent');
+    ctx.beginPath(); safeArc(drawX,drawY,cR); ctx.fillStyle=shine; ctx.fill();
+
+    ctx.shadowBlur=0;
+
+    // Letter
+    ctx.font=`bold ${Math.max(1,r*0.72)}px Orbitron,monospace`;
+    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillStyle='#fff';
+    if(this.mirrored){
+      ctx.save(); ctx.translate(drawX,drawY); ctx.scale(-1,1);
+      ctx.fillText(this.l,0,0);
+      // Warning tint
+      ctx.strokeStyle='rgba(167,139,250,0.5)'; ctx.lineWidth=0.5; ctx.strokeText(this.l,0,0);
+      ctx.restore();
+    } else {
+      ctx.fillText(this.l,drawX,drawY);
+    }
+
+    ctx.restore();
+  }
+
+  hit(x,y){ return Math.hypot(this.x-x,this.y-y)<this.r+6; }
+}
+
+// ── GAME STATE ────────────────────────────────────────────
+const G={
+  state:'intro',
+  mode:'hunt',
+  creatures:[],
+  ri:0,           // total word count (always increases)
+  li:0,           // letter index in current word
+  score:0, lives:3, maxLives:5, combo:0, mood:0.5,
+  phase:1,        // fase adaptif 1–5
+  perfHistory:[],  // skor performa tiap kata (0–100), maks 4 terakhir
+  currentWord:null, // {w,hint} dari pool yang sedang aktif
+  usedWords:{},     // hindari pengulangan kata
+  wordErrors:0,     // error di kata saat ini (reset tiap spawn)
+  wordComboStart:0, // combo saat kata mulai (untuk mengukur combo selama kata ini)
+  timerSec:0, timerMax:0, timerInterval:null,
+  // ── SESSION (5 menit global) ──
+  sessionSec:0, sessionInterval:null, SESSION_TOTAL:300,
+  healthOrbs:[],
+  dx:{ bdErr:0, seqErr:0, echoErr:0, mirrorErr:0, speedSum:0, speedN:0, ok:0, total:0, tLetter:0 },
+
+  word(){ return this.currentWord?this.currentWord.w:''; },
+  nextLetter(){ return this.word()[this.li]||null; },
+  phaseCfg(){ return PHASE_CFG[this.phase]; },
+  wordPool(){ return WORD_POOLS[this.phase]||WORD_POOLS[1]; },
+};
+
+// ── PICK NEXT WORD FROM CURRENT PHASE POOL ─────────────────
+function pickNextWord(){
+  const pool = G.wordPool();
+  const avail = pool.filter(w=>!G.usedWords[G.phase+'_'+w.w]);
+  if(avail.length===0){
+    // semua sudah dipakai → reset used untuk fase ini
+    pool.forEach(w=>{ delete G.usedWords[G.phase+'_'+w.w]; });
+    return pool[Math.floor(Math.random()*pool.length)];
+  }
+  return avail[Math.floor(Math.random()*avail.length)];
+}
+
+// ── PICK MODE FOR CURRENT PHASE ────────────────────────────
+function pickMode(){
+  const modes = G.phaseCfg().modes;
+  return modes[Math.floor(Math.random()*modes.length)];
+}
+
+// ── CALC WORD PERFORMANCE (0–100) ─────────────────────────
+function calcWordPerf(){
+  const word = G.word();
+  const wordLen = word.length;
+  const errRate = G.wordErrors / Math.max(1, wordLen);
+  // Waktu yang benar-benar digunakan (dari mulai kata sampai sisa timer)
+  // Semakin banyak waktu tersisa = semakin cepat = skor lebih tinggi
+  const timeLeft = Math.max(0, G.timerSec);
+  const timeRatio = timeLeft / Math.max(1, G.timerMax); // 0=habis, 1=selesai instan
+  const accScore  = Math.max(0, 100 - errRate * 60);   // 0–100, berkurang per error
+  const speedScore= Math.round(timeRatio * 100);        // 0–100, berdasar sisa waktu
+  const comboGain = G.combo - G.wordComboStart;
+  const comboScore= Math.min(20, comboGain * 5);        // bonus combo, maks 20
+  return Math.min(100, Math.round(accScore * 0.55 + speedScore * 0.3 + comboScore * 0.15));
+}
+
+// ── ADAPT PHASE AFTER WORD ─────────────────────────────────
+function adaptPhase(){
+  const perf = calcWordPerf();
+  G.perfHistory.push(perf);
+  if(G.perfHistory.length>4) G.perfHistory.shift();
+  const avg = G.perfHistory.reduce((a,b)=>a+b,0)/G.perfHistory.length;
+  updatePerfBar(avg);
+
+  const cfg = G.phaseCfg();
+  const oldPhase = G.phase;
+  let dir = 'stay';
+
+  if(G.perfHistory.length>=2){
+    if(avg>=cfg.perfUp && G.phase<5){
+      G.phase++;
+      dir='up';
+    } else if(avg<cfg.perfDown && G.phase>1){
+      G.phase--;
+      dir='down';
+    }
+  }
+  return {dir, oldPhase, perf: Math.round(avg)};
+}
+
+function updatePerfBar(avg){
+  const fill = document.getElementById('perf-bar-fill');
+  if(!fill) return;
+  fill.style.width = Math.min(100,avg)+'%';
+  const col = avg>=70?'#4ADE80':avg>=45?'#00fff9':'#FF6B9D';
+  fill.style.background = col;
+}
+
+
+// ── HEALTH ORB ────────────────────────────────────────────
+class HealthOrb{
+  constructor(){
+    this.x=130+Math.random()*(W-260);
+    this.y=180+Math.random()*(H-300);
+    this.r=26;
+    this.phase=Math.random()*Math.PI*2;
+    this.life=420; // ~7 detik pada 60fps
+    this.maxLife=420;
+    this.col='#ff6ec7';
+  }
+  update(){ this.phase+=0.04; this.life--; }
+  get dead(){ return this.life<=0; }
+  draw(){
+    const a=Math.min(1,this.life/60)*Math.min(1,(this.maxLife-this.life)/30);
+    if(a<0.01) return;
+    const pulse=0.5+0.5*Math.sin(this.phase*2);
+    const r=this.r+pulse*5;
+    const y=this.y+Math.sin(this.phase)*6;
+    ctx.save(); ctx.globalAlpha=a*0.9;
+    // Glow
+    ctx.shadowColor=this.col; ctx.shadowBlur=20+pulse*14;
+    // Outer ring
+    const grd=ctx.createRadialGradient(this.x,y,0,this.x,y,r*1.5);
+    grd.addColorStop(0,this.col+'55'); grd.addColorStop(1,'transparent');
+    ctx.beginPath(); safeArc(this.x,y,r*1.5); ctx.fillStyle=grd; ctx.fill();
+    // Body
+    const body=ctx.createRadialGradient(this.x-r*0.25,y-r*0.25,0,this.x,y,r);
+    body.addColorStop(0,this.col+'EE'); body.addColorStop(0.6,this.col+'66'); body.addColorStop(1,this.col+'22');
+    ctx.beginPath(); safeArc(this.x,y,r); ctx.fillStyle=body; ctx.fill();
+    ctx.strokeStyle=this.col; ctx.lineWidth=1.5; ctx.stroke();
+    // Heart symbol
+    ctx.shadowBlur=0;
+    ctx.font=`bold ${Math.max(1,r*0.75)}px serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillStyle='#fff'; ctx.fillText('❤', this.x, y);
+    ctx.restore();
+  }
+  hit(x,y){ return Math.hypot(this.x-x,this.y-y)<this.r+8; }
+}
+
+
+// ── TIMER ──────────────────────────────────────────────────
+function startTimer(){
+  clearInterval(G.timerInterval);
+  const cfg = G.phaseCfg();
+  // Storm: hanya kecepatan bertambah, waktu sedikit berkurang (bukan double penalty)
+  // Mirror: sedikit lebih ketat karena perlu baca huruf terbalik
+  // Echo: agak lebih ketat karena perlu ingat posisi
+  const modeMulti = G.mode==='storm'?0.82:G.mode==='echo'?0.88:G.mode==='mirror'?0.92:1;
+  G.timerMax = Math.round(cfg.timeBase * modeMulti);
+  G.timerSec = G.timerMax;
+  updateTimerHUD();
+  G.timerInterval = setInterval(()=>{
+    if(G.state!=='play'){ clearInterval(G.timerInterval); return; }
+    G.timerSec--;
+    updateTimerHUD();
+    if(G.timerSec<=0){
+      clearInterval(G.timerInterval);
+      // Waktu habis → nyawa berkurang + catat performa buruk
+      G.lives--;
+      G.combo=0;
+      // Tandai seluruh sisa huruf kata sebagai error untuk calcWordPerf yg adil
+      const remainingLetters = G.word().length - G.li;
+      G.wordErrors += remainingLetters;
+      sfxBad();
+      showHint('⏰ Waktu Habis! -❤️','#ff6ec7');
+      burst(W/2,H/2,'#ff6ec7',20);
+      if(G.lives<=0){ gameOver(); return; }
+      // Respawn kata yang sama (reset li, errors, timer) - JANGAN ambil kata baru
+      G.li=0; G.wordErrors=0; G.wordComboStart=G.combo;
+      setTimeout(()=>{ spawnCreatures(); startTimer(); },600);
+      updateHUD();
+    }
+  },1000);
+}
+
+function stopTimer(){
+  clearInterval(G.timerInterval);
+}
+
+// ── SESSION TIMER (5 menit global) ────────────────────────
+function startSessionTimer(){
+  G.sessionSec = G.SESSION_TOTAL; // 300 detik
+  const el   = document.getElementById('session-timer');
+  const dig  = document.getElementById('session-digits');
+  const fill = document.getElementById('session-bar-fill');
+  const urg  = document.getElementById('session-urgent');
+  el.style.display = 'flex';
+
+  clearInterval(G.sessionInterval);
+  G.sessionInterval = setInterval(()=>{
+    G.sessionSec--;
+    const m = Math.floor(G.sessionSec/60);
+    const s = G.sessionSec%60;
+    dig.textContent = m+':'+(s<10?'0':'')+s;
+    fill.style.width = (G.sessionSec/G.SESSION_TOTAL*100)+'%';
+
+    // Warna berubah seiring waktu habis
+    if(G.sessionSec<=30){
+      dig.style.color='#FF6B9D';
+      dig.style.textShadow='0 0 16px #FF6B9D';
+      fill.style.background='#FF6B9D';
+      urg.style.display='block';
+    } else if(G.sessionSec<=60){
+      dig.style.color='#FFD700';
+      dig.style.textShadow='0 0 14px #FFD700';
+      fill.style.background='#FFD700';
+    }
+
+    // Peringatan 60 detik
+    if(G.sessionSec===60){
+      showHint('⚠️ 1 MENIT TERSISA!','#FFD700');
+      tone(440,'sine',0.3,0.2); tone(550,'sine',0.25,0.15);
+    }
+    // Peringatan 30 detik
+    if(G.sessionSec===30){
+      showHint('🚨 30 DETIK TERSISA!','#FF6B9D');
+      tone(330,'sawtooth',0.3,0.2); tone(440,'sawtooth',0.25,0.15);
+    }
+    // Peringatan 10 detik — hitung mundur
+    if(G.sessionSec>0 && G.sessionSec<=10){
+      showHint(`⏰ ${G.sessionSec}...`,'#FF6B9D');
+      tone(220+G.sessionSec*20,'sine',0.25,0.18);
+    }
+
+    // WAKTU HABIS → paksa selesai
+    if(G.sessionSec<=0){
+      clearInterval(G.sessionInterval);
+      stopTimer();
+      urg.style.display='none';
+      G.state='gameover';
+      showHint('⏰ WAKTU HABIS! Sesi selesai!','#FF6B9D');
+      burst(W/2,H/2,'#FF6B9D',40);
+      setTimeout(showResults, 1800);
+    }
+  }, 1000);
+}
+
+function stopSessionTimer(){
+  clearInterval(G.sessionInterval);
+  document.getElementById('session-timer').style.display='none';
+  document.getElementById('session-urgent').style.display='none';
+}
+
+function updateTimerHUD(){
+  const pct=Math.max(0,G.timerSec/G.timerMax*100);
+  const fill=document.getElementById('timer-bar-fill');
+  const digits=document.getElementById('timer-digits');
+  if(!fill||!digits) return;
+  fill.style.width=pct+'%';
+  digits.textContent=String(G.timerSec).padStart(2,'0');
+  // Warna berubah merah saat hampir habis
+  if(G.timerSec<=5){
+    fill.style.background='#FF6B9D';
+    digits.style.color='#FF6B9D';
+    digits.style.textShadow='0 0 14px #FF6B9D';
+  } else if(G.timerSec<=10){
+    fill.style.background='#FFD700';
+    digits.style.color='#FFD700';
+    digits.style.textShadow='0 0 10px #FFD700';
+  } else {
+    fill.style.background='var(--neon-cyan)';
+    digits.style.color='var(--neon-cyan)';
+    digits.style.textShadow='0 0 8px var(--neon-cyan)';
+  }
+}
+
+// ── HUD UPDATER ───────────────────────────────────────────
+function updateHUD(){
+  const word=G.word();
+  // Slots
+  let html='';
+  for(let i=0;i<word.length;i++){
+    const l=word[i];
+    if(i<G.li){
+      html+=`<div class="tw-slot done" style="color:${lc(l)};border-color:${lc(l)}40">${l}</div>`;
+    } else if(i===G.li){
+      html+=`<div class="tw-slot next">${l}</div>`;
+    } else {
+      html+=`<div class="tw-slot">_</div>`;
+    }
+  }
+  document.getElementById('target-word').innerHTML=html;
+
+  // Next banner
+  const nl=G.nextLetter();
+  const badge=document.getElementById('next-letter-badge');
+  const label=document.getElementById('next-label');
+  if(nl){
+    badge.textContent=nl;
+    badge.style.background=`${lc(nl)}25`;
+    badge.style.borderColor=lc(nl);
+    badge.style.color=lc(nl);
+    if(G.mode==='echo') label.textContent='Ingat posisinya! Tap huruf ini!';
+    else if(G.mode==='mirror') label.textContent='Hati-hati huruf terbalik!';
+    else if(G.mode==='storm') label.textContent='Cepat! Tap huruf ini!';
+    else label.textContent='Ketuk huruf ini berikutnya!';
+  }
+
+  // Stats
+  document.getElementById('lives-val').textContent=G.lives;
+  document.getElementById('max-lives-val').textContent='/'+G.maxLives;
+  const livesItem=document.getElementById('lives-item');
+  if(G.lives<=1) livesItem.style.color='#FF6B9D';
+  else if(G.lives<=2) livesItem.style.color='#FFD700';
+  else livesItem.style.color='';
+  document.getElementById('score-val').textContent=G.score;
+  document.getElementById('round-val').textContent=G.ri+1;
+  // Phase badge
+  const cfg=G.phaseCfg();
+  const pb=document.getElementById('phase-badge');
+  if(pb){
+    pb.textContent=`${cfg.icon} FASE ${G.phase} · ${cfg.name}`;
+    pb.style.color=cfg.color;
+    pb.style.borderColor=cfg.color+'66';
+    pb.style.background=cfg.color+'12';
+    pb.style.textShadow=`0 0 10px ${cfg.color}`;
+  }
+  document.getElementById('combo-val').textContent=G.combo;
+
+  // Mode badge
+  const mb=document.getElementById('mode-badge');
+  const labels={hunt:'🌌 MODE NORMAL',mirror:'🔮 HURUF TERBALIK',echo:'👻 HURUF MENGHILANG',storm:'⚡ MODE BADAI'};
+  mb.textContent=labels[G.mode]||'🌌 NORMAL';
+  mb.className='';
+  if(G.mode==='mirror') mb.classList.add('m-mirror');
+  else if(G.mode==='echo') mb.classList.add('m-echo');
+  else if(G.mode==='storm') mb.classList.add('m-storm');
+}
+
+// ── SPAWN ─────────────────────────────────────────────────
+// spawnCreatures: buat creatures untuk kata yang sudah ada di G.currentWord
+function spawnCreatures(){
+  G.creatures=[]; ghosts.length=0;
+  G.li=0; G.wordErrors=0; G.wordComboStart=G.combo;
+
+  const word = G.word();
+  const cfg  = G.phaseCfg();
+  const uniqueW  = [...new Set(word.split(''))];
+
+  // Distractors: huruf yang TIDAK ada sama sekali dalam kata
+  const pool='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').filter(l=>!uniqueW.includes(l));
+  const dist = pool.sort(()=>Math.random()-0.5).slice(0,cfg.distractors);
+
+  // 1 creature per huruf unik + distractors
+  const allLetters = [...uniqueW, ...dist].sort(()=>Math.random()-0.5);
+  allLetters.forEach(l=>{
+    const x=90+Math.random()*(W-180);
+    const y=160+Math.random()*(H-260);
+    G.creatures.push(new Creature(l,x,y,uniqueW.includes(l)));
+  });
+  G.dx.tLetter=Date.now();
+  updateHUD();
+}
+
+// spawn: pilih kata baru, mode baru, lalu buat creatures
+function spawn(){
+  // Pilih kata baru dari pool fase saat ini
+  G.currentWord = pickNextWord();
+  G.usedWords[G.phase+'_'+G.currentWord.w]=true;
+
+  // Pilih mode dari fase saat ini
+  G.mode = pickMode();
+
+  spawnCreatures();
+
+  // Health orb setiap 5 kata
+  G.healthOrbs=G.healthOrbs.filter(o=>!o.dead);
+  if(G.ri>0 && G.ri%5===0 && G.healthOrbs.length===0){
+    G.healthOrbs.push(new HealthOrb());
+    showHint('💊 Health Orb muncul! Klik untuk +1 nyawa!','#ff6ec7');
+  }
+}
+
+// ── MODE TRANSITION UI ────────────────────────────────────
+const MODE_CFG={
+  hunt:  {emoji:'🌌',title:'MODE NORMAL',color:'#00D4FF',
+          explain:'Huruf-huruf melayang bebas. Ketuk huruf yang berkedip biru sesuai urutan kata target!',
+          tip:'💡 Huruf yang harus diklik berikutnya selalu berkedip lebih terang dan ada aura'},
+  mirror:{emoji:'🔮',title:'HURUF TERBALIK',color:'#A78BFA',
+          explain:'Waspada! Huruf b, d, p, q tampil terbalik seperti di cermin. Jangan tertukar!',
+          tip:'💡 Lihat baik-baik bentuk hurufnya. Yang berkedip cyan adalah huruf berikutnya'},
+  echo:  {emoji:'👻',title:'HURUF MEMUDAR',color:'#60A5FA',
+          explain:'Huruf-huruf berkedip dan memudar, tapi TIDAK pernah sepenuhnya hilang. Ikuti yang berkilau!',
+          tip:'💡 Huruf berikutnya selalu tampak cukup jelas. Fokus pada yang berkedip!'},
+  storm: {emoji:'⚡',title:'MODE BADAI',color:'#F97316',
+          explain:'Huruf bergerak lebih cepat! Tetap fokus dan klik huruf berkilau sesuai urutan.',
+          tip:'💡 Waktumu sedikit lebih singkat, tapi masih bisa! Percaya pada dirimu'},
+};
+function showModeScreen(mode,cb){
+  G.state='transition';
+  const cfg=MODE_CFG[mode];
+  const s=document.getElementById('s-mode');
+  document.getElementById('m-emoji').textContent=cfg.emoji;
+  document.getElementById('m-title').textContent=cfg.title;
+  document.getElementById('m-title').style.color=cfg.color;
+  document.getElementById('m-explain').textContent=cfg.explain;
+  document.getElementById('m-tip').textContent=cfg.tip;
+  const fill=document.getElementById('m-fill');
+  fill.style.background=cfg.color; fill.style.width='100%';
+  s.classList.add('on');
+  let pct=100;
+  const iv=setInterval(()=>{ pct-=2; fill.style.width=pct+'%'; if(pct<=0){ clearInterval(iv); s.classList.remove('on'); cb(); }},55);
+}
+
+// ── CLICK / TAP ───────────────────────────────────────────
+function onTap(cx,cy){
+  if(G.state!=='play') return;
+  audioCtx(); // unlock
+
+  // Cek health orb dulu
+  for(let i=G.healthOrbs.length-1;i>=0;i--){
+    const orb=G.healthOrbs[i];
+    if(orb.hit(cx,cy)){
+      G.healthOrbs.splice(i,1);
+      if(G.lives<G.maxLives){
+        G.lives++;
+        tone(880,'sine',0.4,0.18); tone(1100,'sine',0.3,0.15);
+        burst(cx,cy,'#ff6ec7',30);
+        showHint(`💖 +1 Nyawa! (${G.lives}/${G.maxLives})`,'#ff6ec7');
+      } else {
+        G.score+=80;
+        burst(cx,cy,'#FFD700',25);
+        showHint('💛 Nyawa penuh! +80 BONUS','#FFD700');
+      }
+      updateHUD(); return;
+    }
+  }
+
+  const expected=G.nextLetter();
+  if(!expected) return;
+
+  // Check creatures
+  let hit=null,isGhost=false;
+  for(const c of G.creatures){
+    if(!c.grabbed&&c.hit(cx,cy)){hit=c;break;}
+  }
+  if(!hit){ for(const gh of ghosts){ if(gh.hit(cx,cy)){hit=gh;isGhost=true;break;} } }
+  if(!hit) return;
+
+  const tapped=hit.l;
+
+  if(tapped===expected){
+    // ✅ CORRECT
+    G.dx.ok++; G.dx.total++;
+    const elapsed=(Date.now()-G.dx.tLetter)/1000;
+    G.dx.speedSum+=elapsed; G.dx.speedN++;
+    G.dx.tLetter=Date.now();
+    G.combo++;
+    const pts=isGhost?5:10*(1+Math.min(G.combo-1,4)*0.2)|0;
+    G.score+=pts;
+    G.mood=Math.min(1,G.mood+0.08);
+    sfxOk();
+    burst(cx,cy,lc(tapped),20);
+
+    // Cek apakah huruf ini masih dibutuhkan lagi setelah posisi ini
+    const remainingNeeded = G.word().slice(G.li+1).includes(tapped);
+    if(!isGhost && !remainingNeeded){
+      // Huruf tidak dibutuhkan lagi → grab & tambahkan ke selectedPool
+      hit.grabbed=true;
+      selectedPool.push(hit);
+    }
+    // Jika masih dibutuhkan lagi → biarkan creature tetap ada di layar
+
+    G.li++;
+    // Combo 5 → isi ulang 1 nyawa
+    if(G.combo>0 && G.combo%5===0 && G.lives<G.maxLives){
+      G.lives++;
+      tone(660,'sine',0.35,0.15); tone(880,'sine',0.3,0.13);
+      showHint(`🔥 COMBO ×${G.combo}! +❤️ REGEN!`,'#ff6ec7');
+    } else {
+      showHint(G.combo>=3?`🔥 COMBO ×${G.combo}! +${pts}`:`✓ +${pts}`,lc(tapped));
+    }
+
+    if(G.li>=G.word().length){ setTimeout(wordDone,250); }
+    else { updateHUD(); }
+
+  } else {
+    // ❌ WRONG
+    G.wordErrors++;
+    G.dx.total++;
+    // bdErr: klik huruf BDPQ yang tertukar satu sama lain (indikator disleksia visual)
+    if('BDPQ'.includes(tapped)&&'BDPQ'.includes(expected)&&tapped!==expected) G.dx.bdErr++;
+    // echoErr: salah klik saat mode echo (indikator memori visual)
+    if(G.mode==='echo') G.dx.echoErr++;
+    // mirrorErr: salah klik saat mode mirror (indikator diskriminasi visual)
+    if(G.mode==='mirror') G.dx.mirrorErr++;
+    // seqErr: klik huruf yang ada dalam kata tapi bukan yang berikutnya (urutan fonem salah)
+    // Tidak increment jika klik distractor (itu hanya mis-identifikasi, bukan urutan fonem)
+    if(G.word().includes(tapped) && tapped !== expected) G.dx.seqErr++;
+    G.combo=0; G.lives--;
+    G.mood=Math.max(0,G.mood-0.15);
+    sfxBad();
+    burst(cx,cy,'#FF6B9D',12);
+    showHint(`✗ Harusnya "${expected}"! -❤️`,'#FF6B9D');
+
+    // BUGFIX KRITIS: Huruf yang termasuk dalam kata (isTarget=true) TIDAK boleh hilang.
+    // Hanya distractor yang boleh escape ke ghost.
+    if(!isGhost&&!hit.grabbed){
+      if(hit.isTarget){
+        // Huruf dari kata → shake merah, TIDAK hilang (masih dibutuhkan)
+        hit.shakeFrm=22;
+      } else {
+        // Distractor → escape ke ghost
+        ghosts.push(new Ghost(hit));
+        G.creatures.splice(G.creatures.indexOf(hit),1);
+      }
+    }
+
+    if(G.lives<=0){ gameOver(); return; }
+    updateHUD();
+  }
+}
+
+canvas.addEventListener('click',e=>onTap(e.clientX,e.clientY));
+canvas.addEventListener('touchend',e=>{e.preventDefault();onTap(e.changedTouches[0].clientX,e.changedTouches[0].clientY);},{passive:false});
+
+// Selected pool for neural threads
+let selectedPool=[];
+
+// ── WORD DONE ─────────────────────────────────────────────
+function wordDone(){
+  stopTimer();
+  sfxWord();
+  const wordLen=G.word().length;
+  const bonusPts=50+wordLen*5+(G.phase-1)*15; // bonus naik dengan fase
+  G.score+=bonusPts;
+  fireworks(W/2,H/2,G.phaseCfg().color);
+  fireworks(W/3,H/3,lc(G.word()[0]));
+  fireworks(2*W/3,H/2+50,lc(G.word()[G.word().length-1]));
+  showHint(`🎉 "${G.word()}" +${bonusPts}!`,G.phaseCfg().color);
+  G.ri++;
+
+  // Tidak ada batas kata — game selesai hanya oleh session timer 5 menit atau nyawa habis
+  // Jika session sudah selesai saat wordDone dipanggil, abaikan lanjut
+  if(G.state==='gameover'||G.state==='results') return;
+
+  // Adaptasi fase setelah tiap kata
+  const adapt = adaptPhase();
+  selectedPool=[];
+
+  const doNext=()=>{
+    if(G.state==='gameover'||G.state==='results') return; // cek lagi setelah delay
+    const newMode=pickMode();
+    showModeScreen(newMode,()=>{ G.mode=newMode; G.state='play'; spawn(); startTimer(); });
+  };
+
+  if(adapt.dir!=='stay'){
+    setTimeout(()=>showPhaseScreen(adapt,doNext),800);
+  } else {
+    setTimeout(doNext,1500);
+  }
+}
+
+// ── PHASE TRANSITION SCREEN ───────────────────────────────
+function showPhaseScreen(adapt,cb){
+  G.state='transition';
+  const cfg = PHASE_CFG[G.phase];
+  const s   = document.getElementById('s-phase');
+
+  const isUp = adapt.dir==='up';
+  document.getElementById('ph-icon').textContent = isUp ? '🚀' : '⬇️';
+  document.getElementById('ph-dir').textContent  = isUp ? '◆ NAIK FASE' : '▼ TURUN FASE';
+  document.getElementById('ph-dir').style.color  = isUp ? '#4ADE80' : '#FF6B9D';
+  document.getElementById('ph-name').textContent = `FASE ${G.phase} · ${cfg.name}`;
+  document.getElementById('ph-name').style.color = cfg.color;
+  document.getElementById('ph-name').style.textShadow=`0 0 20px ${cfg.color}`;
+  document.getElementById('ph-explain').textContent = cfg.explain;
+  document.getElementById('ph-spd').textContent  = ['–','🐢 Lambat','🚶 Pelan','🏃 Sedang','⚡ Cepat','💨 Sangat Cepat'][G.phase]||cfg.spd;
+  document.getElementById('ph-time').textContent = cfg.timeBase+'s';
+  document.getElementById('ph-dist').textContent = cfg.distractors+'×';
+  document.getElementById('ph-spd').style.color  = cfg.color;
+  document.getElementById('ph-time').style.color = cfg.color;
+  document.getElementById('ph-dist').style.color = cfg.color;
+
+  const fill = document.getElementById('ph-fill');
+  fill.style.background = cfg.color; fill.style.width='100%';
+  s.classList.add('on');
+
+  if(isUp){
+    burst(W/2,H/2,cfg.color,35);
+    tone(660,'sine',0.3,0.15); tone(880,'sine',0.25,0.12); tone(1100,'sine',0.2,0.1);
+  } else {
+    burst(W/2,H/2,'#FF6B9D',20);
+    tone(220,'sawtooth',0.4,0.12);
+  }
+
+  let pct=100;
+  const iv=setInterval(()=>{
+    pct-=2; fill.style.width=pct+'%';
+    if(pct<=0){ clearInterval(iv); s.classList.remove('on'); cb(); }
+  }, 60); // ~3 detik
+}
+
+// ── GAME OVER ─────────────────────────────────────────────
+function gameOver(){
+  stopTimer();
+  stopSessionTimer();
+  G.state='gameover';
+  showHint('💔 Kehabisan nyawa!','#FF6B9D');
+  setTimeout(showResults,2200);
+}
+
+// ── HINT POPUP ────────────────────────────────────────────
+let hintTimer;
+function showHint(msg,col){
+  const el=document.getElementById('hint');
+  el.textContent=msg; el.style.color=col; el.style.opacity='1';
+  clearTimeout(hintTimer);
+  hintTimer=setTimeout(()=>el.style.opacity='0',1100);
+}
+
+// ── START ─────────────────────────────────────────────────
+function startGame(){
+  document.getElementById('s-intro').classList.remove('on');
+  document.getElementById('hud').style.display='flex';
+  G.ri=0; G.li=0; G.score=0; G.lives=3; G.maxLives=5; G.combo=0; G.mood=0.5;
+  G.phase=1; G.perfHistory=[]; G.usedWords={}; G.currentWord=null;
+  G.wordErrors=0; G.wordComboStart=0;
+  G.healthOrbs=[];
+  G.dx={bdErr:0,seqErr:0,echoErr:0,mirrorErr:0,speedSum:0,speedN:0,ok:0,total:0,tLetter:Date.now()};
+  selectedPool=[];
+  ghosts.length=0;
+  // Mulai dari mode hunt (fase 1 selalu hunt)
+  G.mode='hunt';
+  G.currentWord=pickNextWord(); G.usedWords['1_'+G.currentWord.w]=true;
+  showModeScreen('hunt',()=>{
+    G.state='play';
+    spawnCreatures();
+    startTimer();
+    startSessionTimer(); // mulai hitung mundur 5 menit
+  });
+}
+
+// ── RESULTS ───────────────────────────────────────────────
+function showResults(){
+  G.state='results';
+  stopTimer();
+  stopSessionTimer();
+  document.getElementById('hud').style.display='none';
+  document.getElementById('s-results').classList.add('on');
+
+  const dx=G.dx;
+  const acc=dx.total>0?Math.round(dx.ok/dx.total*100):80;
+  const avgSpd=dx.speedN>0?dx.speedSum/dx.speedN:3;
+  const bdR=Math.min(100,dx.bdErr*35);
+  const seqR=Math.min(100,dx.seqErr*20);
+  const echoR=Math.min(100,dx.echoErr*25);
+  const mirrorR=Math.min(100,dx.mirrorErr*28);
+  const spdR=Math.min(100,Math.max(0,(avgSpd-2.2)*28));
+  const risk=Math.round(bdR*0.3+seqR*0.2+spdR*0.2+echoR*0.15+mirrorR*0.15);
+
+  // Ring
+  const arc=document.getElementById('riskArc');
+  const circ=415;
+  const col=risk<30?'#4ADE80':risk<60?'#FFD700':'#FF6B9D';
+  arc.style.stroke=col;
+  const pctEl=document.getElementById('riskPct');
+  pctEl.style.color=col;
+  setTimeout(()=>{ arc.setAttribute('stroke-dashoffset',circ-(circ*risk/100)); pctEl.textContent=risk+'%'; },200);
+
+  // Chip
+  const chip=document.getElementById('riskChip');
+  if(risk<30){ chip.textContent='🟢 Risiko Rendah'; chip.className='risk-chip chip-low'; }
+  else if(risk<60){ chip.textContent='🟡 Risiko Sedang'; chip.className='risk-chip chip-med'; }
+  else { chip.textContent='🔴 Risiko Tinggi'; chip.className='risk-chip chip-high'; }
+
+  // Profile
+  const maxPhaseReached=G.phase;
+  const wordsCompleted=G.ri;
+  const profs=[
+    {lbl:'Akurasi',val:acc+'%',fill:acc,col:'#4ADE80'},
+    {lbl:'Kecepatan',val:avgSpd.toFixed(1)+'s',fill:Math.max(0,100-spdR),col:'#00D4FF'},
+    {lbl:'Error b/d/p/q',val:dx.bdErr,fill:Math.max(0,100-bdR),col:'#A78BFA'},
+    {lbl:'Kata Selesai',val:wordsCompleted+' kata',fill:Math.min(100,wordsCompleted/20*100),col:PHASE_CFG[maxPhaseReached].color},
+  ];
+  document.getElementById('profileGrid').innerHTML=profs.map(p=>`
+    <div class="pc">
+      <div class="pc-lbl">${p.lbl}</div>
+      <div class="pc-val" style="color:${p.col}">${p.val}</div>
+      <div class="pc-bar"><div class="pc-fill" style="width:${p.fill}%;background:${p.col}"></div></div>
+    </div>`).join('');
+
+  // Interventions
+  const items=[];
+  if(risk<30){
+    items.push({col:'#4ADE80',txt:'Tidak ditemukan tanda signifikan. Lanjutkan kebiasaan membaca buku cerita bergambar dan permainan kata setiap hari.'});
+  } else {
+    if(bdR>25) items.push({col:'#A78BFA',txt:'Latihan diskriminasi huruf b/d/p/q: gunakan kartu huruf berbasis warna dan permainan cermin. Program Orton-Gillingham sangat direkomendasikan.'});
+    if(seqR>20) items.push({col:'#00D4FF',txt:'Latihan urutan fonem: Sound Blending (Woodcock-Johnson III). Ucapkan kata per fonem sambil menepuk tangan.'});
+    if(spdR>25) items.push({col:'#FFD700',txt:'Sesi Rapid Automatized Naming (RAN) harian 5 menit: menyebut huruf/angka secepat mungkin untuk meningkatkan kecepatan akses.'});
+    if(echoR>20) items.push({col:'#60A5FA',txt:'Latihan memori auditori-visual: dengarkan kata, tutup mata, ucapkan ulang. Tingkatkan jumlah suku kata secara bertahap.'});
+    if(mirrorR>20) items.push({col:'#F97316',txt:'Terapi pengenalan huruf visual-motorik untuk huruf yang rentan terbalik (b, d, p, q). Gunakan panduan gerakan tangan.'});
+    items.push({col:'#FF6B9D',txt:'Konsultasikan hasil ini dengan psikolog atau neurolog anak untuk evaluasi komprehensif (WISC-V, WIAT-III).'});
+  }
+  document.getElementById('intervBox').innerHTML=items.map(i=>`<div class="interv-item"><div class="interv-dot" style="background:${i.col}"></div><div class="interv-text">${i.txt}</div></div>`).join('');
+
+  if(risk<40) confetti();
+}
+
+// ── CONFETTI ──────────────────────────────────────────────
+function confetti(){
+  const cols=['#00D4FF','#FF6B9D','#FFD700','#4ADE80','#A78BFA'];
+  if(!document.getElementById('confCSS')){
+    const s=document.createElement('style'); s.id='confCSS';
+    s.textContent='@keyframes cFall{to{transform:translateY(115vh) rotate(720deg);opacity:0}}';
+    document.head.appendChild(s);
+  }
+  for(let i=0;i<55;i++){
+    setTimeout(()=>{
+      const d=document.createElement('div');
+      const col=cols[i%cols.length];
+      d.style.cssText=`position:fixed;z-index:50;pointer-events:none;
+        width:9px;height:9px;border-radius:${Math.random()>0.5?'50%':'2px'};
+        background:${col};left:${Math.random()*100}vw;top:-12px;
+        animation:cFall ${1.8+Math.random()*1.2}s ${Math.random()*0.5}s ease forwards;`;
+      document.body.appendChild(d);
+      setTimeout(()=>d.remove(),3500);
+    },i*55);
+  }
+}
+
+// ── NEURAL THREADS ────────────────────────────────────────
+let threadT=0;
+function drawThreads(){
+  if(selectedPool.length<2) return;
+  threadT+=0.07;
+  for(let i=0;i<selectedPool.length-1;i++){
+    const a=selectedPool[i],b=selectedPool[i+1];
+    const mx=(a.x+b.x)/2+Math.sin(threadT+i)*18;
+    const my=(a.y+b.y)/2+Math.cos(threadT+i)*18;
+    ctx.save();
+    ctx.setLineDash([7,6]); ctx.lineDashOffset=-threadT*18;
+    ctx.strokeStyle=a.col; ctx.lineWidth=1.5;
+    ctx.shadowColor=a.col; ctx.shadowBlur=8;
+    ctx.beginPath(); ctx.moveTo(a.x,a.y);
+    ctx.quadraticCurveTo(mx,my,b.x,b.y); ctx.stroke();
+    ctx.setLineDash([]);
+    // flowing dot
+    const t2=(Math.sin(threadT)*0.5+0.5);
+    const bx=bz(a.x,mx,b.x,t2), by=bz(a.y,my,b.y,t2);
+    ctx.fillStyle='#fff'; ctx.shadowBlur=14;
+    ctx.beginPath(); safeArc(bx,by,3.5); ctx.fill();
+    ctx.restore();
+  }
+}
+function bz(p0,p1,p2,t){ return (1-t)*(1-t)*p0+2*(1-t)*t*p1+t*t*p2; }
+
+// ── WORD HINT LABEL ───────────────────────────────────────
+function drawWordHint(){
+  if(G.state!=='play') return;
+  const hint=G.currentWord?G.currentWord.hint:'';
+  ctx.save();
+  ctx.font='600 0.82rem Nunito,sans-serif'; // can't use rem in canvas directly
+  ctx.font='600 13px Nunito,sans-serif';
+  ctx.fillStyle='rgba(255,255,255,0.22)';
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  ctx.fillText('💬 '+hint, W/2, 12);
+  ctx.restore();
+}
+
+// ── MAIN LOOP ─────────────────────────────────────────────
+function loop(){
+  requestAnimationFrame(loop);
+
+  drawBG(G.mood);
+  drawWordHint();
+
+  if(G.state==='play'||G.state==='gameover'){
+    drawThreads();
+
+    // Update & draw ghosts
+    for(let i=ghosts.length-1;i>=0;i--){ ghosts[i].update(); if(ghosts[i].dead){ghosts.splice(i,1);}else{ghosts[i].draw();} }
+
+    // Update & draw creatures
+    G.creatures.forEach(c=>{ c.update(); c.draw(); });
+
+    // Update & draw health orbs
+    for(let i=G.healthOrbs.length-1;i>=0;i--){
+      G.healthOrbs[i].update();
+      G.healthOrbs[i].draw();
+      if(G.healthOrbs[i].dead) G.healthOrbs.splice(i,1);
+    }
+
+    // Particles
+    updateParticles();
+  }
+
+  drawCursor();
+}
+loop();
+</script>
+</body>
+</html>

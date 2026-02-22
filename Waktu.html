@@ -1,0 +1,1960 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rasi Keluarga — Family Constellation</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --neon-cyan:#00d9ff;
+  --neon-purple:#a855f7;
+  --neon-pink:#ff6ec7;
+  --neon-blue:#00a8ff;
+  --deep-space:#0a0a14;
+  --void-dark:#13131f;
+  --nebula-dark:#1a1a2e;
+  --star-white:#f0f4ff;
+  --neon-glow:rgba(0,217,255,.55);
+  --panel-bg:rgba(10,10,20,.95);
+  --panel-border:rgba(0,217,255,.2);
+  --neon-dim:rgba(0,217,255,.5);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  font-family:'Rajdhani',sans-serif;
+  background:var(--deep-space);
+  color:var(--star-white);
+  overflow:hidden;
+  height:100vh;width:100vw;
+  cursor:crosshair;
+  font-size:16px;
+}
+
+/* ── BACKGROUND LAYERS ──────────────────────────────────── */
+.universe-bg{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse at bottom,#1b1035 0%,#0a0a14 70%);
+}
+.grid-bg{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    linear-gradient(90deg,rgba(0,217,255,.04) 1px,transparent 1px),
+    linear-gradient(rgba(0,217,255,.04) 1px,transparent 1px);
+  background-size:50px 50px;
+  opacity:.5;
+}
+.nebula{
+  position:fixed;border-radius:50%;filter:blur(80px);
+  opacity:.13;pointer-events:none;
+  animation:nebFloat 20s infinite ease-in-out;
+  z-index:0;
+}
+.nebula-1{
+  width:600px;height:600px;
+  background:radial-gradient(circle,var(--neon-purple),transparent);
+  top:5%;left:-8%;
+}
+.nebula-2{
+  width:500px;height:500px;
+  background:radial-gradient(circle,var(--neon-cyan),transparent);
+  bottom:5%;right:-8%;
+  animation-delay:-10s;
+}
+@keyframes nebFloat{
+  0%,100%{transform:translate(0,0);}
+  33%{transform:translate(40px,-40px);}
+  66%{transform:translate(-40px,40px);}
+}
+#nebula-canvas{position:fixed;inset:0;z-index:1;pointer-events:none;}
+#sky-canvas{position:fixed;inset:0;z-index:2;}
+
+/* ── HEADER ─────────────────────────────────────────────── */
+#header{
+  position:fixed;top:0;left:0;right:0;
+  padding:13px 24px;
+  display:flex;align-items:center;justify-content:space-between;
+  z-index:20;pointer-events:all;
+  background:rgba(10,10,20,.88);
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--panel-border);
+}
+.logo-main{
+  font-family:'Orbitron',sans-serif;
+  font-size:17px;font-weight:900;
+  letter-spacing:4px;
+  background:linear-gradient(135deg,var(--neon-cyan),var(--neon-purple));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  text-shadow:none;
+}
+.logo-sub{
+  font-family:'Space Mono',monospace;
+  font-size:9px;letter-spacing:3px;text-transform:uppercase;
+  color:rgba(240,244,255,.4);margin-top:1px;
+}
+.header-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap;}
+
+/* ── BUTTONS ────────────────────────────────────────────── */
+.btn{
+  font-family:'Orbitron',sans-serif;
+  font-size:9px;letter-spacing:1.5px;text-transform:uppercase;
+  padding:8px 15px;border:1px solid;
+  cursor:pointer;transition:all .3s;
+  background:transparent;pointer-events:all;white-space:nowrap;
+  border-radius:3px;position:relative;overflow:hidden;
+}
+.btn::before{
+  content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+  transition:left .3s;z-index:-1;
+}
+.btn-gold{color:var(--neon-cyan);border-color:var(--neon-cyan);}
+.btn-gold::before{background:var(--neon-cyan);}
+.btn-gold:hover{color:var(--deep-space);box-shadow:0 0 20px var(--neon-glow);}
+.btn-gold:hover::before{left:0;}
+
+.btn-ghost{color:rgba(240,244,255,.5);border-color:rgba(240,244,255,.15);}
+.btn-ghost:hover{color:var(--star-white);border-color:rgba(240,244,255,.4);}
+
+.btn-teal{color:var(--neon-cyan);border-color:rgba(0,217,255,.35);}
+.btn-teal::before{background:var(--neon-cyan);}
+.btn-teal:hover{color:var(--deep-space);box-shadow:0 0 16px var(--neon-glow);}
+.btn-teal:hover::before{left:0;}
+
+.btn-violet{color:var(--neon-purple);border-color:rgba(168,85,247,.35);}
+.btn-violet::before{background:var(--neon-purple);}
+.btn-violet:hover{color:#fff;box-shadow:0 0 16px rgba(168,85,247,.5);}
+.btn-violet:hover::before{left:0;}
+
+.btn-danger{color:var(--neon-pink);border-color:rgba(255,110,199,.3);}
+.btn-danger::before{background:var(--neon-pink);}
+.btn-danger:hover{color:#fff;box-shadow:0 0 16px rgba(255,110,199,.5);}
+.btn-danger:hover::before{left:0;}
+
+.btn-blue{color:var(--neon-blue);border-color:rgba(0,168,255,.3);}
+.btn-blue::before{background:var(--neon-blue);}
+.btn-blue:hover{color:var(--deep-space);box-shadow:0 0 16px rgba(0,168,255,.5);}
+.btn-blue:hover::before{left:0;}
+
+/* ── HINT ───────────────────────────────────────────────── */
+#hint{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;
+  color:rgba(0,217,255,.4);z-index:20;pointer-events:none;
+  text-align:center;animation:fadeHint 4s ease-in-out infinite;
+}
+@keyframes fadeHint{0%,100%{opacity:.15}50%{opacity:.6}}
+
+/* ── MODAL ──────────────────────────────────────────────── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(10,10,20,.88);
+  z-index:100;display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .4s;
+  backdrop-filter:blur(10px);
+}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{
+  background:var(--panel-bg);
+  border:1px solid var(--panel-border);
+  padding:38px;max-width:500px;width:92%;
+  position:relative;
+  box-shadow:0 0 60px rgba(0,217,255,.08),0 0 120px rgba(168,85,247,.05),inset 0 0 40px rgba(0,217,255,.02);
+  max-height:90vh;overflow-y:auto;
+  border-radius:4px;
+}
+.modal::before{
+  content:'';position:absolute;top:-1px;left:20px;right:20px;height:2px;
+  background:linear-gradient(to right,transparent,var(--neon-cyan),transparent);
+}
+.modal-close{
+  position:absolute;top:13px;right:16px;background:none;border:none;
+  color:rgba(240,244,255,.35);font-size:17px;cursor:pointer;
+  transition:color .2s;z-index:2;font-family:'Orbitron',sans-serif;
+}
+.modal-close:hover{color:var(--neon-cyan);}
+.modal-title{
+  font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;
+  color:var(--neon-cyan);letter-spacing:3px;text-transform:uppercase;
+  margin-bottom:5px;
+}
+.modal-subtitle{
+  font-family:'Space Mono',monospace;font-size:11px;
+  color:rgba(240,244,255,.4);margin-bottom:26px;line-height:1.6;
+}
+.form-group{margin-bottom:16px;}
+label{
+  display:block;font-family:'Space Mono',monospace;
+  font-size:8px;letter-spacing:2px;text-transform:uppercase;
+  color:rgba(0,217,255,.6);margin-bottom:6px;
+}
+input,select,textarea{
+  width:100%;background:rgba(0,217,255,.03);
+  border:1px solid rgba(0,217,255,.18);
+  color:var(--star-white);
+  font-family:'Rajdhani',sans-serif;font-size:15px;
+  padding:8px 11px;outline:none;
+  transition:border-color .3s,box-shadow .3s;
+  border-radius:2px;
+}
+input:focus,select:focus,textarea:focus{
+  border-color:var(--neon-cyan);
+  box-shadow:0 0 12px rgba(0,217,255,.15);
+}
+select option{background:#0d0d1a;}
+textarea{resize:vertical;min-height:66px;}
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+/* ── INFO PANEL ─────────────────────────────────────────── */
+#info-panel{
+  position:fixed;right:-350px;top:60px;width:310px;
+  background:var(--panel-bg);
+  border:1px solid var(--panel-border);
+  border-right:none;padding:26px;z-index:50;
+  transition:right .5s cubic-bezier(.23,1,.32,1);
+  max-height:calc(100vh - 78px);overflow-y:auto;
+}
+#info-panel.open{right:0;}
+#info-panel::before{
+  content:'';position:absolute;top:0;left:0;bottom:0;width:2px;
+  background:linear-gradient(to bottom,transparent,var(--neon-cyan),transparent);
+}
+.info-star-symbol{font-size:38px;text-align:center;margin-bottom:8px;}
+.info-name{
+  font-family:'Orbitron',sans-serif;font-size:15px;font-weight:700;
+  color:var(--neon-cyan);text-align:center;margin-bottom:2px;
+  text-shadow:0 0 15px rgba(0,217,255,.4);
+}
+.info-role{
+  font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;
+  color:rgba(240,244,255,.4);text-align:center;margin-bottom:18px;
+  text-transform:uppercase;
+}
+.info-divider{
+  height:1px;margin:12px 0;
+  background:linear-gradient(to right,transparent,var(--neon-purple),transparent);
+}
+.info-field{margin-bottom:9px;}
+.info-label{
+  font-family:'Space Mono',monospace;font-size:7px;
+  letter-spacing:2px;text-transform:uppercase;
+  color:rgba(0,217,255,.5);margin-bottom:2px;
+}
+.info-value{font-size:13px;color:rgba(240,244,255,.85);white-space:pre-wrap;line-height:1.5;}
+.info-actions{display:flex;gap:6px;margin-top:18px;flex-wrap:wrap;}
+.btn-sm{
+  flex:1;font-family:'Orbitron',sans-serif;font-size:7px;
+  letter-spacing:1.2px;text-transform:uppercase;
+  padding:7px 6px;border:1px solid;cursor:pointer;
+  background:transparent;transition:all .3s;min-width:56px;
+  border-radius:2px;
+}
+.btn-sm-gold{color:var(--neon-cyan);border-color:rgba(0,217,255,.4);}
+.btn-sm-gold:hover{background:var(--neon-cyan);color:var(--deep-space);}
+.btn-sm-red{color:var(--neon-pink);border-color:rgba(255,110,199,.3);}
+.btn-sm-red:hover{background:var(--neon-pink);color:#fff;}
+.btn-sm-blue{color:var(--neon-blue);border-color:rgba(0,168,255,.3);}
+.btn-sm-blue:hover{background:var(--neon-blue);color:var(--deep-space);}
+
+/* ── CONNECT INDICATOR ──────────────────────────────────── */
+#connect-indicator{
+  position:fixed;top:60px;left:50%;transform:translateX(-50%);
+  background:rgba(0,168,255,.1);border:1px solid rgba(0,168,255,.4);
+  color:var(--neon-blue);
+  font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;
+  padding:7px 16px;z-index:20;display:none;pointer-events:all;
+  align-items:center;gap:8px;border-radius:2px;
+}
+#connect-indicator.active{display:flex;}
+
+/* ── ZOOM CONTROLS ──────────────────────────────────────── */
+#zoom-controls{
+  position:fixed;bottom:66px;right:18px;z-index:20;
+  display:flex;flex-direction:column;gap:3px;pointer-events:all;
+}
+.zoom-btn{
+  width:32px;height:32px;
+  background:rgba(10,10,20,.9);
+  border:1px solid var(--panel-border);
+  color:rgba(240,244,255,.4);font-size:15px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;border-radius:2px;
+}
+.zoom-btn:hover{color:var(--neon-cyan);border-color:var(--neon-cyan);box-shadow:0 0 12px var(--neon-glow);}
+
+/* ── LEGEND ─────────────────────────────────────────────── */
+#legend{
+  position:fixed;bottom:24px;left:18px;z-index:20;
+  pointer-events:none;max-height:220px;overflow:hidden;
+}
+.legend-item{
+  display:flex;align-items:center;gap:6px;margin-bottom:3px;
+  font-family:'Space Mono',monospace;font-size:8px;
+  letter-spacing:.5px;color:rgba(240,244,255,.35);
+}
+.legend-sym{font-size:10px;width:14px;flex-shrink:0;color:rgba(240,244,255,.3);text-align:center;}
+
+/* ── TOAST ──────────────────────────────────────────────── */
+#toast{
+  position:fixed;top:68px;left:50%;transform:translateX(-50%);
+  background:rgba(0,217,255,.08);border:1px solid rgba(0,217,255,.3);
+  color:var(--neon-cyan);
+  font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;
+  padding:8px 20px;z-index:200;opacity:0;transition:opacity .4s;
+  pointer-events:none;text-align:center;max-width:420px;
+  border-radius:2px;
+}
+
+/* ── WELCOME SCREEN ─────────────────────────────────────── */
+#welcome{
+  position:fixed;inset:0;z-index:500;
+  display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at center,#120a2a 0%,#0a0a14 70%);
+  transition:opacity 1s ease-out;
+}
+#welcome.hidden{opacity:0;pointer-events:none;}
+.welcome-inner{text-align:center;max-width:560px;padding:36px;}
+.welcome-star{
+  font-size:52px;margin-bottom:18px;display:block;
+  animation:wstar 2.5s ease-in-out infinite;
+}
+@keyframes wstar{
+  0%,100%{transform:scale(1);filter:drop-shadow(0 0 10px var(--neon-cyan));}
+  50%{transform:scale(1.1);filter:drop-shadow(0 0 30px var(--neon-cyan)) drop-shadow(0 0 60px var(--neon-purple));}
+}
+.welcome-title{
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(1.8rem,6vw,3.2rem);
+  font-weight:900;letter-spacing:5px;text-transform:uppercase;
+  margin-bottom:6px;
+  color:var(--neon-cyan);
+  text-shadow:0 0 10px var(--neon-cyan),0 0 30px var(--neon-cyan),0 0 60px rgba(0,217,255,.4);
+  animation:glitch 4s infinite;
+}
+@keyframes glitch{
+  0%,100%{transform:translate(0);text-shadow:0 0 10px var(--neon-cyan),0 0 30px var(--neon-cyan);}
+  20%{transform:translate(-2px,2px);text-shadow:2px -2px 0 var(--neon-pink),-2px 2px 0 var(--neon-blue),0 0 30px var(--neon-cyan);}
+  40%{transform:translate(-2px,-2px);}
+  60%{transform:translate(2px,2px);}
+  80%{transform:translate(2px,-2px);}
+}
+.welcome-tagline{
+  font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;
+  color:rgba(240,244,255,.4);margin-bottom:28px;line-height:1.8;
+  text-transform:uppercase;
+}
+.welcome-desc{
+  font-size:15px;color:rgba(240,244,255,.6);
+  line-height:2;margin-bottom:32px;
+}
+.welcome-btn{
+  font-family:'Orbitron',sans-serif;font-size:10px;
+  letter-spacing:3px;text-transform:uppercase;
+  padding:14px 44px;
+  border:2px solid var(--neon-cyan);
+  color:var(--neon-cyan);background:transparent;
+  cursor:pointer;transition:all .4s;
+  border-radius:3px;position:relative;overflow:hidden;
+}
+.welcome-btn::before{
+  content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+  background:var(--neon-cyan);transition:left .35s;z-index:-1;
+}
+.welcome-btn:hover{color:var(--deep-space);box-shadow:0 0 30px var(--neon-glow);letter-spacing:4px;}
+.welcome-btn:hover::before{left:0;}
+
+/* ── FILE PANEL ─────────────────────────────────────────── */
+#file-panel{
+  position:fixed;top:60px;left:-300px;width:270px;
+  background:var(--panel-bg);
+  border:1px solid var(--panel-border);border-left:none;
+  padding:26px;z-index:50;
+  transition:left .5s cubic-bezier(.23,1,.32,1);
+  max-height:calc(100vh - 78px);overflow-y:auto;
+}
+#file-panel.open{left:0;}
+#file-panel::before{
+  content:'';position:absolute;top:0;right:0;bottom:0;width:2px;
+  background:linear-gradient(to bottom,transparent,var(--neon-purple),transparent);
+}
+.fp-title{
+  font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;
+  color:var(--neon-cyan);letter-spacing:3px;text-transform:uppercase;
+  margin-bottom:18px;
+}
+.fp-section{margin-bottom:18px;}
+.fp-label{
+  font-family:'Space Mono',monospace;font-size:7px;
+  letter-spacing:2px;text-transform:uppercase;
+  color:rgba(0,217,255,.5);margin-bottom:6px;
+}
+.fp-divider{
+  height:1px;
+  background:linear-gradient(to right,transparent,rgba(168,85,247,.5),transparent);
+  margin:14px 0;
+}
+.fp-note{
+  font-size:11px;font-family:'Space Mono',monospace;
+  color:rgba(240,244,255,.3);line-height:1.7;margin-top:14px;
+}
+
+/* ── PDF OVERLAY ────────────────────────────────────────── */
+#pdf-overlay{
+  position:fixed;inset:0;background:rgba(10,10,20,.95);
+  z-index:600;display:none;
+  align-items:center;justify-content:center;
+  flex-direction:column;gap:18px;
+}
+#pdf-overlay.show{display:flex;}
+.pdf-spin{width:56px;height:56px;animation:spin 1.2s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pdf-text{
+  font-family:'Space Mono',monospace;font-size:10px;
+  letter-spacing:3px;color:var(--neon-cyan);text-transform:uppercase;
+}
+
+/* ── CLOCK ──────────────────────────────────────────────── */
+#clock-display{
+  display:flex;flex-direction:column;align-items:flex-end;
+  padding:4px 12px;
+  border-left:1px solid rgba(0,217,255,.15);
+  margin-right:4px;
+}
+#clock-time{
+  font-family:'Space Mono',monospace;
+  font-size:15px;font-weight:700;
+  color:var(--neon-cyan);
+  letter-spacing:2px;
+  text-shadow:0 0 12px rgba(0,217,255,.5);
+  line-height:1.2;
+}
+#clock-date{
+  font-family:'Space Mono',monospace;
+  font-size:8px;letter-spacing:1.5px;
+  color:rgba(240,244,255,.35);
+  text-transform:uppercase;
+  margin-top:1px;
+}
+
+/* ── BIO OPEN BUTTON ────────────────────────────────────── */
+.bio-open-btn{
+  width:100%;margin-top:14px;
+  font-family:'Space Mono',monospace;font-size:8px;
+  letter-spacing:2px;text-transform:uppercase;
+  padding:9px;border:1px solid rgba(168,85,247,.35);
+  color:var(--neon-purple);background:rgba(168,85,247,.05);
+  cursor:pointer;transition:all .3s;border-radius:2px;
+}
+.bio-open-btn:hover{background:rgba(168,85,247,.15);color:#fff;border-color:var(--neon-purple);}
+
+/* ── BIOGRAPHY PANEL ─────────────────────────────────────── */
+#bio-panel{
+  position:fixed;inset:0;z-index:80;
+  display:flex;align-items:flex-end;
+  pointer-events:none;
+  transition:background .4s;
+}
+#bio-panel.open{
+  pointer-events:all;
+  background:rgba(10,10,20,.7);
+  backdrop-filter:blur(6px);
+}
+.bio-inner{
+  width:100%;max-height:82vh;
+  background:var(--panel-bg);
+  border-top:1px solid rgba(168,85,247,.3);
+  border-left:1px solid var(--panel-border);
+  border-right:1px solid var(--panel-border);
+  border-radius:4px 4px 0 0;
+  overflow-y:auto;
+  transform:translateY(100%);
+  transition:transform .45s cubic-bezier(.23,1,.32,1);
+  position:relative;
+  max-width:860px;
+  margin:0 auto;
+  width:100%;
+}
+#bio-panel.open .bio-inner{transform:translateY(0);}
+.bio-inner::before{
+  content:'';position:absolute;top:-1px;left:60px;right:60px;height:2px;
+  background:linear-gradient(to right,transparent,var(--neon-purple),transparent);
+}
+
+.bio-header{
+  display:flex;align-items:flex-start;gap:16px;
+  padding:28px 30px 18px;
+  border-bottom:1px solid rgba(168,85,247,.15);
+}
+.bio-sym{font-size:42px;line-height:1;flex-shrink:0;margin-top:2px;}
+.bio-name{
+  font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;
+  color:var(--neon-cyan);letter-spacing:2px;
+  text-shadow:0 0 16px rgba(0,217,255,.4);
+  margin-bottom:4px;
+}
+.bio-sub{
+  font-family:'Space Mono',monospace;font-size:9px;
+  letter-spacing:2px;text-transform:uppercase;
+  color:rgba(240,244,255,.35);
+}
+
+/* TABS */
+.bio-tabs{
+  display:flex;gap:0;
+  border-bottom:1px solid rgba(168,85,247,.2);
+  padding:0 30px;
+}
+.bio-tab{
+  font-family:'Space Mono',monospace;font-size:9px;
+  letter-spacing:1.5px;text-transform:uppercase;
+  padding:12px 18px;border:none;background:transparent;
+  color:rgba(240,244,255,.35);cursor:pointer;
+  border-bottom:2px solid transparent;margin-bottom:-1px;
+  transition:all .25s;
+}
+.bio-tab:hover{color:var(--neon-purple);}
+.bio-tab.active{color:var(--neon-purple);border-bottom-color:var(--neon-purple);}
+
+/* SECTIONS */
+.bio-section{padding:24px 30px 30px;display:flex;flex-direction:column;gap:20px;}
+.bio-section.hidden{display:none;}
+
+.bio-card{
+  background:rgba(168,85,247,.06);
+  border:1px solid rgba(168,85,247,.2);
+  border-radius:4px;padding:18px;
+}
+.bio-card-head{
+  font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;
+  color:var(--neon-purple);letter-spacing:2px;margin-bottom:14px;
+}
+.bio-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.bio-grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+.bio-chip{
+  background:rgba(0,217,255,.05);border:1px solid rgba(0,217,255,.12);
+  border-radius:2px;padding:10px 12px;
+}
+.bio-chip-label{
+  font-family:'Space Mono',monospace;font-size:7px;
+  letter-spacing:2px;text-transform:uppercase;
+  color:rgba(0,217,255,.45);margin-bottom:4px;
+}
+.bio-chip-val{font-size:13px;color:var(--star-white);font-weight:600;}
+
+.bio-block{}
+.bio-block-title{
+  font-family:'Space Mono',monospace;font-size:8px;
+  letter-spacing:2px;text-transform:uppercase;
+  color:rgba(0,217,255,.5);margin-bottom:9px;
+}
+.bio-text{
+  font-size:14px;color:rgba(240,244,255,.8);
+  line-height:1.85;font-family:'Rajdhani',sans-serif;
+}
+.bio-tags{display:flex;flex-wrap:wrap;gap:7px;}
+.bio-tag{
+  padding:5px 12px;
+  background:rgba(168,85,247,.12);
+  border:1px solid rgba(168,85,247,.3);
+  border-radius:20px;font-size:12px;
+  color:rgba(240,244,255,.75);
+  font-family:'Rajdhani',sans-serif;
+}
+
+/* PERSONALITY BARS */
+.bio-bars{display:flex;flex-direction:column;gap:10px;margin:4px 0;}
+.bio-bar-row{display:flex;align-items:center;gap:12px;}
+.bio-bar-label{
+  font-family:'Space Mono',monospace;font-size:8px;
+  letter-spacing:1px;text-transform:uppercase;
+  color:rgba(240,244,255,.4);width:110px;flex-shrink:0;text-align:right;
+}
+.bio-bar-track{
+  flex:1;height:4px;background:rgba(255,255,255,.06);
+  border-radius:2px;overflow:hidden;
+}
+.bio-bar-fill{
+  height:100%;border-radius:2px;
+  background:linear-gradient(90deg,var(--neon-purple),var(--neon-cyan));
+  transition:width .8s cubic-bezier(.23,1,.32,1);
+}
+.bio-bar-val{
+  font-family:'Space Mono',monospace;font-size:9px;
+  color:var(--neon-cyan);width:32px;flex-shrink:0;
+}
+
+/* QUOTE */
+.bio-quote{
+  font-family:'Rajdhani',sans-serif;font-size:16px;font-style:italic;
+  color:var(--neon-purple);line-height:1.7;
+  border-left:2px solid var(--neon-purple);
+  padding:10px 16px;
+  background:rgba(168,85,247,.05);
+  border-radius:0 3px 3px 0;
+}
+
+/* ── SCROLLBAR ──────────────────────────────────────────── */
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:rgba(168,85,247,.5);}
+</style>
+</head>
+<body>
+
+<!-- UNIVERSE BACKGROUND -->
+<div class="universe-bg"></div>
+<div class="nebula nebula-1"></div>
+<div class="nebula nebula-2"></div>
+<div class="grid-bg"></div>
+
+<!-- WELCOME -->
+<div id="welcome">
+  <div class="welcome-inner">
+    <span class="welcome-star">✦</span>
+    <div class="welcome-title">Rasi Keluarga</div>
+    <div class="welcome-tagline">Silsilah sebagai peta bintang — setiap jiwa adalah bintang di langit keluargamu</div>
+    <div class="welcome-desc">
+      Klik area kosong untuk menambah bintang.<br>
+      Hubungkan mereka seperti rasi bintang.<br>
+      Simpan, muat kembali, dan ekspor sebagai PDF.
+    </div>
+    <button class="welcome-btn" onclick="startApp()">◈ Mulai dari Kegelapan ◈</button>
+  </div>
+</div>
+
+<!-- CANVASES -->
+<canvas id="nebula-canvas"></canvas>
+<canvas id="sky-canvas"></canvas>
+
+<!-- PDF OVERLAY -->
+<div id="pdf-overlay">
+  <svg class="pdf-spin" viewBox="0 0 56 56">
+    <circle cx="28" cy="28" r="22" fill="none" stroke="#00d9ff" stroke-width="2.5" stroke-dasharray="92 48" opacity=".85"/>
+    <circle cx="28" cy="28" r="14" fill="none" stroke="#a855f7" stroke-width="1.5" stroke-dasharray="50 38" opacity=".5"/>
+  </svg>
+  <div class="pdf-text">Mencetak Rasi Keluarga...</div>
+</div>
+
+<!-- HEADER -->
+<div id="header">
+  <div>
+    <div class="logo-main">✦ Rasi Keluarga</div>
+    <div class="logo-sub">// Peta Silsilah Semesta</div>
+  </div>
+  <div class="header-actions">
+    <div id="clock-display">
+      <div id="clock-time">00:00:00</div>
+      <div id="clock-date">— · —</div>
+    </div>
+    <button class="btn btn-ghost" onclick="toggleFilePanel()">☰ Berkas</button>
+    <button class="btn btn-ghost" id="connect-toggle-btn" onclick="toggleConnectMode()">↔ Hubungkan</button>
+    <button class="btn btn-gold" onclick="openAddModal()">+ Tambah Bintang</button>
+  </div>
+</div>
+
+<!-- FILE PANEL (LEFT DRAWER) -->
+<div id="file-panel">
+  <button class="modal-close" onclick="toggleFilePanel()">✕</button>
+  <div class="fp-title">☰ Kelola Berkas</div>
+
+  <div class="fp-section">
+    <div class="fp-label">// Simpan Rasi</div>
+    <button class="btn btn-teal" style="width:100%;font-size:8px;padding:10px" onclick="saveToFile()">
+      Simpan sebagai .rasi
+    </button>
+  </div>
+
+  <div class="fp-section">
+    <div class="fp-label">// Muat Rasi</div>
+    <button class="btn btn-violet" style="width:100%;font-size:8px;padding:10px" onclick="document.getElementById('load-input').click()">
+      Muat dari .rasi
+    </button>
+    <input type="file" id="load-input" accept=".rasi,.json" style="display:none" onchange="loadFromFile(event)">
+  </div>
+
+  <div class="fp-divider"></div>
+
+  <div class="fp-section">
+    <div class="fp-label">// Ekspor PDF</div>
+    <button class="btn btn-gold" style="width:100%;font-size:8px;padding:10px;margin-bottom:6px" onclick="exportPDF('landscape')">
+      PDF Landscape (A4 Lebar)
+    </button>
+    <button class="btn btn-ghost" style="width:100%;font-size:8px;padding:10px" onclick="exportPDF('portrait')">
+      PDF Portrait (A4 Tegak)
+    </button>
+  </div>
+
+  <div class="fp-divider"></div>
+
+  <div class="fp-section">
+    <div class="fp-label">// Reset</div>
+    <button class="btn btn-danger" style="width:100%;font-size:8px;padding:10px" onclick="clearAll()">
+      Hapus Semua Bintang
+    </button>
+  </div>
+
+  <div class="fp-note">
+    File <code style="color:var(--neon-cyan);font-size:9px">.rasi</code> menyimpan semua bintang &amp; koneksimu. Muat kapan saja untuk melanjutkan.
+  </div>
+</div>
+
+<!-- CONNECT INDICATOR -->
+<div id="connect-indicator">
+  <span>⚡</span>
+  <span id="connect-status">Mode Hubung — Klik bintang pertama</span>
+  <button onclick="toggleConnectMode()" style="background:none;border:none;color:var(--neon-blue);cursor:pointer;font-size:13px;margin-left:5px">✕</button>
+</div>
+
+<!-- HINT -->
+<div id="hint">◈ Klik kosong = tambah bintang &nbsp;•&nbsp; Seret = pindah &nbsp;•&nbsp; Scroll = zoom &nbsp;•&nbsp; ☰ Berkas untuk simpan &amp; PDF ◈</div>
+
+<!-- ZOOM -->
+<div id="zoom-controls">
+  <button class="zoom-btn" onclick="zoomIn()">+</button>
+  <button class="zoom-btn" onclick="resetView()">◎</button>
+  <button class="zoom-btn" onclick="zoomOut()">−</button>
+</div>
+
+<!-- LEGEND -->
+<div id="legend">
+  <div style="font-family:'Space Mono',monospace;font-size:7px;letter-spacing:2px;color:rgba(0,217,255,.35);margin-bottom:5px;text-transform:uppercase">// Warna Generasi</div>
+  <div class="legend-item"><span class="legend-sym">ᛟ</span>Leluhur</div>
+  <div class="legend-item"><span class="legend-sym">✦</span>Greatest Gen <span style="opacity:.4">1900–27</span></div>
+  <div class="legend-item"><span class="legend-sym">◑</span>Silent Gen <span style="opacity:.4">1928–45</span></div>
+  <div class="legend-item"><span class="legend-sym">✸</span>Baby Boomers <span style="opacity:.4">1946–64</span></div>
+  <div class="legend-item"><span class="legend-sym">⌬</span>Gen X <span style="opacity:.4">1965–80</span></div>
+  <div class="legend-item"><span class="legend-sym">◈</span>Millennials <span style="opacity:.4">1981–96</span></div>
+  <div class="legend-item"><span class="legend-sym">⚝</span>Gen Z <span style="opacity:.4">1997–2012</span></div>
+  <div class="legend-item"><span class="legend-sym">⍺</span>Gen Alpha <span style="opacity:.4">2013–24</span></div>
+  <div class="legend-item"><span class="legend-sym">ꞵ</span>Gen Beta <span style="opacity:.4">2025+</span></div>
+</div>
+
+<!-- INFO PANEL (RIGHT DRAWER) -->
+<div id="info-panel">
+  <button class="modal-close" onclick="closeInfoPanel()">✕</button>
+  <div class="info-star-symbol" id="info-symbol">✦</div>
+  <div class="info-name" id="info-name">—</div>
+  <div class="info-role" id="info-role">—</div>
+  <div class="info-divider"></div>
+  <div class="info-field"><div class="info-label">// Rasi Zodiak</div><div class="info-value" id="info-zodiac">—</div></div>
+  <div class="info-field"><div class="info-label">// Generasi</div><div class="info-value" id="info-era">—</div></div>
+  <div class="info-field"><div class="info-label">// Status</div><div class="info-value" id="info-status">—</div></div>
+  <div class="info-field"><div class="info-label">// Umur</div><div class="info-value" id="info-age">—</div></div>
+  <div class="info-field"><div class="info-label">// Tanggal Lahir</div><div class="info-value" id="info-birth">—</div></div>
+  <div class="info-field"><div class="info-label">// Tanggal Wafat</div><div class="info-value" id="info-death">—</div></div>
+  <div class="info-field"><div class="info-label">// Tempat Lahir</div><div class="info-value" id="info-place">—</div></div>
+  <div class="info-field"><div class="info-label">// Catatan</div><div class="info-value" id="info-notes">—</div></div>
+  <div class="info-divider"></div>
+  <div class="info-actions">
+    <button class="btn-sm btn-sm-blue" onclick="editSelected()">✎ Edit</button>
+    <button class="btn-sm btn-sm-gold" onclick="connectFromSelected()">↔ Hubung</button>
+    <button class="btn-sm btn-sm-red" onclick="deleteSelected()">✕ Hapus</button>
+  </div>
+  <button class="bio-open-btn" onclick="openBioPanel()">◈ Lihat Biografi Lengkap</button>
+</div>
+
+<!-- BIOGRAPHY PANEL -->
+<div id="bio-panel">
+  <div class="bio-inner">
+    <div class="bio-header">
+      <div>
+        <div class="bio-sym" id="bio-sym">✦</div>
+        <div class="bio-name" id="bio-name">—</div>
+        <div class="bio-sub" id="bio-sub">—</div>
+      </div>
+      <button class="modal-close" onclick="closeBioPanel()" style="position:relative;top:auto;right:auto;margin-left:auto;align-self:flex-start">✕</button>
+    </div>
+
+    <!-- TABS -->
+    <div class="bio-tabs">
+      <button class="bio-tab active" onclick="switchTab('zodiak')">◈ Rasi Zodiak</button>
+      <button class="bio-tab" onclick="switchTab('generasi')">⌬ Generasi</button>
+      <button class="bio-tab" onclick="switchTab('kepribadian')">⚝ Kepribadian</button>
+    </div>
+
+    <!-- TAB: ZODIAK -->
+    <div class="bio-section" id="tab-zodiak">
+      <div class="bio-card">
+        <div class="bio-card-head" id="z-header">—</div>
+        <div class="bio-grid-3">
+          <div class="bio-chip"><div class="bio-chip-label">Elemen</div><div class="bio-chip-val" id="z-elemen">—</div></div>
+          <div class="bio-chip"><div class="bio-chip-label">Modus</div><div class="bio-chip-val" id="z-modus">—</div></div>
+          <div class="bio-chip"><div class="bio-chip-label">Planet</div><div class="bio-chip-val" id="z-planet">—</div></div>
+        </div>
+      </div>
+      <div class="bio-block">
+        <div class="bio-block-title">✦ Kepribadian Inti</div>
+        <div class="bio-text" id="z-kepribadian">—</div>
+      </div>
+      <div class="bio-block">
+        <div class="bio-block-title">◈ Kekuatan</div>
+        <div class="bio-tags" id="z-kekuatan"></div>
+      </div>
+      <div class="bio-block">
+        <div class="bio-block-title">⌬ Tantangan</div>
+        <div class="bio-tags" id="z-tantangan"></div>
+      </div>
+      <div class="bio-block">
+        <div class="bio-block-title">⚝ Cinta & Hubungan</div>
+        <div class="bio-text" id="z-cinta">—</div>
+      </div>
+      <div class="bio-block">
+        <div class="bio-block-title">⌀ Karier & Tujuan</div>
+        <div class="bio-text" id="z-karier">—</div>
+      </div>
+    </div>
+
+    <!-- TAB: GENERASI -->
+    <div class="bio-section hidden" id="tab-generasi">
+      <div class="bio-card">
+        <div class="bio-card-head" id="g-header">—</div>
+        <div class="bio-grid-2">
+          <div class="bio-chip"><div class="bio-chip-label">Rentang Tahun</div><div class="bio-chip-val" id="g-tahun">—</div></div>
+          <div class="bio-chip"><div class="bio-chip-label">Era</div><div class="bio-chip-val" id="g-era">—</div></div>
+        </div>
+      </div>
+      <div class="bio-block">
+        <div class="bio-block-title">✦ Konteks Sejarah</div>
+        <div class="bio-text" id="g-konteks">—</div>
+      </div>
+      <div class="bio-block">
+        <div class="bio-block-title">◈ Nilai & Pandangan Hidup</div>
+        <div class="bio-text" id="g-nilai">—</div>
+      </div>
+      <div class="bio-block">
+        <div class="bio-block-title">⌬ Ciri Khas Generasi</div>
+        <div class="bio-tags" id="g-ciri"></div>
+      </div>
+      <div class="bio-block">
+        <div class="bio-block-title">⚝ Hubungan Antar Generasi</div>
+        <div class="bio-text" id="g-hubungan">—</div>
+      </div>
+    </div>
+
+    <!-- TAB: KEPRIBADIAN GABUNGAN -->
+    <div class="bio-section hidden" id="tab-kepribadian">
+      <div class="bio-block">
+        <div class="bio-block-title">✦ Profil Kepribadian</div>
+        <div class="bio-text" id="p-profil">—</div>
+      </div>
+      <div class="bio-bars" id="p-bars"></div>
+      <div class="bio-block">
+        <div class="bio-block-title">◈ Gaya Komunikasi</div>
+        <div class="bio-text" id="p-komunikasi">—</div>
+      </div>
+      <div class="bio-block">
+        <div class="bio-block-title">⌬ Peran dalam Keluarga</div>
+        <div class="bio-text" id="p-keluarga">—</div>
+      </div>
+      <div class="bio-block">
+        <div class="bio-block-title">⚝ Kata Mutiara</div>
+        <div class="bio-quote" id="p-quote">—</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeAddModal()">✕</button>
+    <div class="modal-title" id="modal-title">Daftarkan Bintang Baru</div>
+    <div class="modal-subtitle" id="modal-subtitle">Setiap anggota keluarga adalah bintang dalam rasi keluarga kita</div>
+
+    <div class="form-group">
+      <label>Nama Lengkap *</label>
+      <input type="text" id="f-name" placeholder="Nama anggota keluarga...">
+    </div>
+    <div class="row-2">
+      <div class="form-group">
+        <label>Hubungan *</label>
+        <select id="f-role">
+          <option value="self">Diri Sendiri</option>
+          <option value="parent">Orang Tua</option>
+          <option value="grandparent">Kakek / Nenek</option>
+          <option value="sibling">Saudara</option>
+          <option value="spouse">Pasangan</option>
+          <option value="child">Anak</option>
+          <option value="other">Lainnya</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Jenis Kelamin</label>
+        <select id="f-gender">
+          <option value="male">Laki-laki</option>
+          <option value="female">Perempuan</option>
+        </select>
+      </div>
+    </div>
+    <div class="row-2">
+      <div class="form-group">
+        <label>Tanggal Lahir</label>
+        <input type="date" id="f-birth" oninput="updatePreview()">
+      </div>
+      <div class="form-group">
+        <label>Tempat Lahir</label>
+        <input type="text" id="f-place" placeholder="Kota...">
+      </div>
+    </div>
+    <div class="row-2">
+      <div class="form-group">
+        <label>Status</label>
+        <select id="f-status" onchange="toggleDeathField()">
+          <option value="alive">✦ Masih Hidup</option>
+          <option value="deceased">✝ Telah Berpulang</option>
+        </select>
+      </div>
+      <div class="form-group" id="f-death-group" style="display:none">
+        <label>Tanggal Wafat</label>
+        <input type="date" id="f-death">
+      </div>
+    </div>
+
+    <div id="preview-group" style="display:none;margin-bottom:16px">
+      <label>Generasi · Rasi Zodiak</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+        <div id="p-decade-box" style="display:flex;align-items:center;gap:10px;background:rgba(0,217,255,.05);border:1px solid rgba(0,217,255,.18);padding:9px 11px;transition:all .3s;border-radius:2px">
+          <span id="p-decade-sym" style="font-size:24px;line-height:1">✦</span>
+          <div>
+            <div id="p-decade-era" style="font-family:'Orbitron',sans-serif;font-size:8px;letter-spacing:1px;color:var(--neon-cyan);text-transform:uppercase;font-weight:700"></div>
+            <div id="p-decade-desc" style="font-family:'Space Mono',monospace;font-size:9px;color:rgba(240,244,255,.4);margin-top:2px;line-height:1.3"></div>
+          </div>
+        </div>
+        <div id="zodiac-preview-box" style="display:flex;align-items:center;gap:10px;border:1px solid rgba(168,85,247,.2);padding:9px 11px;transition:all .3s;border-radius:2px">
+          <span id="p-zodiac-sym" style="font-size:24px;line-height:1"></span>
+          <div>
+            <div id="p-zodiac-name" style="font-family:'Orbitron',sans-serif;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--neon-purple)"></div>
+            <div id="p-zodiac-el" style="font-family:'Space Mono',monospace;font-size:9px;color:rgba(240,244,255,.4);margin-top:2px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Catatan / Kisah Singkat</label>
+      <textarea id="f-notes" placeholder="Kisah singkat tentang beliau..."></textarea>
+    </div>
+    <button class="btn btn-gold" style="width:100%;margin-top:6px;padding:12px;font-size:9px" onclick="saveMember()">◈ Tambahkan ke Langit Keluarga</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  CONSTANTS
+// ═══════════════════════════════════════════════════════
+const GEN_MAP = [
+  {from:-Infinity,to:1883,symbol:'ᛟ',tag:'Leluhur',era:'Generasi Leluhur',desc:'Para pendiri garis keluarga, peletak pondasi sejarah',color:'#c8a96e'},
+  {from:1883,to:1900,symbol:'⌀',tag:'Lost Gen',era:'Lost Generation',desc:'Tumbuh di antara perang & perubahan besar abad',color:'#a07850'},
+  {from:1900,to:1928,symbol:'✦',tag:'Greatest Gen',era:'The Greatest Generation',desc:'Melewati Depresi Besar & Perang Dunia',color:'#d4a843'},
+  {from:1928,to:1946,symbol:'◑',tag:'Silent Gen',era:'Silent Generation',desc:'Diam tapi kuat — membangun dunia modern',color:'#8aaac8'},
+  {from:1946,to:1965,symbol:'✸',tag:'Baby Boomers',era:'Baby Boomers',desc:'Ledakan kelahiran pasca perang — penuh optimisme',color:'#ff8c42'},
+  {from:1965,to:1981,symbol:'⌬',tag:'Gen X',era:'Generation X',desc:'Generasi mandiri & skeptis — MTV & walkman',color:'#b06aff'},
+  {from:1981,to:1997,symbol:'◈',tag:'Millennials',era:'Millennials / Gen Y',desc:'Digital pioneer — tumbuh bersama internet',color:'#1ed9a0'},
+  {from:1997,to:2013,symbol:'⚝',tag:'Gen Z',era:'Generation Z — Zoomers',desc:'Lahir digital native — TikTok & streaming',color:'#4db8ff'},
+  {from:2013,to:2025,symbol:'⍺',tag:'Gen Alpha',era:'Generation Alpha',desc:'Generasi pertama yang lahir sepenuhnya di era AI',color:'#ff6eb4'},
+  {from:2025,to:2040,symbol:'ꞵ',tag:'Gen Beta',era:'Generation Beta',desc:'Tumbuh bersama AI generatif & energi terbarukan',color:'#a0ff60'},
+  {from:2040,to:2060,symbol:'⌁',tag:'Gen Gamma',era:'Generation Gamma',desc:'Generasi kota cerdas & perjalanan luar angkasa',color:'#60e8ff'},
+  {from:2060,to:Infinity,symbol:'⊛',tag:'Gen Future',era:'Generasi Masa Depan',desc:'Peradaban yang belum bisa kita bayangkan',color:'#dde8ff'},
+];
+
+const ZODIAC = [
+  {name:'Capricorn',glyph:'♑',element:'Bumi',color:'#4fc97e',
+   stars:[[-20,-25],[-5,-15],[0,-5],[10,0],[18,10],[8,18],[-10,15],[-20,-5]],
+   lines:[[-20,-25,-5,-15],[-5,-15,0,-5],[0,-5,10,0],[10,0,18,10],[18,10,8,18],[8,18,-10,15],[-10,15,-20,-5]]},
+  {name:'Aquarius',glyph:'♒',element:'Udara',color:'#f5d76e',
+   stars:[[-22,-8],[-8,-15],[8,-8],[22,-15],[-22,8],[-8,15],[8,8],[22,15]],
+   lines:[[-22,-8,-8,-15],[-8,-15,8,-8],[8,-8,22,-15],[-22,8,-8,15],[-8,15,8,8],[8,8,22,15]]},
+  {name:'Pisces',glyph:'♓',element:'Air',color:'#5bc8f5',
+   stars:[[-20,-15],[0,-8],[20,-15],[-20,15],[0,8],[20,15]],
+   lines:[[-20,-15,0,-8],[0,-8,20,-15],[-20,15,0,8],[0,8,20,15],[0,-8,0,8]]},
+  {name:'Aries',glyph:'♈',element:'Api',color:'#ff6b4a',
+   stars:[[-15,10],[-5,0],[5,-10],[15,-15],[20,0]],
+   lines:[[-15,10,-5,0],[-5,0,5,-10],[5,-10,15,-15],[15,-15,20,0]]},
+  {name:'Taurus',glyph:'♉',element:'Bumi',color:'#4fc97e',
+   stars:[[-18,0],[-8,8],[0,0],[8,8],[18,0],[0,-15],[-8,-8],[8,-8]],
+   lines:[[-18,0,-8,8],[-8,8,0,0],[0,0,8,8],[8,8,18,0],[0,0,0,-15],[0,-15,-8,-8],[0,-15,8,-8]]},
+  {name:'Gemini',glyph:'♊',element:'Udara',color:'#f5d76e',
+   stars:[[-12,-20],[-12,-8],[-12,5],[-12,18],[12,-20],[12,-8],[12,5],[12,18]],
+   lines:[[-12,-20,-12,-8],[-12,-8,-12,5],[-12,5,-12,18],[12,-20,12,-8],[12,-8,12,5],[12,5,12,18],[-12,-8,12,-8],[-12,5,12,5]]},
+  {name:'Cancer',glyph:'♋',element:'Air',color:'#5bc8f5',
+   stars:[[-18,5],[-5,-10],[5,-10],[18,5],[0,18]],
+   lines:[[-18,5,-5,-10],[-5,-10,5,-10],[5,-10,18,5],[18,5,0,18],[0,18,-18,5]]},
+  {name:'Leo',glyph:'♌',element:'Api',color:'#ff6b4a',
+   stars:[[-20,10],[-10,-5],[0,-15],[10,-10],[18,0],[10,10],[0,18],[-10,10]],
+   lines:[[-20,10,-10,-5],[-10,-5,0,-15],[0,-15,10,-10],[10,-10,18,0],[18,0,10,10],[10,10,0,18],[0,18,-10,10],[-10,10,-20,10]]},
+  {name:'Virgo',glyph:'♍',element:'Bumi',color:'#4fc97e',
+   stars:[[-15,-20],[-5,-10],[5,-15],[15,-5],[10,8],[0,18],[-10,8],[-15,0]],
+   lines:[[-15,-20,-5,-10],[-5,-10,5,-15],[5,-15,15,-5],[15,-5,10,8],[10,8,0,18],[0,18,-10,8],[-10,8,-15,0],[-15,0,-15,-20]]},
+  {name:'Libra',glyph:'♎',element:'Udara',color:'#f5d76e',
+   stars:[[-18,0],[0,-12],[18,0],[0,12]],
+   lines:[[-18,0,0,-12],[0,-12,18,0],[18,0,0,12],[0,12,-18,0],[-18,0,18,0]]},
+  {name:'Scorpio',glyph:'♏',element:'Air',color:'#5bc8f5',
+   stars:[[-20,-10],[-10,-5],[0,0],[10,5],[18,8],[22,15],[18,22],[12,20]],
+   lines:[[-20,-10,-10,-5],[-10,-5,0,0],[0,0,10,5],[10,5,18,8],[18,8,22,15],[22,15,18,22],[18,22,12,20]]},
+  {name:'Sagittarius',glyph:'♐',element:'Api',color:'#ff6b4a',
+   stars:[[-15,15],[0,0],[15,-15],[-15,-15],[15,15]],
+   lines:[[-15,15,15,-15],[0,0,-15,-15],[0,0,15,15],[-15,-15,15,-15],[15,-15,15,15]]},
+];
+
+const ROLE_LABELS={self:'Diri Sendiri',parent:'Orang Tua',grandparent:'Kakek/Nenek',sibling:'Saudara',spouse:'Pasangan',child:'Anak',other:'Lainnya'};
+
+function calcAge(birth,death){
+  if(!birth) return null;
+  const start=new Date(birth);
+  const end=death?new Date(death):new Date();
+  let age=end.getFullYear()-start.getFullYear();
+  const m=end.getMonth()-start.getMonth();
+  if(m<0||(m===0&&end.getDate()<start.getDate())) age--;
+  return age<0?0:age;
+}
+
+function toggleDeathField(){
+  const dec=document.getElementById('f-status').value==='deceased';
+  document.getElementById('f-death-group').style.display=dec?'block':'none';
+  if(!dec) document.getElementById('f-death').value='';
+}
+
+function getGeneration(birth){
+  if(!birth) return null;
+  const y=new Date(birth).getFullYear();
+  return GEN_MAP.find(g=>y>=g.from&&y<g.to)||GEN_MAP[GEN_MAP.length-1];
+}
+function getZodiac(birth){
+  if(!birth) return null;
+  const d=new Date(birth),m=d.getMonth()+1,day=d.getDate();
+  const ranges=[
+    [0,[12,22],[1,19]],[1,[1,20],[2,18]],[2,[2,19],[3,20]],[3,[3,21],[4,19]],
+    [4,[4,20],[5,20]],[5,[5,21],[6,20]],[6,[6,21],[7,22]],[7,[7,23],[8,22]],
+    [8,[8,23],[9,22]],[9,[9,23],[10,22]],[10,[10,23],[11,21]],[11,[11,22],[12,21]]
+  ];
+  for(const [idx,[sm,sd],[em,ed]] of ranges){
+    if((m===sm&&day>=sd)||(m===em&&day<=ed)) return ZODIAC[idx];
+  }
+  return ZODIAC[0];
+}
+
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+let members=[],connections=[],nextId=1;
+let selectedId=null,connectMode=false,connectSource=null,editingId=null,pendingPos=null;
+let scale=1,offsetX=0,offsetY=0;
+let isDraggingCanvas=false,dragStartX,dragStartY,dragOffX,dragOffY;
+let draggingStar=null,draggingStartX,draggingStartY;
+let filePanelOpen=false;
+
+// ═══════════════════════════════════════════════════════
+//  NEBULA BACKGROUND
+// ═══════════════════════════════════════════════════════
+const nebulaCanvas=document.getElementById('nebula-canvas');
+const nCtx=nebulaCanvas.getContext('2d');
+let bgStars=[],bgT=0;
+
+function initNebula(){
+  nebulaCanvas.width=window.innerWidth;nebulaCanvas.height=window.innerHeight;
+  bgStars=[];
+  for(let i=0;i<420;i++) bgStars.push({
+    x:Math.random()*nebulaCanvas.width,y:Math.random()*nebulaCanvas.height,
+    r:Math.random()*1.1+.2,a:Math.random()*.5+.1,
+    sp:Math.random()*.02+.005,ph:Math.random()*Math.PI*2
+  });
+}
+function drawNebula(){
+  bgT+=.016;nCtx.clearRect(0,0,nebulaCanvas.width,nebulaCanvas.height);
+  // Neon nebula blobs: purple, cyan, pink
+  [[.28,.38,'168,85,247',.12,.44],[.75,.58,'0,217,255',.08,.35],[.55,.25,'255,110,199',.07,.3]].forEach(([rx,ry,c,a,r])=>{
+    const g=nCtx.createRadialGradient(nebulaCanvas.width*rx,nebulaCanvas.height*ry,0,nebulaCanvas.width*rx,nebulaCanvas.height*ry,nebulaCanvas.width*r);
+    g.addColorStop(0,`rgba(${c},${a})`);g.addColorStop(1,'rgba(0,0,0,0)');
+    nCtx.fillStyle=g;nCtx.fillRect(0,0,nebulaCanvas.width,nebulaCanvas.height);
+  });
+  bgStars.forEach(s=>{
+    const a=Math.max(0,Math.min(1,s.a+Math.sin(bgT*s.sp*60+s.ph)*.22));
+    nCtx.beginPath();nCtx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    nCtx.fillStyle=`rgba(200,220,255,${a})`;nCtx.fill();
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  MAIN CANVAS DRAW
+// ═══════════════════════════════════════════════════════
+const canvas=document.getElementById('sky-canvas');
+const ctx=canvas.getContext('2d');
+let animT=0;
+
+function resize(){
+  canvas.width=window.innerWidth;canvas.height=window.innerHeight;
+  nebulaCanvas.width=window.innerWidth;nebulaCanvas.height=window.innerHeight;
+  initNebula();
+}
+resize();window.addEventListener('resize',resize);
+
+function hex2(v){return Math.round(Math.max(0,Math.min(1,v))*255).toString(16).padStart(2,'0');}
+
+function drawScene(oc,ow,oh,sc,tx,ty,snap){
+  oc.save();oc.translate(tx,ty);oc.scale(sc,sc);
+
+  // Connections
+  connections.forEach(c=>{
+    const a=members.find(m=>m.id===c.a),b=members.find(m=>m.id===c.b);
+    if(!a||!b) return;
+    const cA=a.genColor||a.color||'#00d9ff',cB=b.genColor||b.color||'#00d9ff';
+    const al=snap?0.35:0.22+Math.sin(animT*.8+c.a)*.06;
+    const grad=oc.createLinearGradient(a.x,a.y,b.x,b.y);
+    grad.addColorStop(0,cA+hex2(al));grad.addColorStop(1,cB+hex2(al));
+    oc.beginPath();oc.moveTo(a.x,a.y);oc.lineTo(b.x,b.y);
+    oc.strokeStyle=grad;oc.lineWidth=.9/sc;
+    oc.setLineDash([5/sc,7/sc]);oc.stroke();oc.setLineDash([]);
+    if(!snap){
+      const ph=(animT*.25)%1,px=a.x+(b.x-a.x)*ph,py=a.y+(b.y-a.y)*ph;
+      oc.beginPath();oc.arc(px,py,2.5/sc,0,Math.PI*2);oc.fillStyle=cA+'bb';oc.fill();
+    }
+  });
+
+  // Stars
+  members.forEach(m=>{
+    const pulse=snap?0:Math.sin(animT*(.8+m.id*.1)+m.id)*.15;
+    const r=m.radius/sc,glowR=(m.radius+8+pulse*4)/sc;
+    const isSel=!snap&&m.id===selectedId,isConn=!snap&&m.id===connectSource;
+    const col=m.genColor||m.color||'#00d9ff';
+    const zcol=m.zodiacColor||col;
+
+    // Zodiac constellation
+    if(m.zodiacLines&&m.zodiacStars){
+      const os=r*3.6;
+      const ca=snap?0.18:(.16+Math.sin(animT*.4+m.id)*.05);
+      m.zodiacLines.forEach(([x1,y1,x2,y2])=>{
+        oc.beginPath();oc.moveTo(m.x+x1/60*os,m.y+y1/60*os);oc.lineTo(m.x+x2/60*os,m.y+y2/60*os);
+        oc.strokeStyle=zcol+hex2(ca);oc.lineWidth=.6/sc;oc.stroke();
+      });
+      m.zodiacStars.forEach(([sx,sy],i)=>{
+        const da=snap?0.32:(.28+Math.sin(animT*.6+m.id+i)*.12);
+        oc.beginPath();oc.arc(m.x+sx/60*os,m.y+sy/60*os,(i===0?2.5:1.5)/sc,0,Math.PI*2);
+        oc.fillStyle=zcol+hex2(da);oc.fill();
+      });
+    }
+
+    // Glow
+    const gw=oc.createRadialGradient(m.x,m.y,0,m.x,m.y,glowR*3);
+    gw.addColorStop(0,col+'45');gw.addColorStop(.4,col+'12');gw.addColorStop(1,'transparent');
+    oc.beginPath();oc.arc(m.x,m.y,glowR*3,0,Math.PI*2);oc.fillStyle=gw;oc.fill();
+
+    // Selected ring
+    if(isSel||isConn){
+      oc.beginPath();oc.arc(m.x,m.y,r+10/sc,0,Math.PI*2);
+      oc.strokeStyle=isConn?'rgba(0,168,255,.8)':col+'cc';oc.lineWidth=1.5/sc;oc.stroke();
+      oc.save();oc.translate(m.x,m.y);oc.rotate(animT*.5);
+      oc.beginPath();oc.arc(0,0,r+16/sc,0,Math.PI*2);
+      oc.strokeStyle=isConn?'rgba(0,168,255,.28)':col+'38';
+      oc.setLineDash([4/sc,8/sc]);oc.lineWidth=1/sc;oc.stroke();oc.setLineDash([]);oc.restore();
+    }
+
+    // Core
+    const core=oc.createRadialGradient(m.x,m.y,0,m.x,m.y,r);
+    if(m.status==='deceased'){
+      core.addColorStop(0,'#e8e8ee');core.addColorStop(.3,col+'99');core.addColorStop(1,col+'44');
+    } else {
+      core.addColorStop(0,'#ffffff');core.addColorStop(.3,col);core.addColorStop(1,col+'80');
+    }
+    oc.beginPath();oc.arc(m.x,m.y,r,0,Math.PI*2);oc.fillStyle=core;oc.fill();
+
+    // Spikes
+    oc.save();oc.translate(m.x,m.y);oc.rotate(snap?Math.PI/8:animT*.2);
+    for(let i=0;i<4;i++){
+      const a=i/4*Math.PI*2;
+      oc.beginPath();oc.moveTo(Math.cos(a)*r*.8,Math.sin(a)*r*.8);
+      oc.lineTo(Math.cos(a)*r*1.85,Math.sin(a)*r*1.85);
+      oc.strokeStyle=col+'55';oc.lineWidth=.9/sc;oc.stroke();
+    }
+    oc.restore();
+
+    // Symbol
+    oc.font=`${r*1.1/sc}px serif`;oc.textAlign='center';oc.textBaseline='middle';
+    oc.fillStyle='rgba(255,255,255,.92)';oc.fillText(m.symbol,m.x,m.y);
+
+    // Zodiac glyph
+    if(m.zodiacGlyph){oc.font=`${9/sc}px serif`;oc.fillStyle=col+'aa';oc.fillText(m.zodiacGlyph,m.x+r*.85,m.y-r*.85);}
+
+    // Name
+    oc.font=`bold ${11/sc}px 'Orbitron',sans-serif`;oc.textAlign='center';oc.textBaseline='top';
+    oc.fillStyle=col;oc.shadowColor=col;oc.shadowBlur=10/sc;
+    oc.fillText(m.name,m.x,m.y+r+10/sc);oc.shadowBlur=0;
+
+    // Role · zodiac
+    oc.font=`${9/sc}px 'Rajdhani',sans-serif`;oc.fillStyle='rgba(200,216,240,.45)';
+    oc.fillText((ROLE_LABELS[m.role]||m.role)+(m.zodiacName?' · '+m.zodiacName:''),m.x,m.y+r+24/sc);
+
+    // Age · Status
+    if(m.birth){
+      const age=calcAge(m.birth,m.death||null);
+      const isDead=m.status==='deceased';
+      const statusGlyph=isDead?'✝':'✦';
+      const ageStr=age!==null?(isDead?`${statusGlyph} ${age} thn`:`${statusGlyph} ${age} thn`):'';
+      oc.font=`${8/sc}px 'Space Mono',monospace`;
+      oc.fillStyle=isDead?'rgba(200,200,220,.35)':'rgba(0,217,255,.38)';
+      oc.fillText(ageStr,m.x,m.y+r+36/sc);
+    }
+  });
+
+  oc.restore();
+}
+
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  animT+=.016;
+  drawScene(ctx,canvas.width,canvas.height,scale,canvas.width/2+offsetX,canvas.height/2+offsetY,false);
+}
+function loop(){drawNebula();draw();requestAnimationFrame(loop);}
+
+// ═══════════════════════════════════════════════════════
+//  INTERACTION
+// ═══════════════════════════════════════════════════════
+function screenToWorld(sx,sy){return{x:(sx-canvas.width/2-offsetX)/scale,y:(sy-canvas.height/2-offsetY)/scale};}
+function hitTest(wx,wy){
+  for(let i=members.length-1;i>=0;i--){const m=members[i],dx=wx-m.x,dy=wy-m.y;if(Math.sqrt(dx*dx+dy*dy)<m.radius+14)return m;}
+  return null;
+}
+
+canvas.addEventListener('mousedown',e=>{
+  if(e.button!==0)return;
+  const w=screenToWorld(e.clientX,e.clientY),hit=hitTest(w.x,w.y);
+  if(hit){if(connectMode){handleConnectClick(hit);return;}draggingStar=hit;draggingStartX=e.clientX;draggingStartY=e.clientY;}
+  else{if(connectMode)return;isDraggingCanvas=true;dragStartX=e.clientX;dragStartY=e.clientY;dragOffX=offsetX;dragOffY=offsetY;canvas.style.cursor='grabbing';}
+});
+canvas.addEventListener('mousemove',e=>{
+  if(draggingStar){draggingStar.x+=(e.clientX-draggingStartX)/scale;draggingStar.y+=(e.clientY-draggingStartY)/scale;draggingStartX=e.clientX;draggingStartY=e.clientY;}
+  else if(isDraggingCanvas){offsetX=dragOffX+(e.clientX-dragStartX);offsetY=dragOffY+(e.clientY-dragStartY);}
+});
+canvas.addEventListener('mouseup',e=>{
+  if(draggingStar){const ds=draggingStar;draggingStar=null;if(Math.abs(e.clientX-draggingStartX)<4&&Math.abs(e.clientY-draggingStartY)<4)selectMember(ds);return;}
+  if(isDraggingCanvas){isDraggingCanvas=false;canvas.style.cursor='crosshair';if(Math.abs(e.clientX-dragStartX)<5&&Math.abs(e.clientY-dragStartY)<5){pendingPos=screenToWorld(e.clientX,e.clientY);openAddModal();}}
+});
+canvas.addEventListener('wheel',e=>{e.preventDefault();scale=Math.max(.2,Math.min(4,scale*(e.deltaY<0?1.1:.9)));},{passive:false});
+canvas.addEventListener('contextmenu',e=>e.preventDefault());
+
+let touchStart=null;
+canvas.addEventListener('touchstart',e=>{
+  e.preventDefault();const t=e.touches[0];
+  const w=screenToWorld(t.clientX,t.clientY),hit=hitTest(w.x,w.y);
+  touchStart={x:t.clientX,y:t.clientY};
+  if(hit&&!connectMode){draggingStar=hit;draggingStartX=t.clientX;draggingStartY=t.clientY;}
+  else if(!hit&&!connectMode){isDraggingCanvas=true;dragStartX=t.clientX;dragStartY=t.clientY;dragOffX=offsetX;dragOffY=offsetY;}
+  else if(hit&&connectMode)handleConnectClick(hit);
+},{passive:false});
+canvas.addEventListener('touchmove',e=>{
+  e.preventDefault();const t=e.touches[0];
+  if(draggingStar){draggingStar.x+=(t.clientX-draggingStartX)/scale;draggingStar.y+=(t.clientY-draggingStartY)/scale;draggingStartX=t.clientX;draggingStartY=t.clientY;}
+  else if(isDraggingCanvas){offsetX=dragOffX+(t.clientX-dragStartX);offsetY=dragOffY+(t.clientY-dragStartY);}
+},{passive:false});
+canvas.addEventListener('touchend',e=>{
+  e.preventDefault();const t=e.changedTouches[0];
+  if(draggingStar){const ds=draggingStar;draggingStar=null;if(Math.abs(t.clientX-touchStart.x)<8&&Math.abs(t.clientY-touchStart.y)<8)selectMember(ds);}
+  if(isDraggingCanvas){isDraggingCanvas=false;if(Math.abs(t.clientX-touchStart.x)<8&&Math.abs(t.clientY-touchStart.y)<8){pendingPos=screenToWorld(t.clientX,t.clientY);openAddModal();}}
+},{passive:false});
+
+// ═══════════════════════════════════════════════════════
+//  MEMBER LOGIC
+// ═══════════════════════════════════════════════════════
+function selectMember(m){
+  selectedId=m.id;
+  const gd=getGeneration(m.birth),zd=m.zodiacName?ZODIAC.find(z=>z.name===m.zodiacName):null;
+  const col=m.genColor||'#00d9ff';
+  const isDead=m.status==='deceased';
+  const age=calcAge(m.birth,m.death||null);
+  document.getElementById('info-symbol').textContent=m.symbol;
+  document.getElementById('info-symbol').style.color=isDead?'rgba(200,200,220,.6)':col;
+  document.getElementById('info-name').textContent=m.name;
+  document.getElementById('info-name').style.color=isDead?'rgba(200,200,220,.7)':col;
+  document.getElementById('info-role').textContent=ROLE_LABELS[m.role]||m.role;
+  document.getElementById('info-zodiac').textContent=zd?`${zd.glyph} ${zd.name} · Elemen ${zd.element}`:'—';
+  document.getElementById('info-era').textContent=gd?`${gd.symbol} ${gd.tag} · ${gd.era}\n${gd.desc}`:'—';
+  document.getElementById('info-status').textContent=isDead?'✝ Telah Berpulang':'✦ Masih Hidup';
+  document.getElementById('info-status').style.color=isDead?'rgba(200,200,220,.6)':'rgba(0,217,255,.8)';
+  document.getElementById('info-age').textContent=age!==null?(isDead?`${age} tahun (saat wafat)`:`${age} tahun`):'—';
+  document.getElementById('info-birth').textContent=m.birth||'—';
+  document.getElementById('info-death').textContent=isDead?(m.death||'—'):'—';
+  document.getElementById('info-place').textContent=m.place||'—';
+  document.getElementById('info-notes').textContent=m.notes||'—';
+  document.getElementById('info-panel').classList.add('open');
+}
+function closeInfoPanel(){document.getElementById('info-panel').classList.remove('open');selectedId=null;}
+
+function editSelected(){
+  const m=members.find(x=>x.id===selectedId);if(!m)return;
+  editingId=m.id;
+  document.getElementById('modal-title').textContent='Edit Bintang';
+  document.getElementById('modal-subtitle').textContent='Perbarui informasi bintang dalam langit keluarga';
+  document.getElementById('f-name').value=m.name;
+  document.getElementById('f-role').value=m.role;
+  document.getElementById('f-gender').value=m.gender||'male';
+  document.getElementById('f-birth').value=m.birth||'';
+  document.getElementById('f-place').value=m.place||'';
+  document.getElementById('f-notes').value=m.notes||'';
+  document.getElementById('f-status').value=m.status||'alive';
+  document.getElementById('f-death').value=m.death||'';
+  toggleDeathField();
+  document.querySelector('#add-modal button[onclick="saveMember()"]').textContent='◈ Simpan Perubahan';
+  updatePreview();
+  document.getElementById('add-modal').classList.add('open');
+}
+function deleteSelected(){
+  if(!selectedId||!confirm('Hapus bintang ini dari rasi keluarga?'))return;
+  members=members.filter(m=>m.id!==selectedId);
+  connections=connections.filter(c=>c.a!==selectedId&&c.b!==selectedId);
+  closeInfoPanel();showToast('Bintang telah dihapus dari langit');
+}
+function connectFromSelected(){
+  if(!selectedId)return;
+  connectSource=selectedId;connectMode=true;closeInfoPanel();
+  document.getElementById('connect-indicator').classList.add('active');
+  document.getElementById('connect-status').textContent='Klik bintang kedua untuk menghubungkan';
+  document.getElementById('connect-toggle-btn').style.color='var(--neon-cyan)';
+}
+function handleConnectClick(m){
+  if(!connectSource){connectSource=m.id;document.getElementById('connect-status').textContent=`"${m.name}" dipilih — klik bintang kedua`;return;}
+  if(connectSource===m.id){connectSource=null;return;}
+  const ex=connections.some(c=>(c.a===connectSource&&c.b===m.id)||(c.a===m.id&&c.b===connectSource));
+  if(ex){connections=connections.filter(c=>!((c.a===connectSource&&c.b===m.id)||(c.a===m.id&&c.b===connectSource)));showToast('Koneksi rasi dihapus');}
+  else{connections.push({a:connectSource,b:m.id});showToast('Bintang-bintang terhubung dalam rasi! ◈');}
+  toggleConnectMode();
+}
+function toggleConnectMode(){
+  connectMode=!connectMode;connectSource=null;
+  const ind=document.getElementById('connect-indicator'),btn=document.getElementById('connect-toggle-btn');
+  if(connectMode){ind.classList.add('active');document.getElementById('connect-status').textContent='Klik bintang pertama';btn.style.color='var(--neon-cyan)';}
+  else{ind.classList.remove('active');btn.style.color='';}
+}
+
+// ═══════════════════════════════════════════════════════
+//  MODAL & FORM
+// ═══════════════════════════════════════════════════════
+function openAddModal(){
+  editingId=null;
+  document.getElementById('modal-title').textContent='Daftarkan Bintang Baru';
+  document.getElementById('modal-subtitle').textContent='Setiap anggota keluarga adalah bintang dalam rasi keluarga kita';
+  ['f-name','f-birth','f-place','f-notes','f-death'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-role').value='self';document.getElementById('f-gender').value='male';
+  document.getElementById('f-status').value='alive';
+  document.getElementById('f-death-group').style.display='none';
+  document.getElementById('preview-group').style.display='none';
+  document.querySelector('#add-modal button[onclick="saveMember()"]').textContent='◈ Tambahkan ke Langit Keluarga';
+  document.getElementById('add-modal').classList.add('open');
+}
+function closeAddModal(){document.getElementById('add-modal').classList.remove('open');editingId=null;pendingPos=null;}
+
+function updatePreview(){
+  const val=document.getElementById('f-birth').value;
+  const group=document.getElementById('preview-group');
+  if(!val){group.style.display='none';return;}
+  const gd=getGeneration(val),zd=getZodiac(val);
+  group.style.display='block';
+  if(gd){
+    document.getElementById('p-decade-sym').textContent=gd.symbol;
+    document.getElementById('p-decade-sym').style.color=gd.color;
+    document.getElementById('p-decade-era').textContent=gd.tag;
+    document.getElementById('p-decade-era').style.color=gd.color;
+    document.getElementById('p-decade-desc').textContent=gd.era;
+    document.getElementById('p-decade-box').style.background=gd.color+'12';
+    document.getElementById('p-decade-box').style.borderColor=gd.color+'44';
+  }
+  if(zd){
+    document.getElementById('p-zodiac-sym').textContent=zd.glyph;document.getElementById('p-zodiac-sym').style.color=zd.color;
+    document.getElementById('p-zodiac-name').textContent=zd.name;document.getElementById('p-zodiac-name').style.color=zd.color;
+    document.getElementById('p-zodiac-el').textContent='Elemen '+zd.element;
+    document.getElementById('zodiac-preview-box').style.background=zd.color+'11';
+    document.getElementById('zodiac-preview-box').style.borderColor=zd.color+'44';
+  }
+}
+
+function buildExtras(birth){
+  const gd=getGeneration(birth),zd=getZodiac(birth);
+  return {
+    symbol:gd?gd.symbol:'◈',
+    genColor:gd?gd.color:'#00d9ff',
+    zodiacColor:zd?zd.color:'#00d9ff',
+    genName:gd?gd.era:null,genTag:gd?gd.tag:null,
+    zodiacName:zd?zd.name:null,zodiacGlyph:zd?zd.glyph:null,
+    zodiacElement:zd?zd.element:null,
+    zodiacLines:zd?zd.lines:null,zodiacStars:zd?zd.stars:null,
+  };
+}
+
+function saveMember(){
+  const name=document.getElementById('f-name').value.trim();
+  if(!name){alert('Nama tidak boleh kosong');return;}
+  const birth=document.getElementById('f-birth').value,role=document.getElementById('f-role').value;
+  const status=document.getElementById('f-status').value;
+  const death=status==='deceased'?document.getElementById('f-death').value:'';
+  const extras=buildExtras(birth);
+  const base={name,role,gender:document.getElementById('f-gender').value,birth,place:document.getElementById('f-place').value.trim(),notes:document.getElementById('f-notes').value.trim(),status,death,color:extras.genColor,...extras};
+  if(editingId){
+    const m=members.find(x=>x.id===editingId);if(m)Object.assign(m,base);
+    showToast('Bintang berhasil diperbarui ◈');
+  }else{
+    const pos=pendingPos||{x:(Math.random()-.5)*600,y:(Math.random()-.5)*400};
+    members.push({id:nextId++,...base,x:pos.x,y:pos.y,radius:role==='self'?18:14});
+    showToast('Bintang baru muncul di langit keluarga ◈');
+  }
+  closeAddModal();
+}
+
+// ═══════════════════════════════════════════════════════
+//  ZOOM & NAV
+// ═══════════════════════════════════════════════════════
+function zoomIn(){scale=Math.min(4,scale*1.2);}
+function zoomOut(){scale=Math.max(.2,scale/1.2);}
+function resetView(){scale=1;offsetX=0;offsetY=0;}
+
+// ═══════════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════════
+let toastTimer;
+function showToast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.style.opacity='1';
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.style.opacity='0',2800);
+}
+
+// ═══════════════════════════════════════════════════════
+//  FILE PANEL
+// ═══════════════════════════════════════════════════════
+function toggleFilePanel(){
+  filePanelOpen=!filePanelOpen;
+  document.getElementById('file-panel').classList.toggle('open',filePanelOpen);
+}
+
+// ── SAVE .rasi ──────────────────────────────────────────
+function saveToFile(){
+  const data={
+    version:2,savedAt:new Date().toISOString(),nextId,
+    members:members.map(m=>({
+      id:m.id,name:m.name,role:m.role,gender:m.gender||'male',
+      birth:m.birth||'',place:m.place||'',notes:m.notes||'',
+      status:m.status||'alive',death:m.death||'',
+      x:Math.round(m.x*10)/10,y:Math.round(m.y*10)/10,radius:m.radius,
+      symbol:m.symbol,genColor:m.genColor,genName:m.genName,genTag:m.genTag,
+      zodiacColor:m.zodiacColor,zodiacName:m.zodiacName,zodiacGlyph:m.zodiacGlyph,
+      zodiacElement:m.zodiacElement,zodiacLines:m.zodiacLines,zodiacStars:m.zodiacStars,color:m.color
+    })),
+    connections:[...connections]
+  };
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const ds=new Date().toISOString().slice(0,10).replace(/-/g,'');
+  a.href=url;a.download=`rasi-keluarga-${ds}.rasi`;a.click();
+  URL.revokeObjectURL(url);
+  showToast('◈ Rasi keluarga berhasil disimpan');
+}
+
+// ── LOAD .rasi ──────────────────────────────────────────
+function loadFromFile(evt){
+  const file=evt.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!data.members||!Array.isArray(data.members)) throw new Error('Format file tidak dikenali');
+      if(members.length>0&&!confirm(`Muat "${file.name}"?\nSemua data saat ini akan digantikan.`))return;
+      members=data.members;connections=data.connections||[];
+      nextId=data.nextId||(Math.max(0,...members.map(m=>m.id))+1);
+      selectedId=null;closeInfoPanel();resetView();
+      showToast(`◈ "${file.name}" berhasil dimuat — ${members.length} bintang`);
+    }catch(err){alert('Gagal memuat file: '+err.message);}
+    evt.target.value='';
+  };
+  reader.readAsText(file);
+}
+
+// ── CLEAR ALL ───────────────────────────────────────────
+function clearAll(){
+  if(!confirm('Hapus semua bintang dan koneksi?\nTindakan ini tidak dapat dibatalkan.'))return;
+  members=[];connections=[];nextId=1;selectedId=null;closeInfoPanel();
+  showToast('Langit telah kembali kosong');
+}
+
+// ═══════════════════════════════════════════════════════
+//  PDF EXPORT
+// ═══════════════════════════════════════════════════════
+async function exportPDF(orientation){
+  if(members.length===0){showToast('Tambahkan bintang terlebih dahulu');return;}
+  document.getElementById('pdf-overlay').classList.add('show');
+  await new Promise(r=>setTimeout(r,80));
+
+  try{
+    const pw=orientation==='landscape'?297:210;
+    const ph=orientation==='landscape'?210:297;
+    const DPI=2.5;
+    const cw=Math.round(pw*3.7795*DPI),ch=Math.round(ph*3.7795*DPI);
+
+    const off=document.createElement('canvas');
+    off.width=cw;off.height=ch;
+    const oc=off.getContext('2d');
+
+    oc.fillStyle='#0a0a14';oc.fillRect(0,0,cw,ch);
+
+    // Grid
+    oc.strokeStyle='rgba(0,217,255,0.04)';oc.lineWidth=1;
+    const gs=50*DPI;
+    for(let x=0;x<cw;x+=gs){oc.beginPath();oc.moveTo(x,0);oc.lineTo(x,ch);oc.stroke();}
+    for(let y=0;y<ch;y+=gs){oc.beginPath();oc.moveTo(0,y);oc.lineTo(cw,y);oc.stroke();}
+
+    // Neon nebula blobs
+    [[.28,.38,'168,85,247',.16,.44],[.75,.58,'0,217,255',.12,.35],[.55,.25,'255,110,199',.1,.3]].forEach(([rx,ry,c,a,r])=>{
+      const g=oc.createRadialGradient(cw*rx,ch*ry,0,cw*rx,ch*ry,cw*r);
+      g.addColorStop(0,`rgba(${c},${a})`);g.addColorStop(1,'rgba(0,0,0,0)');
+      oc.fillStyle=g;oc.fillRect(0,0,cw,ch);
+    });
+
+    // Bg stars
+    for(let i=0;i<600;i++){
+      let x=i*7+1;for(let j=0;j<20;j++)x=(x*1103515245+12345)&0x7fffffff;const rx=x/0x7fffffff;
+      let y=i*13+2;for(let j=0;j<20;j++)y=(y*1103515245+12345)&0x7fffffff;const ry=y/0x7fffffff;
+      let r=i*3+3;for(let j=0;j<20;j++)r=(r*1103515245+12345)&0x7fffffff;const rr=r/0x7fffffff;
+      let al=i*5+4;for(let j=0;j<20;j++)al=(al*1103515245+12345)&0x7fffffff;const ra=al/0x7fffffff;
+      oc.beginPath();oc.arc(rx*cw,ry*ch,rr*1.4+.3,0,Math.PI*2);
+      oc.fillStyle=`rgba(200,220,255,${ra*.5+.1})`;oc.fill();
+    }
+
+    const hh=52*DPI;
+    const fh=26*DPI;
+
+    // Sama persis dengan reset view: scale=1, offsetX=0, offsetY=0
+    // tapi disekalakan ke resolusi PDF via DPI
+    const fitSc=DPI;
+    const tx=cw/2;
+    const ty=ch/2;
+
+    drawScene(oc,cw,ch,fitSc,tx,ty,true);
+
+    // Header bar
+    oc.fillStyle='rgba(10,10,20,.78)';oc.fillRect(0,0,cw,hh);
+    // Header accent line
+    const hgrad=oc.createLinearGradient(0,0,cw,0);
+    hgrad.addColorStop(0,'transparent');hgrad.addColorStop(.5,'rgba(0,217,255,.8)');hgrad.addColorStop(1,'transparent');
+    oc.fillStyle=hgrad;oc.fillRect(0,hh-2,cw,2);
+    oc.font=`bold ${15*DPI}px 'Orbitron',sans-serif`;oc.fillStyle='#00d9ff';oc.textAlign='left';oc.textBaseline='middle';
+    oc.shadowColor='#00d9ff';oc.shadowBlur=10*DPI;
+    oc.fillText('◈  RASI KELUARGA',20*DPI,hh/2);oc.shadowBlur=0;
+    oc.font=`${9*DPI}px 'Space Mono',monospace`;oc.fillStyle='rgba(240,244,255,.5)';oc.textAlign='right';
+    oc.fillText(`${members.length} bintang · ${connections.length} koneksi · ${new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'})}`,cw-20*DPI,hh/2);
+
+    // Footer
+    oc.fillStyle='rgba(10,10,20,.6)';oc.fillRect(0,ch-fh,cw,fh);
+    oc.font=`${7*DPI}px 'Space Mono',monospace`;oc.fillStyle='rgba(0,217,255,.3)';oc.textAlign='center';oc.textBaseline='middle';
+    oc.fillText('RASI KELUARGA — Silsilah sebagai peta bintang',cw/2,ch-fh/2);
+
+    const imgData=off.toDataURL('image/png',0.95);
+    const {jsPDF}=window.jspdf;
+    const doc=new jsPDF({orientation,unit:'mm',format:'a4'});
+    doc.addImage(imgData,'PNG',0,0,pw,ph);
+    const ds=new Date().toISOString().slice(0,10).replace(/-/g,'');
+    doc.save(`rasi-keluarga-${ds}-${orientation}.pdf`);
+    showToast('◈ PDF berhasil diunduh');
+  }catch(err){
+    alert('Gagal membuat PDF: '+err.message);console.error(err);
+  }finally{
+    document.getElementById('pdf-overlay').classList.remove('show');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  WELCOME
+// ═══════════════════════════════════════════════════════
+function startApp(){
+  document.getElementById('welcome').classList.add('hidden');
+  setTimeout(()=>document.getElementById('welcome').style.display='none',1000);
+}
+
+// ═══════════════════════════════════════════════════════
+//  BIOGRAPHY DATA
+// ═══════════════════════════════════════════════════════
+const ZODIAC_BIO = {
+  Capricorn:{
+    elemen:'Bumi',modus:'Kardinal',planet:'Saturnus',
+    kepribadian:'Capricorn adalah jiwa yang ambisius dan berdisiplin tinggi. Mereka membangun kehidupan seperti arsitek — dengan rencana matang, kesabaran baja, dan tekad yang tidak mudah goyah. Di balik eksterior yang dingin dan serius, tersimpan loyalitas mendalam dan kehangatan yang hanya tampak bagi mereka yang dipercaya.',
+    kekuatan:['Disiplin','Ambisius','Sabar','Bertanggung jawab','Loyal','Pragmatis'],
+    tantangan:['Terlalu kaku','Pesimis','Sulit percaya orang','Workaholic','Sulit mengekspresikan emosi'],
+    cinta:'Dalam cinta, Capricorn butuh waktu lama untuk membuka diri. Mereka bukan tipe yang impulsif — setiap langkah dipertimbangkan. Namun sekali berkomitmen, mereka adalah pasangan yang setia dan penuh dedikasi. Mereka menunjukkan cinta melalui tindakan nyata, bukan kata-kata manis.',
+    karier:'Capricorn unggul dalam dunia bisnis, keuangan, hukum, dan manajemen. Mereka adalah pemimpin alamiah yang tidak takut bekerja keras demi posisi puncak. Kesuksesan bagi mereka bukan kebetulan — itu adalah hasil dari bertahun-tahun kerja keras yang terencana.'
+  },
+  Aquarius:{
+    elemen:'Udara',modus:'Tetap',planet:'Uranus / Saturnus',
+    kepribadian:'Aquarius adalah visioner yang hidup di masa depan. Mereka memandang dunia dengan perspektif yang unik — selalu bertanya "mengapa tidak?" ketika orang lain berkata "tidak mungkin." Individu yang sangat mandiri dan orisinal ini membawa angin segar di mana pun mereka berada.',
+    kekuatan:['Inovatif','Humanis','Mandiri','Visioner','Intuitif','Idealis'],
+    tantangan:['Terlalu idealis','Dingin secara emosional','Keras kepala','Sulit diprediksi','Menghindari keintiman'],
+    cinta:'Aquarius mencari koneksi intelektual sebelum emosional. Mereka butuh pasangan yang bisa menjadi sahabat diskusi sekaligus menghormati kebebasan mereka. Dalam hubungan, mereka unik dan tidak konvensional — sering kali membuat pasangan terkejut dengan cara mereka menunjukkan kasih sayang.',
+    karier:'Teknologi, ilmu sosial, aktivisme, dan inovasi adalah medan terbaik Aquarius. Mereka hebat dalam pekerjaan yang membutuhkan pemikiran out-of-the-box dan kemampuan melihat pola besar dari masalah kompleks.'
+  },
+  Pisces:{
+    elemen:'Air',modus:'Mutable',planet:'Neptunus / Yupiter',
+    kepribadian:'Pisces adalah jiwa terdalam di antara semua zodiak — empatik, intuitif, dan selalu terhubung dengan dimensi yang tak terlihat. Mereka seperti air yang mengalir bebas, mampu beradaptasi dengan siapa pun dan situasi apa pun. Dunia batin mereka kaya dan penuh imajinasi.',
+    kekuatan:['Empatik','Kreatif','Intuitif','Penyayang','Adaptif','Spiritual'],
+    tantangan:['Terlalu sensitif','Mudah dipengaruhi','Pelarian dari realita','Tidak tegas','Mudah kelelahan emosional'],
+    cinta:'Dalam cinta, Pisces adalah romantis sejati. Mereka mencintai tanpa syarat dan sering mengorbankan diri untuk kebahagiaan pasangan. Namun mereka rentan dimanfaatkan — penting bagi mereka menemukan pasangan yang menghargai ketulusan mereka.',
+    karier:'Seni, musik, sastra, psikologi, dan pekerjaan sosial memanggil jiwa Pisces. Imajinasi mereka yang tak terbatas membuat mereka unggul dalam bidang kreatif dan penyembuhan.'
+  },
+  Aries:{
+    elemen:'Api',modus:'Kardinal',planet:'Mars',
+    kepribadian:'Aries adalah api pertama — penuh semangat, berani, dan selalu siap menjadi yang pertama. Mereka membawa energi murni dan antusiasme yang menular. Pionir sejati yang tidak takut menghadapi tantangan baru, bahkan ketika orang lain masih ragu-ragu.',
+    kekuatan:['Berani','Energetik','Optimis','Pioneering','Tegas','Jujur'],
+    tantangan:['Impulsif','Mudah marah','Tidak sabar','Egois','Ceroboh'],
+    cinta:'Aries jatuh cinta dengan cepat dan penuh gairah. Mereka adalah kekasih yang penuh perhatian dan suka membuat kejutan. Namun mereka butuh ruang dan kebebasan — hubungan yang terlalu mengekang akan membuat mereka resah.',
+    karier:'Kepemimpinan, kewirausahaan, olahraga, dan militer cocok untuk Aries. Mereka unggul dalam peran yang membutuhkan inisiatif dan kemampuan bertindak cepat di bawah tekanan.'
+  },
+  Taurus:{
+    elemen:'Bumi',modus:'Tetap',planet:'Venus',
+    kepribadian:'Taurus adalah jiwa bumi yang paling setia dan terpercaya. Mereka mencintai keindahan, kenyamanan, dan stabilitas dalam segala aspek kehidupan. Keras kepala bukan berarti lemah — keteguhan mereka adalah kekuatan yang membangun fondasi tak tergoyahkan.',
+    kekuatan:['Terpercaya','Sabar','Praktis','Loyal','Berorientasi keindahan','Tekun'],
+    tantangan:['Keras kepala','Materialistis','Tidak fleksibel','Posesif','Lambat berubah'],
+    cinta:'Taurus adalah kekasih yang sensual dan penuh perhatian. Mereka mencintai dengan cara yang nyata — melalui sentuhan, hadiah, dan kehadiran fisik. Sekali berkomitmen, mereka adalah yang paling setia. Namun hati-hati memancing kecemburuan mereka.',
+    karier:'Keuangan, seni, kuliner, real estate, dan fashion adalah ladang terbaik Taurus. Ketekunan dan indera estetika mereka yang tajam membuat mereka hebat dalam membangun sesuatu yang bernilai dan bertahan lama.'
+  },
+  Gemini:{
+    elemen:'Udara',modus:'Mutable',planet:'Merkurius',
+    kepribadian:'Gemini adalah penjinak pikiran yang paling lincah di zodiak. Mereka hidup di dunia ide dan komunikasi — selalu penasaran, selalu belajar, selalu memiliki sudut pandang baru. Dualitas mereka bukan kelemahan, tapi kemampuan melihat semua sisi dari suatu persoalan.',
+    kekuatan:['Cerdas','Komunikatif','Adaptif','Humoris','Kreatif','Serbabisa'],
+    tantangan:['Inkonsisten','Superfisial','Mudah bosan','Tidak fokus','Manipulatif'],
+    cinta:'Gemini butuh pasangan yang bisa mengimbangi pikiran mereka yang lincah. Mereka mencintai dengan cara yang menyenangkan dan penuh kejutan. Komunikasi adalah kunci — tanpa dialog yang hidup, mereka akan kehilangan minat.',
+    karier:'Jurnalisme, pendidikan, periklanan, teknologi, dan hubungan masyarakat adalah ranah Gemini. Kemampuan komunikasi mereka yang luar biasa membuat mereka bersinar di mana pun kata-kata menjadi senjata utama.'
+  },
+  Cancer:{
+    elemen:'Air',modus:'Kardinal',planet:'Bulan',
+    kepribadian:'Cancer adalah penjaga terdalam — empatik, protektif, dan selalu terhubung dengan perasaan. Seperti bulan yang mempengaruhi pasang surut, emosi mereka bergerak dalam siklus yang dalam dan kaya. Di balik cangkang keras mereka, tersimpan hati yang paling lembut dan penuh cinta.',
+    kekuatan:['Penyayang','Intuitif','Protektif','Setia','Imajinatif','Empati tinggi'],
+    tantangan:['Terlalu sensitif','Moody','Menarik diri','Kliing','Susah melupakan luka'],
+    cinta:'Cancer mencintai dengan sepenuh jiwa — rumah dan keluarga adalah segalanya bagi mereka. Mereka adalah pasangan yang nurturing dan penuh perhatian. Mereka butuh rasa aman yang nyata sebelum membuka diri sepenuhnya.',
+    karier:'Psikologi, pengasuhan, pendidikan, memasak, dan seni kreatif memanggil jiwa Cancer. Mereka terbaik ketika bisa membantu dan melindungi orang lain.'
+  },
+  Leo:{
+    elemen:'Api',modus:'Tetap',planet:'Matahari',
+    kepribadian:'Leo adalah bintang dari segala bintang — karismatik, murah hati, dan penuh vitalitas. Mereka lahir untuk bersinar dan membawa kehangatan bagi orang-orang di sekitar mereka. Kepercayaan diri mereka bukan kesombongan, tapi keyakinan bahwa mereka memiliki sesuatu berharga untuk diberikan kepada dunia.',
+    kekuatan:['Karismatik','Murah hati','Kreatif','Pemimpin alami','Hangat','Setia'],
+    tantangan:['Ego besar','Suka dipuji','Dramatik','Dominan','Keras kepala'],
+    cinta:'Leo mencintai dengan dramatis dan megah — mereka adalah pasangan yang romanatis dan tidak pelit memberi perhatian. Mereka ingin dikagumi dan dihargai, dan akan membalas dengan loyalitas dan kemurahan hati yang tak terbatas.',
+    karier:'Seni pertunjukan, kepemimpinan, politik, hiburan, dan olahraga adalah panggung Leo. Mereka bersinar paling terang ketika bisa mengekspresikan kreativitas dan jiwa pemimpin mereka.'
+  },
+  Virgo:{
+    elemen:'Bumi',modus:'Mutable',planet:'Merkurius',
+    kepribadian:'Virgo adalah pemikir analitis yang paling teliti — mereka melihat detail yang terlewat oleh semua orang lain. Perfeksionis bukan karena mereka tidak puas, tapi karena mereka tahu betapa indahnya sesuatu yang benar-benar sempurna. Kepedulian mereka terhadap orang lain terwujud dalam tindakan praktis yang nyata.',
+    kekuatan:['Analitis','Teliti','Praktis','Penolong','Cerdas','Disiplin'],
+    tantangan:['Terlalu kritis','Perfeksionis berlebihan','Cemas','Susah rileks','Ragu-ragu'],
+    cinta:'Virgo menunjukkan cinta melalui tindakan — bukan kata-kata manis. Mereka adalah pasangan yang penuh perhatian pada kebutuhan praktis. Mereka butuh waktu untuk mempercayai, namun sekali memberikan kepercayaan, mereka adalah yang paling setia.',
+    karier:'Kesehatan, ilmu pengetahuan, analisis data, editing, dan pelayanan sosial adalah bidang terbaik Virgo. Kemampuan mereka menguraikan masalah kompleks menjadi solusi praktis tak tertandingi.'
+  },
+  Libra:{
+    elemen:'Udara',modus:'Kardinal',planet:'Venus',
+    kepribadian:'Libra adalah pencari keseimbangan dan keindahan di semua hal. Mereka dilahirkan dengan radar keadilan yang sangat sensitif dan kemampuan diplomasi yang luar biasa. Sosial, elegan, dan selalu mempertimbangkan semua sisi sebelum mengambil keputusan.',
+    kekuatan:['Diplomatis','Adil','Sosial','Estetis','Karismatik','Kooperatif'],
+    tantangan:['Tidak tegas','Menghindari konflik','Tergantung pendapat orang','Manipulatif','Mudah dipengaruhi'],
+    cinta:'Libra adalah ahli romansa — mereka menciptakan hubungan yang indah dan harmonis. Partnership adalah inti dari jiwa mereka; mereka tidak menikmati hidup sendiri. Mereka akan selalu berusaha menjaga keseimbangan dalam hubungan, meski terkadang dengan mengorbankan kebutuhan sendiri.',
+    karier:'Hukum, desain, diplomasi, hubungan masyarakat, dan seni memanggil jiwa Libra. Kemampuan mereka melihat semua perspektif dengan adil membuat mereka mediator yang luar biasa.'
+  },
+  Scorpio:{
+    elemen:'Air',modus:'Tetap',planet:'Pluto / Mars',
+    kepribadian:'Scorpio adalah kekuatan terdalam dan paling intens di antara semua zodiak. Mereka merasakan segalanya dengan kedalaman yang luar biasa — tidak ada yang setengah-setengah bagi Scorpio. Magnetis, misterius, dan memiliki kemampuan transformasi yang fenomenal.',
+    kekuatan:['Intens','Berpendirian','Intuitif','Kuat','Bersemangat','Transformatif'],
+    tantangan:['Cemburu','Posesif','Manipulatif','Pendendam','Obsesif'],
+    cinta:'Scorpio mencintai dengan intensitas yang jarang tertandingi. Mereka butuh kedalaman emosional yang nyata — bukan hubungan dangkal. Ketika dikhianati, luka mereka dalam. Namun ketika dicintai dengan tulus, mereka akan memberikan segalanya.',
+    karier:'Psikologi, penelitian, investigasi, keuangan, dan kedokteran adalah ranah Scorpio. Kemampuan mereka menggali kebenaran dan bertransformasi dalam krisis membuat mereka berharga dalam situasi paling menantang.'
+  },
+  Sagittarius:{
+    elemen:'Api',modus:'Mutable',planet:'Yupiter',
+    kepribadian:'Sagittarius adalah petualang jiwa — selalu mencari makna, kebenaran, dan cakrawala baru. Optimisme mereka adalah api yang tidak pernah padam. Filosof, pengembara, dan pencinta kebebasan yang percaya bahwa kehidupan adalah petualangan tanpa batas.',
+    kekuatan:['Optimis','Petualang','Filosofis','Jujur','Antusias','Bebas'],
+    tantangan:['Tidak disiplin','Blak-blakan','Tidak konsisten','Tidak sabaran','Menghindari komitmen'],
+    cinta:'Sagittarius butuh kebebasan bahkan dalam cinta. Mereka adalah kekasih yang menyenangkan dan penuh petualangan. Namun mereka takut terjebak — pasangan terbaik mereka adalah yang bisa tumbuh dan menjelajah bersama mereka.',
+    karier:'Perjalanan, pendidikan tinggi, filosofi, hukum internasional, dan jurnalisme adalah medan Sagittarius. Hasrat mereka memperluas batas pengetahuan membuat mereka unggul dalam eksplorasi ide dan budaya.'
+  }
+};
+
+const GEN_BIO = {
+  'Leluhur':{
+    tahun:'Sebelum 1883',konteks:'Generasi yang menjadi akar dari pohon keluarga — hidup di era pra-modern, di mana kehidupan sangat bergantung pada alam, tradisi oral, dan ikatan komunitas yang kuat. Teknologi masih sangat terbatas; kearifan lokal adalah panduan utama.',
+    nilai:'Menghargai tradisi dan warisan leluhur secara mendalam. Kepercayaan pada kekuatan komunitas dan gotong royong. Hidup selaras dengan alam dan siklus alam semesta.',
+    ciri:['Penjaga tradisi','Kebijaksanaan oral','Komunal','Dekat dengan alam','Spiritual mendalam'],
+    hubungan:'Generasi ini adalah fondasi dari semua yang ada. Nilai-nilai yang mereka tanamkan mengalir dalam darah generasi-generasi berikutnya, meski sering tak disadari.'
+  },
+  'Lost Gen':{
+    tahun:'1883 – 1900',konteks:'Tumbuh di era pergolakan besar — Revolusi Industri yang mengubah tatanan sosial, konflik-konflik besar, dan transisi dari dunia agraris ke industrial. Mereka adalah generasi yang "hilang" di antara dua era besar.',
+    nilai:'Ketangguhan dalam menghadapi perubahan. Pragmatisme sebagai respons terhadap ketidakpastian. Loyalitas terhadap komunitas dan negara sebagai pelabuhan di tengah badai perubahan.',
+    ciri:['Tangguh','Adaptif','Pragmatis','Patriotis','Stoik'],
+    hubungan:'Lost Generation adalah jembatan antara dunia lama dan baru. Pengalaman mereka mengajarkan generasi berikutnya tentang ketahanan dalam menghadapi ketidakpastian.'
+  },
+  'Greatest Gen':{
+    tahun:'1900 – 1928',konteks:'Ditempa oleh Depresi Besar dan Perang Dunia II — dua ujian terbesar abad ke-20. Mereka berkorban luar biasa, kemudian bangkit untuk membangun peradaban modern. Tom Brokaw menyebut mereka "The Greatest Generation" karena alasan yang sangat nyata.',
+    nilai:'Kewajiban di atas keinginan pribadi. Pengorbanan untuk kebaikan bersama. Kerja keras, tabungan, dan kesederhanaan sebagai kebajikan utama.',
+    ciri:['Disiplin tinggi','Patriotis','Pekerja keras','Menabung','Hormat pada otoritas','Stoik'],
+    hubungan:'Greatest Generation membangun fondasi kemakmuran yang dinikmati generasi-generasi setelahnya. Mereka mengajarkan bahwa kesulitan terbesar dapat diatasi dengan tekad kolektif.'
+  },
+  'Silent Gen':{
+    tahun:'1928 – 1946',konteks:'Tumbuh dalam bayangan Perang Dunia dan kemudian menjadi dewasa di era konservatif. Dinamakan "Silent" karena mereka diharapkan untuk diam dan patuh — namun justru merekalah yang memimpin banyak gerakan sosial penting, termasuk hak sipil.',
+    nilai:'Konformitas sebagai jalan aman, namun dengan gejolak di dalam. Keyakinan pada institusi dan prosedur. Loyalitas jangka panjang pada satu pekerjaan atau pasangan.',
+    ciri:['Disiplin','Loyal pada institusi','Sabar','Hormat pada tradisi','Pekerja tekun'],
+    hubungan:'Silent Generation adalah mediator alami — generasi yang memahami nilai-nilai lama namun cukup fleksibel untuk menavigasi perubahan.'
+  },
+  'Baby Boomers':{
+    tahun:'1946 – 1965',konteks:'Lahir dalam gelombang kelahiran pasca perang — era optimisme dan kemakmuran. Mereka tumbuh bersama rock and roll, televisi, gerakan hak sipil, dan Perang Vietnam. Generasi yang mendefinisikan ulang apa artinya menjadi muda dan bebas.',
+    nilai:'Individualisme dan ekspresi diri. Optimisme bahwa dunia dapat diubah. Kerja keras sebagai jalan menuju kesuksesan dan identitas.',
+    ciri:['Optimis','Workaholic','Kompetitif','Konsumtif','Berorientasi pada status','Loyal pada karier'],
+    hubungan:'Boomers membawa semangat perubahan yang besar, namun sering berkonflik dengan generasi yang lebih muda tentang nilai-nilai dan cara kerja.'
+  },
+  'Gen X':{
+    tahun:'1965 – 1981',konteks:'Generasi yang tumbuh di antara krisis ekonomi, AIDS, dan runtuhnya kepercayaan pada institusi. Mereka adalah "latchkey kids" — sering ditinggal sendiri karena kedua orang tua bekerja. Mereka membentuk budaya alternatif: grunge, hip-hop awal, dan sarkasme sebagai bahasa.',
+    nilai:'Skeptisisme terhadap otoritas dan institusi besar. Kemandirian sebagai kebanggaan. Keseimbangan kerja-hidup sebagai respons terhadap workaholic generasi sebelumnya.',
+    ciri:['Mandiri','Skeptis','Adaptif','Pragmatis','Kerja cerdas bukan keras','Toleran'],
+    hubungan:'Gen X adalah generasi jembatan yang paling fleksibel — memahami dunia analog sekaligus mampu beradaptasi dengan digital. Mereka sering menjadi "penerjemah" antar generasi.'
+  },
+  'Millennials':{
+    tahun:'1981 – 1997',konteks:'Digital pioneer yang tumbuh menyaksikan kelahiran internet, serangan 9/11, dan krisis keuangan 2008. Mereka adalah generasi pertama yang benar-benar hidup di dua dunia: analog di masa kecil, digital di dewasa.',
+    nilai:'Pengalaman di atas materi. Autentisitas dan dampak sosial dalam pekerjaan. Keseimbangan hidup-kerja sebagai hak, bukan kemewahan.',
+    ciri:['Tech-savvy','Kolaboratif','Multitasking','Penuh harapan','Beban hutang','Menunda pernikahan'],
+    hubungan:'Millennials adalah generasi yang paling sering disalahpahami — terlalu dimanjakan kata satu pihak, terlalu terbebani kata pihak lain. Namun mereka membawa nilai-nilai baru yang mendorong perubahan positif.'
+  },
+  'Gen Z':{
+    tahun:'1997 – 2013',konteks:'Digital native sejati yang tidak pernah mengenal dunia tanpa smartphone. Mereka tumbuh di era media sosial, polarisasi politik, dan krisis iklim. Generasi yang paling terdiversifikasi, paling terhubung secara global, namun juga menghadapi tekanan kesehatan mental yang belum pernah ada sebelumnya.',
+    nilai:'Inklusivitas dan representasi sebagai standar, bukan kemewahan. Kesehatan mental setara dengan kesehatan fisik. Keaslian di atas performa.',
+    ciri:['Digital native','Pragmatis','Inklusif','Entrepeneurial','Anxious','Sadar iklim','Visual-first'],
+    hubungan:'Gen Z menantang semua norma yang dianggap sudah selesai — dari gender hingga karier hingga format belajar. Mereka bukan pemberontak, tapi perancang ulang.'
+  },
+  'Gen Alpha':{
+    tahun:'2013 – 2025',konteks:'Generasi pertama yang lahir sepenuhnya dalam era AI, tablet sejak bayi, dan pandemi COVID-19 sebagai bagian dari memori awal mereka. Mereka akan menjadi generasi paling terdidik dan paling terhubung secara teknologi dalam sejarah manusia.',
+    nilai:'Fluidity dalam semua hal — identitas, karier, dan koneksi. Kolaborasi dengan AI sebagai norma. Pembelajaran yang dipersonalisasi dan immersif.',
+    ciri:['AI-native','Visual learner','Hyper-connected','Sangat terdidik','Global mindset','Creator economy'],
+    hubungan:'Gen Alpha akan mendefinisikan ulang apa artinya menjadi manusia di era kecerdasan buatan. Mereka belum bisa dinilai sepenuhnya — kisah mereka baru dimulai.'
+  },
+  'Gen Beta':{
+    tahun:'2025 – 2040',konteks:'Generasi yang akan lahir dan tumbuh bersama AI generatif yang sudah matang, teknologi energi terbarukan, dan kemungkinan perjalanan luar angkasa komersial. Dunia mereka akan sangat berbeda dari yang bisa kita bayangkan.',
+    nilai:'Keberlanjutan bukan pilihan tapi cara hidup. Kolaborasi manusia-AI sebagai hal alami. Batas antara digital dan fisik hampir tidak ada.',
+    ciri:['Post-digital','Sustainability-first','AI collaborator','Global citizen','Space-aware'],
+    hubungan:'Generasi yang akan mewarisi semua pencapaian dan semua masalah yang ditinggalkan generasi sebelumnya. Beban dan harapan mereka sama besarnya.'
+  },
+  'Gen Gamma':{
+    tahun:'2040 – 2060',konteks:'Generasi kota cerdas dan perjalanan antar planet mungkin sudah menjadi kenyataan. Batas antara manusia dan teknologi semakin kabur — augmentasi, AI, dan dunia digital melebur menjadi satu.',
+    nilai:'Transendensi batas biologis dan geografis. Identitas yang melampaui konsep tradisional tentang bangsa atau spesies.',
+    ciri:['Post-human','Multi-planetary','Augmented','Fully connected'],
+    hubungan:'Generasi yang ada di ambang transformasi terbesar dalam sejarah manusia.'
+  },
+  'Gen Future':{
+    tahun:'2060+',konteks:'Peradaban yang belum bisa kita bayangkan dengan kerangka pikir kita saat ini. Generasi yang mungkin sudah melampaui batasan yang kita anggap fundamental.',
+    nilai:'Nilai-nilai yang belum dapat kita konseptualisasikan.',
+    ciri:['Tak terbayangkan','Beyond current paradigm'],
+    hubungan:'Mereka adalah bintang-bintang yang belum lahir di langit yang belum ada.'
+  }
+};
+
+// Personality traits berdasarkan kombinasi zodiak + generasi
+function getPersonalityProfile(zodiacName, genTag){
+  const z = ZODIAC_BIO[zodiacName];
+  const g = GEN_BIO[genTag];
+  if(!z||!g) return null;
+
+  // Skor kepribadian unik berdasarkan elemen zodiak dan generasi
+  const elScores = {
+    'Api':    {ekstrovert:85, intuisi:70, perasaan:60, penilaian:65},
+    'Bumi':   {ekstrovert:45, intuisi:40, perasaan:55, penilaian:85},
+    'Udara':  {ekstrovert:75, intuisi:80, perasaan:50, penilaian:55},
+    'Air':    {ekstrovert:40, intuisi:85, perasaan:90, penilaian:45},
+  };
+  const el = z.elemen || 'Bumi';
+  const base = elScores[el] || elScores['Bumi'];
+
+  // Modifikasi berdasarkan generasi
+  const genMods = {
+    'Greatest Gen': {penilaian:15, ekstrovert:-5},
+    'Silent Gen':   {penilaian:10, ekstrovert:-10},
+    'Baby Boomers': {ekstrovert:10, penilaian:5},
+    'Gen X':        {ekstrovert:-5, intuisi:10},
+    'Millennials':  {perasaan:10, intuisi:5},
+    'Gen Z':        {perasaan:5, intuisi:10, ekstrovert:-5},
+    'Gen Alpha':    {intuisi:15, ekstrovert:5},
+  };
+  const mod = genMods[genTag] || {};
+  const clamp = v => Math.max(10, Math.min(97, v));
+
+  return {
+    ekstrovert:  clamp((base.ekstrovert || 50) + (mod.ekstrovert || 0)),
+    intuisi:     clamp((base.intuisi || 50)    + (mod.intuisi    || 0)),
+    perasaan:    clamp((base.perasaan || 50)   + (mod.perasaan   || 0)),
+    penilaian:   clamp((base.penilaian || 50)  + (mod.penilaian  || 0)),
+  };
+}
+
+const GAYA_KOMUNIKASI = {
+  'Api': 'Langsung, tegas, dan penuh energi. Mereka berbicara dengan percaya diri dan tidak suka basa-basi. Terkadang terlalu blak-blakan, namun selalu jujur dan membangkitkan semangat.',
+  'Bumi': 'Hati-hati, terukur, dan berbasis fakta. Mereka berbicara ketika sudah siap dan lebih suka mendengarkan sebelum merespons. Kata-kata mereka dapat diandalkan.',
+  'Udara': 'Fasih, cepat, dan penuh ide. Mereka menikmati diskusi panjang dan perdebatan intelektual. Komunikasi adalah seni bagi mereka — mereka dapat membicarakan hampir semua hal.',
+  'Air': 'Empatik dan intuitif. Mereka membaca yang tersirat lebih dari yang tersurat. Sering berkomunikasi melalui ekspresi nonverbal — tatapan, sentuhan, dan energi.',
+};
+
+const PERAN_KELUARGA = {
+  'Api': 'Pemimpin yang menginspirasi dan penggerak keluarga. Mereka yang pertama berani membuat keputusan besar. Dalam saat-saat sulit, energi mereka yang menular menjadi sumber kekuatan bagi seluruh keluarga.',
+  'Bumi': 'Pilar yang menopang keluarga — mereka yang bisa diandalkan saat segalanya goyah. Mereka menjaga stabilitas praktis: keuangan, rumah, dan rutinitas yang membuat keluarga berjalan.',
+  'Udara': 'Penghubung dan komunikator keluarga. Mereka menjaga aliran informasi dan dialog tetap hidup. Sering menjadi mediator dalam konflik karena kemampuan mereka melihat semua sudut pandang.',
+  'Air': 'Penjaga emosi keluarga — mereka yang merasakan ketika ada yang tidak beres bahkan sebelum diungkapkan. Sumber empati dan dukungan emosional yang tak ternilai bagi seluruh anggota keluarga.',
+};
+
+const QUOTES = {
+  Capricorn: '"Kesabaran adalah jembatan antara mimpi dan kenyataan. Aku membangun jembatan itu dengan tangan sendiri."',
+  Aquarius:  '"Masa depan bukan sesuatu yang datang — ia adalah sesuatu yang kita ciptakan bersama."',
+  Pisces:    '"Di antara mimpi dan kenyataan, aku menemukan diriku yang paling sejati."',
+  Aries:     '"Lebih baik mencoba dan gagal daripada bertanya-tanya selamanya tentang apa yang mungkin terjadi."',
+  Taurus:    '"Hal-hal terbaik dalam hidup dibangun perlahan, dengan tangan yang sabar dan hati yang setia."',
+  Gemini:    '"Setiap orang yang kutemui mengajarkanku sesuatu. Dunia adalah perpustakaan yang tak pernah tutup."',
+  Cancer:    '"Rumah bukan sekadar tempat — ia adalah rasa aman yang kubawa ke mana pun aku pergi."',
+  Leo:       '"Cahayaku bukan untuk menyilaukan — tapi untuk menerangi jalan bagi mereka yang berjalan bersamaku."',
+  Virgo:     '"Dalam detail yang paling kecil tersembunyi keindahan yang paling agung."',
+  Libra:     '"Keadilan bukan tentang persamaan — tapi tentang memberikan apa yang benar-benar dibutuhkan."',
+  Scorpio:   '"Aku telah turun ke kedalaman terdalam dan kembali. Tidak ada yang benar-benar bisa menghancurkanku."',
+  Sagittarius:'"Setiap cakrawala adalah undangan, dan aku tidak pernah menolak undangan."',
+};
+
+// ═══════════════════════════════════════════════════════
+//  BIOGRAPHY PANEL LOGIC
+// ═══════════════════════════════════════════════════════
+let bioOpen = false;
+
+function openBioPanel(){
+  const m = members.find(x => x.id === selectedId);
+  if(!m) return;
+  populateBio(m);
+  document.getElementById('bio-panel').classList.add('open');
+  switchTab('zodiak');
+  bioOpen = true;
+}
+
+function closeBioPanel(){
+  document.getElementById('bio-panel').classList.remove('open');
+  bioOpen = false;
+}
+
+// close when clicking backdrop
+document.getElementById('bio-panel').addEventListener('click', e => {
+  if(e.target === document.getElementById('bio-panel')) closeBioPanel();
+});
+
+function switchTab(tab){
+  document.querySelectorAll('.bio-tab').forEach((t,i) => {
+    t.classList.toggle('active', ['zodiak','generasi','kepribadian'][i] === tab);
+  });
+  ['zodiak','generasi','kepribadian'].forEach(t => {
+    document.getElementById('tab-'+t).classList.toggle('hidden', t !== tab);
+  });
+}
+
+function makeTags(containerId, arr){
+  const el = document.getElementById(containerId);
+  el.innerHTML = arr.map(t => `<span class="bio-tag">${t}</span>`).join('');
+}
+
+function populateBio(m){
+  const zd = m.zodiacName ? ZODIAC_BIO[m.zodiacName] : null;
+  const gd = m.genTag ? GEN_BIO[m.genTag] : null;
+  const col = m.genColor || '#00d9ff';
+  const age = calcAge(m.birth, m.death || null);
+  const isDead = m.status === 'deceased';
+
+  // Header
+  document.getElementById('bio-sym').textContent = m.symbol;
+  document.getElementById('bio-sym').style.color = isDead ? 'rgba(200,200,220,.7)' : col;
+  document.getElementById('bio-name').textContent = m.name;
+  document.getElementById('bio-name').style.color = isDead ? 'rgba(200,200,220,.8)' : col;
+  document.getElementById('bio-sub').textContent =
+    [ROLE_LABELS[m.role]||m.role, m.genTag, age !== null ? (isDead?`✝ ${age} thn`:`✦ ${age} thn`) : '']
+    .filter(Boolean).join('  ·  ');
+
+  // ── TAB ZODIAK ──
+  if(zd){
+    document.getElementById('z-header').textContent = `${m.zodiacGlyph || ''} ${m.zodiacName} — Elemen ${zd.elemen || m.zodiacElement || '—'}`;
+    document.getElementById('z-elemen').textContent = zd.elemen || m.zodiacElement || '—';
+    document.getElementById('z-modus').textContent = zd.modus || '—';
+    document.getElementById('z-planet').textContent = zd.planet || '—';
+    document.getElementById('z-kepribadian').textContent = zd.kepribadian || '—';
+    makeTags('z-kekuatan', zd.kekuatan || []);
+    makeTags('z-tantangan', zd.tantangan || []);
+    document.getElementById('z-cinta').textContent = zd.cinta || '—';
+    document.getElementById('z-karier').textContent = zd.karier || '—';
+  } else {
+    ['z-header','z-elemen','z-modus','z-planet','z-kepribadian','z-cinta','z-karier']
+      .forEach(id => document.getElementById(id).textContent = 'Tanggal lahir tidak diisi');
+    makeTags('z-kekuatan', []);
+    makeTags('z-tantangan', []);
+  }
+
+  // ── TAB GENERASI ──
+  if(gd){
+    document.getElementById('g-header').textContent = `${m.symbol} ${m.genTag} — ${m.genName || ''}`;
+    document.getElementById('g-tahun').textContent = gd.tahun || '—';
+    document.getElementById('g-era').textContent = m.genName || '—';
+    document.getElementById('g-konteks').textContent = gd.konteks || '—';
+    document.getElementById('g-nilai').textContent = gd.nilai || '—';
+    makeTags('g-ciri', gd.ciri || []);
+    document.getElementById('g-hubungan').textContent = gd.hubungan || '—';
+  } else {
+    ['g-header','g-tahun','g-era','g-konteks','g-nilai','g-hubungan']
+      .forEach(id => document.getElementById(id).textContent = 'Tanggal lahir tidak diisi');
+    makeTags('g-ciri', []);
+  }
+
+  // ── TAB KEPRIBADIAN ──
+  const el = zd ? (zd.elemen || m.zodiacElement) : null;
+  const profile = m.zodiacName && m.genTag ? getPersonalityProfile(m.zodiacName, m.genTag) : null;
+
+  if(profile){
+    const profDesc = el ?
+      `Perpaduan unik antara energi ${el} (${m.zodiacName}) dan semangat ${m.genTag} membentuk kepribadian yang ${
+        profile.ekstrovert > 60 ? 'cenderung ekstrovert' : 'cenderung introvert'
+      }, ${profile.intuisi > 60 ? 'intuitif' : 'sensoris'}, ${
+        profile.perasaan > 60 ? 'berempati tinggi' : 'berpikir analitis'
+      }, dan ${profile.penilaian > 60 ? 'terstruktur' : 'fleksibel'}. Kombinasi ini menciptakan individu yang unik dan tak mudah diulang.`
+      : '—';
+    document.getElementById('p-profil').textContent = profDesc;
+
+    const barsEl = document.getElementById('p-bars');
+    const bars = [
+      {label:'Ekstrovert', val: profile.ekstrovert},
+      {label:'Intuisi',    val: profile.intuisi},
+      {label:'Perasaan',   val: profile.perasaan},
+      {label:'Terstruktur',val: profile.penilaian},
+    ];
+    barsEl.innerHTML = bars.map(b => `
+      <div class="bio-bar-row">
+        <div class="bio-bar-label">${b.label}</div>
+        <div class="bio-bar-track"><div class="bio-bar-fill" style="width:${b.val}%"></div></div>
+        <div class="bio-bar-val">${b.val}%</div>
+      </div>`).join('');
+  } else {
+    document.getElementById('p-profil').textContent = 'Isi tanggal lahir untuk melihat profil kepribadian.';
+    document.getElementById('p-bars').innerHTML = '';
+  }
+
+  document.getElementById('p-komunikasi').textContent = el ? (GAYA_KOMUNIKASI[el] || '—') : 'Tanggal lahir tidak diisi';
+  document.getElementById('p-keluarga').textContent = el ? (PERAN_KELUARGA[el] || '—') : '—';
+  document.getElementById('p-quote').textContent = m.zodiacName ? (QUOTES[m.zodiacName] || '—') : '—';
+}
+
+// ═══════════════════════════════════════════════════════
+//  LIVE CLOCK
+// ═══════════════════════════════════════════════════════
+const HARI=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+const BULAN=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+
+function updateClock(){
+  const now=new Date();
+  const hh=String(now.getHours()).padStart(2,'0');
+  const mm=String(now.getMinutes()).padStart(2,'0');
+  const ss=String(now.getSeconds()).padStart(2,'0');
+  const hari=HARI[now.getDay()];
+  const tgl=String(now.getDate()).padStart(2,'0');
+  const bln=BULAN[now.getMonth()];
+  const thn=now.getFullYear();
+  document.getElementById('clock-time').textContent=`${hh}:${mm}:${ss}`;
+  document.getElementById('clock-date').textContent=`${hari} · ${tgl} ${bln} ${thn}`;
+}
+updateClock();
+setInterval(updateClock,1000);
+
+loop();
+</script>
+</body>
+</html>
