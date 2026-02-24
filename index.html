@@ -1392,7 +1392,7 @@
             const nextBtn = document.getElementById('sliderNext');
             const dotsEl  = document.getElementById('sliderDots');
 
-            let currentIndex = 0;
+            let currentPage = 0;
 
             function getVisible() {
                 const w = window.innerWidth;
@@ -1403,46 +1403,49 @@
 
             const totalItems = slider.children.length; // 6
 
-            function maxIndex() {
-                return Math.max(0, totalItems - getVisible());
+            function totalPages() {
+                return Math.ceil(totalItems / getVisible());
             }
 
-            // Build dots
+            // Build dots — satu dot per halaman
             function buildDots() {
                 dotsEl.innerHTML = '';
-                const count = maxIndex() + 1;
+                const count = totalPages();
                 for (let i = 0; i < count; i++) {
                     const dot = document.createElement('div');
-                    dot.className = 'slider-dot' + (i === currentIndex ? ' active' : '');
+                    dot.className = 'slider-dot' + (i === currentPage ? ' active' : '');
                     dot.addEventListener('click', () => goTo(i));
                     dotsEl.appendChild(dot);
                 }
             }
 
-            function goTo(index) {
-                currentIndex = Math.min(Math.max(index, 0), maxIndex());
-                const vis     = getVisible();
-                const gap     = 40; // 2.5rem = 40px
-                const trackW  = slider.parentElement.offsetWidth;
-                const cardW   = (trackW - gap * (vis - 1)) / vis;
-                const offset  = currentIndex * (cardW + gap);
+            function goTo(page) {
+                const pages = totalPages();
+                currentPage = Math.min(Math.max(page, 0), pages - 1);
+
+                const vis    = getVisible();
+                const gap    = parseFloat(getComputedStyle(slider).gap) || 45;
+                const trackW = slider.parentElement.offsetWidth;
+                const cardW  = (trackW - gap * (vis - 1)) / vis;
+                // Lompat satu halaman penuh = vis kartu
+                const offset = currentPage * vis * (cardW + gap);
 
                 slider.style.transform = `translateX(-${offset}px)`;
-                prevBtn.disabled = currentIndex === 0;
-                nextBtn.disabled = currentIndex >= maxIndex();
+                prevBtn.disabled = currentPage === 0;
+                nextBtn.disabled = currentPage >= pages - 1;
 
                 dotsEl.querySelectorAll('.slider-dot').forEach((d, i) => {
-                    d.classList.toggle('active', i === currentIndex);
+                    d.classList.toggle('active', i === currentPage);
                 });
             }
 
             window.slideProjects = function(dir) {
-                goTo(currentIndex + dir);
+                goTo(currentPage + dir);
             };
 
             window.addEventListener('resize', () => {
                 buildDots();
-                goTo(Math.min(currentIndex, maxIndex()));
+                goTo(Math.min(currentPage, totalPages() - 1));
             });
 
             // Touch/swipe support
