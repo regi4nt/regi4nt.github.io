@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SYNAPSE — Neural Typing Trainer</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a14;--bg2:#13131f;
+  --cyan:#00fff9;--cd:#00fff920;
+  --pur:#a855f7;--amb:#f7b731;
+  --red:#ff4060;--grn:#39ff14;
+  --pnk:#ff6ec7;--blu:#00d9ff;
+  --txt:#f0f4ff;--dim:#3a4a6b;--dim2:#1e2040;
+  --gc:0 0 10px #00fff9,0 0 30px #00fff940,0 0 60px #00fff920;
+  --gp:0 0 10px #a855f7,0 0 30px #a855f740;
+  --gr:0 0 10px #ff4060,0 0 30px #ff406040;
+  --nebula1:#a855f7;--nebula2:#00d9ff;
+}
+body{background:var(--bg);color:var(--txt);font-family:'Rajdhani',sans-serif;min-height:100vh;overflow:hidden;cursor:none;font-size:16px}
+#cursor{position:fixed;width:10px;height:10px;border-radius:50%;background:var(--cyan);box-shadow:var(--gc);pointer-events:none;z-index:9999;transform:translate(-50%,-50%)}
+#cring{position:fixed;width:28px;height:28px;border-radius:50%;border:1px solid var(--cyan);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);opacity:.35;transition:all .12s}
+
+/* ── SPACE BACKGROUND ── */
+.universe-bg{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse at bottom,#1b2735 0%,#090a0f 100%)}
+.grid-bg{position:fixed;inset:0;background:linear-gradient(90deg,rgba(0,255,249,.03) 1px,transparent 1px),linear-gradient(rgba(0,255,249,.03) 1px,transparent 1px);background-size:50px 50px;pointer-events:none;z-index:0;opacity:.4}
+.nebula{position:fixed;width:600px;height:600px;border-radius:50%;filter:blur(80px);opacity:.12;animation:nbFloat 20s infinite ease-in-out;pointer-events:none;z-index:0}
+.nebula-1{background:radial-gradient(circle,var(--nebula1),transparent);top:5%;left:-10%}
+.nebula-2{background:radial-gradient(circle,var(--nebula2),transparent);bottom:5%;right:-10%;animation-delay:-10s}
+.nebula-3{background:radial-gradient(circle,#ff6ec720,transparent);top:50%;left:40%;width:400px;height:400px;animation-delay:-5s}
+@keyframes nbFloat{0%,100%{transform:translate(0,0)}33%{transform:translate(40px,-40px)}66%{transform:translate(-40px,40px)}}
+#stars-layer{position:fixed;inset:0;pointer-events:none;z-index:0}
+.star{position:absolute;background:white;border-radius:50%;animation:twinkle 4s infinite ease-in-out}
+@keyframes twinkle{0%,100%{opacity:.25;transform:scale(1)}50%{opacity:.9;transform:scale(1.3)}}
+.shooting-star{position:absolute;width:2px;height:2px;background:white;border-radius:50%;box-shadow:0 0 8px 2px rgba(255,255,255,.8);animation:shoot 2.5s linear forwards;opacity:0}
+@keyframes shoot{0%{transform:translateX(0) translateY(0);opacity:1}70%{opacity:.8}100%{transform:translateX(-200px) translateY(200px);opacity:0}}
+
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,#00000010 2px,#00000010 4px);pointer-events:none;z-index:50}
+
+/* ── START SCREEN ── */
+#SS{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,10,20,.82);backdrop-filter:blur(16px);gap:14px;padding:20px;overflow-y:auto}
+.logo{font-family:'Orbitron',sans-serif;font-weight:900;font-size:2rem;letter-spacing:.3em;text-align:center;line-height:1}
+.logo .a{color:var(--cyan);text-shadow:var(--gc)}.logo .b{color:var(--pur);text-shadow:var(--gp)}
+.logo .sub{display:block;font-size:.26em;font-weight:400;letter-spacing:.5em;color:var(--dim);margin-top:4px;font-family:'Rajdhani',sans-serif}
+
+/* Lang pills */
+.lbar{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;max-width:600px}
+.lp{display:flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid rgba(0,217,255,.2);background:rgba(19,19,31,.6);backdrop-filter:blur(8px);color:#7aaecf;font-family:'Rajdhani',sans-serif;cursor:none;transition:all .2s;border-radius:6px}
+.lp:hover{border-color:rgba(0,217,255,.5);background:rgba(0,217,255,.08);color:var(--txt)}.lp.on{border-color:var(--cyan);color:var(--cyan);background:rgba(0,255,249,.1);box-shadow:0 0 12px rgba(0,255,249,.2)}
+.lp .f{font-size:1.1rem;flex-shrink:0}
+.lp-info{display:flex;flex-direction:column;align-items:flex-start;line-height:1.2}
+.lp-code{font-size:.62rem;font-weight:700;letter-spacing:.1em;color:inherit;font-family:'Orbitron',sans-serif}
+.lp-name{font-size:.56rem;font-weight:400;letter-spacing:.04em;color:inherit;opacity:.7;font-family:'Rajdhani',sans-serif}
+
+/* Category tabs */
+.ctabs{display:flex;gap:4px;padding:4px;background:rgba(19,19,31,.6);border:1px solid rgba(0,217,255,.15);border-radius:10px;backdrop-filter:blur(8px)}
+.ct{padding:6px 18px;background:transparent;border:none;color:rgba(240,244,255,.45);font-family:'Orbitron',sans-serif;font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;cursor:none;transition:all .2s;border-radius:7px}
+.ct:hover{color:rgba(240,244,255,.8);background:rgba(0,255,249,.05)}.ct.on{background:rgba(0,255,249,.12);color:var(--cyan);box-shadow:0 0 10px rgba(0,255,249,.15)}
+
+/* Mode panels - 2 cols with descriptions */
+.mpanel{display:none;width:100%;max-width:580px;grid-template-columns:repeat(2,1fr);gap:8px}
+.mpanel.vis{display:grid}
+.mc{display:flex;flex-direction:row;align-items:center;gap:12px;padding:14px 16px;background:rgba(26,26,46,.5);border:1px solid rgba(0,217,255,.15);border-left:3px solid var(--mc,rgba(0,217,255,.2));cursor:none;transition:all .2s;text-align:left;border-radius:10px;backdrop-filter:blur(8px)}
+.mc:hover{border-color:rgba(168,85,247,.4);border-left-color:var(--mc,rgba(168,85,247,.5));transform:translateX(3px) translateY(-2px);background:rgba(26,26,46,.7);box-shadow:0 8px 24px rgba(0,0,0,.3)}.mc.sel{border-color:var(--mc,var(--cyan));transform:translateX(4px) translateY(-2px);background:rgba(26,26,46,.75)}
+.mc .i{font-size:1.7rem;line-height:1;flex-shrink:0}
+.mc-info{display:flex;flex-direction:column;gap:2px;min-width:0}
+.mc .n{font-family:'Orbitron',sans-serif;font-weight:700;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase}
+.mc .d{font-size:.57rem;color:rgba(240,244,255,.45);letter-spacing:.03em;line-height:1.35;font-weight:400;font-family:'Rajdhani',sans-serif}
+
+/* Mode accent colors via CSS attr */
+.mc[data-m="klasik"]{--mc:var(--cyan)}.mc[data-m="bebas"]{--mc:var(--grn)}.mc[data-m="badai"]{--mc:#a29bfe}.mc[data-m="ritme"]{--mc:#00cec9}
+.mc[data-m="nyawa"]{--mc:var(--pnk)}.mc[data-m="bom"]{--mc:#fd7843}.mc[data-m="reaktor"]{--mc:#55efc4}.mc[data-m="eskalasi"]{--mc:#ff9f43}
+.mc[data-m="buta"]{--mc:#fdcb6e}.mc[data-m="balik"]{--mc:#fd79a8}.mc[data-m="sandi"]{--mc:#74b9ff}.mc[data-m="hantu"]{--mc:var(--pur)}
+.mc[data-m="angka"]{--mc:#00b894}.mc[data-m="adaptif"]{--mc:var(--blu)}.mc[data-m="duel"]{--mc:#e17055}.mc[data-m="ritme"]{--mc:#00cec9}.mc[data-m="acak"]{--mc:#dfe6e9}
+.mc .n{color:var(--mc,rgba(0,255,249,.6))}.mc.sel{border-left-color:var(--mc,var(--cyan))!important;box-shadow:0 0 20px color-mix(in srgb,var(--mc,var(--cyan)) 20%,transparent),inset 0 0 20px color-mix(in srgb,var(--mc,var(--cyan)) 5%,transparent)}
+.mc .d{color:color-mix(in srgb,var(--mc,#3a6090) 40%,rgba(240,244,255,.3))}
+
+/* ── PER-MODE BODY THEMING ── */
+body[data-mode="klasik"]{--ma:var(--cyan);--mb:#00f5d440;--ms:var(--gc)}
+body[data-mode="bebas"]{--ma:var(--grn);--mb:#39ff1425;--ms:0 0 18px #39ff14aa}
+body[data-mode="badai"]{--ma:#a29bfe;--mb:#a29bfe25;--ms:0 0 18px #a29bfeaa}
+body[data-mode="ritme"]{--ma:#00cec9;--mb:#00cec925;--ms:0 0 18px #00cec9aa}
+body[data-mode="nyawa"]{--ma:#ff6eb4;--mb:#ff6eb425;--ms:0 0 18px #ff6eb4aa}
+body[data-mode="bom"]{--ma:#fd7843;--mb:#fd784325;--ms:0 0 18px #fd7843aa}
+body[data-mode="reaktor"]{--ma:#55efc4;--mb:#55efc425;--ms:0 0 18px #55efc4aa}
+body[data-mode="eskalasi"]{--ma:#ff9f43;--mb:#ff9f4325;--ms:0 0 18px #ff9f43aa}
+body[data-mode="buta"]{--ma:#fdcb6e;--mb:#fdcb6e25;--ms:0 0 18px #fdcb6eaa}
+body[data-mode="balik"]{--ma:#fd79a8;--mb:#fd79a825;--ms:0 0 18px #fd79a8aa}
+body[data-mode="sandi"]{--ma:#74b9ff;--mb:#74b9ff25;--ms:0 0 18px #74b9ffaa}
+body[data-mode="hantu"]{--ma:#9b5de5;--mb:#9b5de525;--ms:0 0 18px #9b5de5aa}
+body[data-mode="angka"]{--ma:#00b894;--mb:#00b89425;--ms:0 0 18px #00b894aa}
+body[data-mode="adaptif"]{--ma:#00d4ff;--mb:#00d4ff25;--ms:0 0 18px #00d4ffaa}
+body[data-mode="duel"]{--ma:#e17055;--mb:#e1705525;--ms:0 0 18px #e17055aa}
+/* Apply accent to in-game elements */
+body[data-mode] .glogo{color:var(--ma,var(--cyan));text-shadow:var(--ms,var(--gc))}
+body[data-mode] #cursor{background:var(--ma,var(--cyan));box-shadow:var(--ms,var(--gc))}
+body[data-mode] #cring{border-color:var(--ma,var(--cyan))}
+body[data-mode] .sv{color:var(--ma,var(--cyan));text-shadow:var(--ms,var(--gc))}
+body[data-mode] #pb{background:linear-gradient(90deg,var(--pur),var(--ma,var(--cyan)));box-shadow:0 0 6px var(--ma,var(--cyan))}
+body[data-mode] .lt.ok{color:var(--ma,var(--cyan));text-shadow:0 0 9px var(--ma,var(--cyan))}
+body[data-mode] .lt.cur::after{background:var(--ma,var(--cyan))}
+body[data-mode] .k.act{border-color:var(--ma,var(--cyan));color:var(--ma,var(--cyan));background:var(--mb,var(--cd));box-shadow:var(--ms,var(--gc))}
+body[data-mode] #hdr{border-bottom:1px solid var(--mb,transparent)}
+body[data-mode] #tmr{color:var(--ma,var(--dim))}
+
+/* Desc line */
+#mdesc{font-size:.78rem;color:rgba(240,244,255,.55);letter-spacing:.03em;min-height:1.4em;text-align:center;max-width:560px;line-height:1.6;padding:4px 0;font-family:'Rajdhani',sans-serif;font-weight:400}
+
+/* Sub-config */
+#subcfg{display:flex;align-items:center;gap:6px;min-height:32px}
+.sl{font-size:.58rem;letter-spacing:.18em;color:var(--dim);text-transform:uppercase;font-family:'Orbitron',sans-serif}
+.sp{padding:5px 14px;border:1px solid rgba(0,217,255,.2);background:rgba(19,19,31,.5);color:rgba(240,244,255,.45);font-family:'Orbitron',sans-serif;font-size:.6rem;letter-spacing:.1em;cursor:none;transition:all .2s;border-radius:6px}
+.sp:hover{border-color:rgba(0,217,255,.4);color:var(--txt);background:rgba(0,255,249,.05)}.sp.on{border-color:var(--cyan);color:var(--cyan);background:rgba(0,255,249,.1);box-shadow:0 0 10px rgba(0,255,249,.2)}
+
+/* Start btn */
+.sbtn{padding:12px 44px;background:transparent;border:2px solid var(--cyan);color:var(--cyan);font-family:'Orbitron',sans-serif;font-weight:700;font-size:.82rem;letter-spacing:.3em;text-transform:uppercase;cursor:none;position:relative;overflow:hidden;transition:all .3s;border-radius:6px}
+.sbtn::before{content:'';position:absolute;inset:0;background:var(--cyan);transform:translateX(-101%);transition:transform .3s;z-index:-1}
+.sbtn:hover{color:var(--bg);box-shadow:0 0 24px var(--cyan);transform:translateY(-2px)}.sbtn:hover::before{transform:translateX(0)}
+.sbtn.sec{border-color:var(--pur);color:var(--pur)}.sbtn.sec::before{background:var(--pur)}.sbtn.sec:hover{box-shadow:0 0 24px var(--pur)}
+
+/* ── RESULT ── */
+#RS{position:fixed;inset:0;z-index:100;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,10,20,.88);backdrop-filter:blur(16px);gap:16px;padding:24px}
+.rb{font-size:.62rem;letter-spacing:.28em;padding:5px 14px;border:1px solid currentColor;text-transform:uppercase;font-weight:700;font-family:'Orbitron',sans-serif;border-radius:4px}
+.rt{font-family:'Orbitron',sans-serif;font-weight:900;font-size:2.2rem;letter-spacing:.2em}
+.rt .a{color:var(--cyan);text-shadow:var(--gc)}.rt .b{color:var(--pur)}
+.rg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:460px}
+.rc{background:rgba(26,26,46,.6);border:1px solid rgba(0,217,255,.2);padding:18px;text-align:center;border-radius:12px;backdrop-filter:blur(8px);transition:all .3s}
+.rc:hover{border-color:var(--cyan);box-shadow:0 0 20px rgba(0,255,249,.15)}
+.rc .rv{font-family:'Space Mono',monospace;font-size:1.9rem;font-weight:700;color:var(--cyan);text-shadow:var(--gc)}
+.rc .rl{font-size:.52rem;letter-spacing:.22em;color:var(--dim);text-transform:uppercase;margin-top:5px;font-family:'Orbitron',sans-serif}
+.rmsg{font-size:1rem;font-weight:400;letter-spacing:.05em;color:var(--txt);text-align:center;max-width:440px;font-family:'Rajdhani',sans-serif}
+#rweak{display:none;width:100%;max-width:460px;background:rgba(26,26,46,.5);border:1px solid rgba(255,64,96,.25);padding:14px;text-align:center;border-radius:10px;backdrop-filter:blur(8px)}
+#rwtitle{font-size:.52rem;letter-spacing:.26em;color:var(--dim);text-transform:uppercase;margin-bottom:8px;font-family:'Orbitron',sans-serif}
+.wkrow{display:flex;gap:7px;justify-content:center;flex-wrap:wrap}
+.wk{display:flex;flex-direction:column;align-items:center;padding:7px 10px;border:1px solid var(--red);min-width:44px;border-radius:6px;background:rgba(255,64,96,.05)}
+.wkc{font-family:'Space Mono',monospace;font-size:1rem;font-weight:700;color:var(--red);text-transform:uppercase}
+.wkp{font-size:.52rem;color:var(--dim);margin-top:2px}
+
+/* ── GAME UI ── */
+#app{position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+#hdr{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:10px 32px;z-index:20;background:rgba(10,10,20,.85);backdrop-filter:blur(15px);border-bottom:1px solid rgba(0,217,255,.15)}
+.glogo{font-family:'Orbitron',sans-serif;font-weight:900;font-size:1.15rem;letter-spacing:.25em;color:var(--cyan);text-shadow:var(--gc)}.glogo span{color:var(--pur)}
+#mbadge{display:none;font-size:.5rem;letter-spacing:.18em;padding:3px 10px;border:1px solid currentColor;text-transform:uppercase;font-weight:700;margin-top:3px;background:var(--mb,transparent);border-radius:4px;font-family:'Orbitron',sans-serif}
+#stats{display:flex;gap:24px;align-items:center}
+.sv{font-family:'Space Mono',monospace;font-size:1.4rem;font-weight:700;color:var(--cyan);text-shadow:var(--gc);transition:all .25s;line-height:1}
+.sl2{font-size:.48rem;letter-spacing:.18em;color:var(--dim);text-transform:uppercase;margin-top:3px;text-align:center;font-family:'Orbitron',sans-serif}
+.sv.am{color:var(--amb);text-shadow:0 0 16px #f7b73199}.sv.rd{color:var(--red);text-shadow:var(--gr)}
+.sv.pulse{animation:sp .25s ease}
+@keyframes sp{0%,100%{transform:scale(1)}50%{transform:scale(1.25)}}
+#lvdisp{display:none;font-size:1.2rem;letter-spacing:3px;filter:drop-shadow(0 0 6px #ff4060)}
+#lvdisp.shake{animation:ls .32s ease}
+@keyframes ls{0%,100%{transform:scale(1)}25%{transform:scale(1.25) rotate(-4deg)}75%{transform:scale(1.25) rotate(4deg)}}
+
+/* Side panels */
+#rkt-wrap{position:fixed;right:32px;top:50%;transform:translateY(-50%);display:none;flex-direction:column;align-items:center;gap:8px;z-index:20;background:rgba(26,26,46,.6);border:1px solid rgba(0,217,255,.2);padding:14px 12px;border-radius:14px;backdrop-filter:blur(10px)}
+#rkt-lbl{font-size:.48rem;letter-spacing:.2em;color:var(--ma,var(--grn));text-transform:uppercase;text-align:center;font-family:'Orbitron',sans-serif}
+#rkt-pct{font-family:'Space Mono',monospace;font-size:.9rem;color:var(--ma,var(--grn));font-weight:700}
+#rkt-out{width:10px;height:140px;background:var(--dim2);border-radius:5px;overflow:hidden;position:relative}
+#rkt-in{position:absolute;bottom:0;width:100%;background:linear-gradient(to top,var(--red),var(--amb),var(--grn));border-radius:5px;transition:height .28s ease}
+#esc-wrap{position:fixed;left:32px;top:50%;transform:translateY(-50%);text-align:center;z-index:20;display:none;background:rgba(26,26,46,.6);border:1px solid rgba(168,85,247,.25);padding:18px 22px;min-width:110px;border-radius:14px;backdrop-filter:blur(10px)}
+#esc-lv{font-family:'Space Mono',monospace;font-size:2.4rem;font-weight:700;color:var(--pur);text-shadow:var(--gp);line-height:1;transition:all .4s}
+#esc-lb{font-size:.46rem;letter-spacing:.22em;color:var(--dim);text-transform:uppercase;margin-top:3px;font-family:'Orbitron',sans-serif}
+#esc-nm{font-size:.6rem;color:var(--pur);letter-spacing:.1em;text-transform:uppercase;margin-top:8px;padding:3px 8px;border:1px solid currentColor;border-radius:4px;font-family:'Orbitron',sans-serif}
+#maut-wrap{position:fixed;left:32px;top:50%;transform:translateY(-50%);text-align:center;z-index:20;display:none;background:rgba(26,26,46,.6);border:1px solid rgba(255,64,96,.3);padding:18px 22px;border-radius:14px;backdrop-filter:blur(10px)}
+#mn{font-family:'Space Mono',monospace;font-size:2.6rem;font-weight:700;color:var(--red);text-shadow:var(--gr);line-height:1}
+#ml{font-size:.48rem;letter-spacing:.22em;color:var(--dim);text-transform:uppercase;margin-top:4px;font-family:'Orbitron',sans-serif}
+#marat-wrap{position:fixed;left:32px;top:50%;transform:translateY(-50%);text-align:center;z-index:20;display:none;background:rgba(26,26,46,.6);border:1px solid rgba(162,155,254,.3);padding:18px 22px;border-radius:14px;backdrop-filter:blur(10px)}
+#marat-n{font-family:'Space Mono',monospace;font-size:2.4rem;font-weight:700;color:#a29bfe;line-height:1}
+#marat-l{font-size:.58rem;letter-spacing:.1em;color:var(--dim);margin-top:4px;font-family:'Rajdhani',sans-serif}
+/* DUEL: top bar scoreboard */
+#duel-wrap{position:fixed;top:0;left:50%;transform:translateX(-50%);text-align:center;z-index:21;display:none;background:rgba(10,10,20,.9);border:1px solid rgba(0,217,255,.2);border-top:none;border-radius:0 0 16px 16px;padding:8px 32px 14px;backdrop-filter:blur(12px)}
+#duel-sc{display:flex;gap:22px;align-items:center;justify-content:center}
+.ds .dv{font-family:'Space Mono',monospace;font-size:2rem;font-weight:700;line-height:1}
+.ds .dl{font-size:.46rem;letter-spacing:.18em;color:var(--dim);text-transform:uppercase;margin-top:2px;font-family:'Orbitron',sans-serif}
+#duel-you .dv{color:var(--cyan)}#duel-bot .dv{color:var(--red)}
+#duel-vs{color:var(--dim);font-size:.8rem;font-family:'Space Mono',monospace;align-self:center}
+#duel-tag{font-size:.46rem;letter-spacing:.25em;color:var(--dim);text-transform:uppercase;margin-bottom:4px;font-family:'Orbitron',sans-serif}
+#duel-cur{font-family:'Space Mono',monospace;font-size:.7rem;color:var(--red);opacity:.65;letter-spacing:.08em;margin-top:4px;word-break:break-all;max-width:160px;text-align:center}
+
+/* STREAK */
+#stk-wrap{position:fixed;top:50%;right:32px;transform:translateY(-50%);text-align:center;z-index:20;background:rgba(26,26,46,.6);border:1px solid rgba(247,183,49,.2);padding:16px 18px;border-radius:14px;backdrop-filter:blur(10px)}
+#stk-fire{font-size:1.6rem;filter:drop-shadow(0 0 7px #f7b731);animation:flk .5s ease infinite alternate;min-height:1.9rem}
+@keyframes flk{0%{transform:scale(1) rotate(-2deg)}100%{transform:scale(1.05) rotate(2deg)}}
+#stk-n{font-family:'Space Mono',monospace;font-size:2.2rem;font-weight:700;color:var(--amb);text-shadow:0 0 25px #f7b73188;line-height:1;transition:all .25s}
+#stk-lb{font-size:.46rem;letter-spacing:.22em;color:var(--dim);text-transform:uppercase;margin-top:5px;font-family:'Orbitron',sans-serif}
+
+/* RITME */
+#ritme-wrap{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);display:none;flex-direction:column;align-items:center;gap:8px;z-index:20;background:rgba(0,206,201,.08);border:1px solid rgba(0,206,201,.25);padding:12px 28px;border-radius:30px;backdrop-filter:blur(8px)}
+#ritme-dots{display:flex;gap:10px;align-items:center}
+.rd{width:12px;height:12px;border-radius:50%;background:var(--dim2);transition:all .08s;border:1px solid #2a4a6b}
+.rd.beat{background:var(--ma,var(--cyan));box-shadow:0 0 14px var(--ma,var(--cyan));transform:scale(1.8);border-color:var(--ma,var(--cyan))}
+#ritme-bpm{font-family:'Orbitron',monospace;font-size:.68rem;letter-spacing:.18em;color:var(--ma,#00cec9);text-transform:uppercase}
+
+/* BOTTOM */
+#btm{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:20;display:flex;flex-direction:column;align-items:center;gap:3px}
+#tmr{font-family:'Space Mono',monospace;font-size:.85rem;color:var(--ma,var(--dim));letter-spacing:.12em;transition:color .3s}
+#zen-el{font-family:'Space Mono',monospace;font-size:.85rem;color:var(--grn);letter-spacing:.1em;display:none}
+#ftip{font-size:.56rem;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;white-space:nowrap;font-family:'Orbitron',sans-serif}
+.fp{color:var(--ma,var(--cyan))}
+
+/* Action buttons */
+#zen-btn{display:none;position:fixed;bottom:88px;left:50%;transform:translateX(-50%);padding:8px 28px;background:transparent;border:1px solid var(--grn);color:var(--grn);font-family:'Orbitron',sans-serif;font-weight:600;font-size:.68rem;letter-spacing:.22em;text-transform:uppercase;cursor:none;z-index:20;transition:all .25s;box-shadow:0 0 16px #39ff1420;border-radius:6px}
+#zen-btn:hover{background:var(--grn);color:var(--bg)}
+#marat-btn{display:none;position:fixed;bottom:88px;right:32px;padding:8px 16px;background:transparent;border:1px solid #a29bfe;color:#a29bfe;font-family:'Orbitron',sans-serif;font-size:.65rem;letter-spacing:.16em;text-transform:uppercase;cursor:none;z-index:20;transition:all .25s;border-radius:6px}
+#marat-btn:hover{background:#a29bfe;color:var(--bg)}
+
+/* DANGER + BLITZ */
+#dol{position:fixed;inset:0;pointer-events:none;z-index:8;opacity:0;border:2px solid var(--red);box-shadow:inset 0 0 60px #ff386430;transition:opacity .25s}
+#blitz-w{position:fixed;top:0;left:0;right:0;height:4px;background:var(--dim2);z-index:30;display:none}
+#blitz-b{height:100%;background:linear-gradient(90deg,var(--red),var(--amb));box-shadow:0 0 8px var(--amb);width:100%;transition:width .5s linear}
+
+/* TYPING AREA */
+#ta{width:100%;max-width:820px;display:flex;flex-direction:column;align-items:center;gap:28px}
+#ws{width:100%;position:relative}
+#up{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:16px;min-height:25px;opacity:.28}
+.uw{font-family:'Space Mono',monospace;font-size:.92rem;color:var(--txt);letter-spacing:.07em}
+#pw{width:100%;height:2px;background:var(--dim2);border-radius:2px;overflow:hidden;margin-bottom:6px}
+#pb{height:100%;background:linear-gradient(90deg,var(--pur),var(--cyan));box-shadow:0 0 8px var(--cyan);width:0%;transition:width .25s ease}
+#wb{position:relative;display:flex;justify-content:center;align-items:center;margin-bottom:20px}
+#lvbadge{display:none;position:absolute;top:-22px;right:0;font-size:.5rem;letter-spacing:.14em;text-transform:uppercase;padding:2px 7px;border:1px solid var(--pur);color:var(--pur);border-radius:4px;font-family:'Orbitron',sans-serif}
+#bom-tmr{display:none;position:absolute;top:-44px;left:50%;transform:translateX(-50%);font-family:'Space Mono',monospace;font-size:1.8rem;font-weight:700;color:var(--amb);text-shadow:0 0 14px #f7b731;transition:color .2s;white-space:nowrap;letter-spacing:.05em}
+#bom-tmr.danger{color:var(--red);text-shadow:var(--gr);animation:bpulse .28s ease infinite alternate}
+@keyframes bpulse{0%{transform:translateX(-50%) scale(1)}100%{transform:translateX(-50%) scale(1.12)}}
+#angka-badge{display:none;position:absolute;top:-28px;left:50%;transform:translateX(-50%);font-size:.62rem;letter-spacing:.15em;color:#00b894;border:1px solid #00b894;padding:3px 10px;text-transform:uppercase;white-space:nowrap;background:rgba(0,184,148,.08);font-family:'Orbitron',sans-serif;border-radius:4px}
+/* ── SANDI PANEL: inline horizontal cipher table ── */
+#sandi-panel{display:none;width:100%;max-width:820px;background:rgba(19,19,50,.7);border:1px solid rgba(116,185,255,.25);border-top:2px solid rgba(116,185,255,.5);padding:10px 16px;border-radius:12px;backdrop-filter:blur(12px);position:static;transform:none}
+#sp-title{font-size:.48rem;letter-spacing:.22em;color:#74b9ff;text-transform:uppercase;margin-bottom:8px;text-align:center;font-family:'Orbitron',sans-serif}
+.sg{display:grid;grid-template-columns:repeat(13,1fr);gap:4px}
+.sk{font-family:'Space Mono',monospace;font-size:.6rem;color:var(--dim);display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 2px;background:rgba(116,185,255,.05);border-radius:4px;border:1px solid rgba(116,185,255,.1)}
+.sk span{color:#74b9ff;font-weight:700;font-size:.62rem}.sk .sym{color:rgba(240,244,255,.5);font-size:.58rem}
+
+/* DUEL top bar: handled by JS */
+/* ESKALASI/REAKTOR/MAUT: handled by JS */
+/* SANDI: no side streak, cipher inline */
+body[data-mode="sandi"] #stk-wrap{display:none!important}
+/* REAKTOR: hide streak (right conflict with HP bar) */
+body[data-mode="reaktor"] #stk-wrap{display:none!important}
+/* BADAI: center content, no keyboard */
+body[data-mode="badai"] #ta{display:none}
+/* RITME: bottom dots don't clip keyboard */
+body[data-mode="ritme"] #kbs{margin-bottom:70px}
+
+/* BUTA mode reveal overlay */
+#buta-ol{display:none;position:absolute;inset:-4px;background:rgba(10,10,20,.96);z-index:4;align-items:center;justify-content:center;flex-direction:column;gap:8px;border-radius:8px}
+#buta-q{font-family:'Space Mono',monospace;font-size:3rem;font-weight:700;color:var(--dim);letter-spacing:.15em}
+#buta-hint{font-size:.5rem;letter-spacing:.2em;color:#2a3a50;text-transform:uppercase;font-family:'Orbitron',sans-serif}
+
+/* CURRENT WORD */
+#cw{font-family:'Space Mono',monospace;font-size:2.9rem;font-weight:700;letter-spacing:.14em;display:flex;gap:2px;position:relative;transition:filter .35s}
+#cw.blurred{filter:blur(12px)}#cw.semi{filter:blur(4px)}#cw.bu{animation:bUrgent .5s ease infinite alternate}
+@keyframes bUrgent{0%{transform:scale(1)}100%{transform:scale(1.04)}}
+.lt{display:inline-block;color:var(--dim);transition:all .09s;position:relative}
+.lt.ok{color:var(--cyan);text-shadow:0 0 9px var(--cyan)}
+.lt.no{color:var(--red);text-shadow:var(--gr);animation:shk .16s ease}
+.lt.cur{color:var(--txt)}
+.lt.cur::after{content:'';position:absolute;bottom:-3px;left:0;width:100%;height:2px;background:var(--cyan);box-shadow:var(--gc);animation:blk .8s ease infinite}
+@keyframes blk{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes shk{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+.wf{animation:wfl .36s ease forwards}
+@keyframes wfl{0%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.09);filter:brightness(2)}100%{opacity:0;transform:scale(.85) translateY(-16px)}}
+
+/* BADAI */
+.bword{position:fixed;font-family:'Space Mono',monospace;font-size:1.7rem;font-weight:700;z-index:15;pointer-events:none;transition:color .3s}
+
+/* KEYBOARD */
+#kbs{width:100%;display:flex;flex-direction:column;align-items:center;gap:8px}
+#kblbl{font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--txt);text-align:center;padding:5px 18px;border:1px solid rgba(0,217,255,.2);background:rgba(0,217,255,.05);border-radius:20px;transition:all .4s;font-family:'Orbitron',sans-serif;font-weight:400;opacity:.85;backdrop-filter:blur(4px)}
+#gkb{display:flex;flex-direction:column;gap:5px;align-items:center;transition:opacity 1s ease}
+.kr{display:flex;gap:5px}
+.k{width:38px;height:38px;border:1px solid rgba(255,255,255,.08);border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:.62rem;color:rgba(255,255,255,.14);background:rgba(255,255,255,.03);transition:all .12s;position:relative}
+.k.wd{width:55px}.k.wr{width:72px}.k.ws{width:190px}
+.k.act{border-color:var(--cyan);color:var(--cyan);background:rgba(0,255,249,.12);box-shadow:var(--gc);transform:translateY(2px)}
+.k.fh{border-color:rgba(168,85,247,.35);opacity:.5}
+.fd{position:absolute;bottom:2px;width:3px;height:3px;border-radius:50%;opacity:.3}
+.f1{background:#ff6b6b}.f2{background:#ffa726}.f3{background:#66bb6a}.f4{background:#42a5f5}.f5{background:#ab47bc}
+#gkb.gf1{opacity:.65}#gkb.gf2{opacity:.45}#gkb.gf3{opacity:.25}#gkb.gf4{opacity:.1}#gkb.gf5{opacity:.03}
+#gkb.ghost{opacity:0!important;transition:none!important}
+.k.hg{border-color:#2a7a2a;color:#4aaa4a;box-shadow:0 0 5px #4aaa4a28}
+.k.hx{border-color:#7acc7a;color:#7acc7a;box-shadow:0 0 8px #7acc7a40}
+.k.hb{border-color:#aa6600;color:#cc8800}
+.k.ht{border-color:var(--red);color:var(--red);box-shadow:0 0 9px rgba(255,64,96,.35)}
+
+/* ── MODE-SPECIFIC GAME VISUALS ── */
+/* HANTU: keyboard visual hidden, label stays */
+body[data-mode="hantu"] #gkb{opacity:0!important;transition:none!important}
+/* BADAI: no KB area */
+body[data-mode="badai"] #kbs{display:none}
+/* BEBAS: green theme enhancements */
+body[data-mode="bebas"] #zen-el{color:var(--grn);text-shadow:0 0 8px #39ff14}
+/* BOM: orange danger border pulse */
+body[data-mode="bom"] #dol{border-color:var(--ma,var(--amb))}
+/* ESKALASI: level badge glow */
+body[data-mode="eskalasi"] #lvbadge{box-shadow:0 0 10px currentColor}
+/* ADAPTIF: make keyboard more visible for heatmap */
+body[data-mode="adaptif"] #gkb{opacity:1!important}
+/* DUEL: blue-red bg tint */
+body[data-mode="duel"]::before{content:'';position:fixed;inset:0;background:linear-gradient(135deg,#00d4ff08 0%,transparent 50%,#e1705508 100%);pointer-events:none;z-index:1}
+/* NYAWA: hearts glow red */
+body[data-mode="nyawa"] #lvdisp{font-size:1.4rem;letter-spacing:4px}
+/* RITME: pulse border on beat */
+body[data-mode="ritme"] #ritme-wrap{box-shadow:0 0 20px #00cec920}
+/* SANDI: panel highlight */
+body[data-mode="sandi"] #sandi-panel{box-shadow:0 0 20px #74b9ff15}
+/* BUTA: extra dark BG for tension */
+body[data-mode="buta"] #app::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at center,transparent 30%,#00000060 100%);pointer-events:none;z-index:1}
+/* REAKTOR: right-side glow */
+body[data-mode="reaktor"] #rkt-wrap{box-shadow:0 0 24px #55efc420}
+/* BALIK: pink word tint */
+body[data-mode="balik"] #cw{filter:drop-shadow(0 0 8px #fd79a830)}
+.pt{position:fixed;pointer-events:none;border-radius:50%;z-index:5;animation:pf 1s ease forwards}
+@keyframes pf{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0}}
+.rpl{position:fixed;border-radius:50%;border:1px solid var(--cyan);pointer-events:none;z-index:6;animation:ra .55s ease forwards}
+.rpl.wr{border-color:var(--red)}
+@keyframes ra{0%{width:0;height:0;opacity:.8;transform:translate(-50%,-50%)}100%{width:72px;height:72px;opacity:0;transform:translate(-50%,-50%)}}
+
+/* ACAK reveal */
+#acakr{position:fixed;inset:0;background:rgba(10,10,20,.96);z-index:200;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;backdrop-filter:blur(20px)}
+#ar-lbl{font-size:.6rem;letter-spacing:.45em;color:var(--dim);text-transform:uppercase;font-family:'Orbitron',sans-serif}
+#ar-ic{font-size:4.5rem;line-height:1;animation:ars .38s ease infinite}
+@keyframes ars{0%{transform:rotate(0) scale(1)}50%{transform:rotate(180deg) scale(1.1)}100%{transform:rotate(360deg) scale(1)}}
+#ar-ic.rv{animation:arr .48s ease forwards}
+@keyframes arr{0%{transform:scale(.5) rotate(720deg);opacity:0}70%{transform:scale(1.3) rotate(0);opacity:1}100%{transform:scale(1) rotate(0);opacity:1}}
+#ar-nm{font-family:'Orbitron',sans-serif;font-weight:900;font-size:1.8rem;letter-spacing:.3em;text-transform:uppercase;opacity:0;transition:opacity .38s}
+#ar-nm.sh{opacity:1}
+#ar-cd{font-family:'Space Mono',monospace;font-size:2.6rem;color:var(--dim);transition:all .18s}
+#ar-cd.pop{animation:cp .26s ease}
+@keyframes cp{0%{transform:scale(1)}50%{transform:scale(1.45);color:var(--cyan)}100%{transform:scale(1)}}
+
+#inp{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="universe-bg"></div>
+<div class="grid-bg"></div>
+<div class="nebula nebula-1"></div>
+<div class="nebula nebula-2"></div>
+<div class="nebula nebula-3"></div>
+<div id="stars-layer"></div>
+<div id="cursor"></div><div id="cring"></div>
+<div id="dol"></div>
+<div id="blitz-w"><div id="blitz-b"></div></div>
+<canvas id="nc"></canvas>
+
+<!-- ACAK REVEAL -->
+<div id="acakr">
+  <div id="ar-lbl">MODE SESI INI</div>
+  <div id="ar-ic">🎲</div>
+  <div id="ar-nm"></div>
+  <div id="ar-cd">3</div>
+</div>
+
+<!-- START SCREEN -->
+<div id="SS">
+  <div class="logo"><span class="a">SYN</span><span class="b">APSE</span><span class="sub">Neural Typing Trainer</span></div>
+
+  <div class="lbar" id="lbar">
+    <button class="lp on" data-l="id"><span class="f">🇮🇩</span><span class="lp-info"><span class="lp-code">ID</span><span class="lp-name">Indonesia</span></span></button>
+    <button class="lp" data-l="en"><span class="f">🇬🇧</span><span class="lp-info"><span class="lp-code">EN</span><span class="lp-name">English</span></span></button>
+    <button class="lp" data-l="zh"><span class="f">🇨🇳</span><span class="lp-info"><span class="lp-code">ZH</span><span class="lp-name">中文</span></span></button>
+    <button class="lp" data-l="es"><span class="f">🇪🇸</span><span class="lp-info"><span class="lp-code">ES</span><span class="lp-name">Español</span></span></button>
+    <button class="lp" data-l="hi"><span class="f">🇮🇳</span><span class="lp-info"><span class="lp-code">HI</span><span class="lp-name">हिन्दी</span></span></button>
+    <button class="lp" data-l="ar"><span class="f">🇸🇦</span><span class="lp-info"><span class="lp-code">AR</span><span class="lp-name">العربية</span></span></button>
+    <button class="lp" data-l="pt"><span class="f">🇧🇷</span><span class="lp-info"><span class="lp-code">PT</span><span class="lp-name">Português</span></span></button>
+    <button class="lp" data-l="fr"><span class="f">🇫🇷</span><span class="lp-info"><span class="lp-code">FR</span><span class="lp-name">Français</span></span></button>
+    <button class="lp" data-l="de"><span class="f">🇩🇪</span><span class="lp-info"><span class="lp-code">DE</span><span class="lp-name">Deutsch</span></span></button>
+    <button class="lp" data-l="ja"><span class="f">🇯🇵</span><span class="lp-info"><span class="lp-code">JA</span><span class="lp-name">日本語</span></span></button>
+  </div>
+
+  <div class="ctabs" id="ctabs">
+    <button class="ct on" data-c="std">STANDAR</button>
+    <button class="ct" data-c="bhy">BAHAYA</button>
+    <button class="ct" data-c="kog">KOGNITIF</button>
+    <button class="ct" data-c="spl">SPESIAL</button>
+  </div>
+
+  <!-- STANDAR -->
+  <div class="mpanel vis" id="p-std">
+    <div class="mc sel" data-m="klasik"><div class="i">⏱️</div><div class="mc-info"><div class="n">Klasik</div><div class="d">Ketik sebanyak mungkin dalam batas waktu</div></div></div>
+    <div class="mc" data-m="bebas"><div class="i">🌿</div><div class="mc-info"><div class="n">Bebas</div><div class="d">Tanpa timer — sesi santai dengan target kata</div></div></div>
+    <div class="mc" data-m="badai"><div class="i">🌪️</div><div class="mc-info"><div class="n">Badai</div><div class="d">Kata jatuh dari langit, ketik sebelum lolos!</div></div></div>
+    <div class="mc" data-m="ritme"><div class="i">🎵</div><div class="mc-info"><div class="n">Ritme</div><div class="d">Ketik tepat pada ketukan metronom yang makin cepat</div></div></div>
+  </div>
+  <!-- BAHAYA -->
+  <div class="mpanel" id="p-bhy">
+    <div class="mc" data-m="nyawa"><div class="i">❤️</div><div class="mc-info"><div class="n">Nyawa</div><div class="d">Salah = nyawa berkurang — 1 nyawa = instant death</div></div></div>
+    <div class="mc" data-m="bom"><div class="i">💣</div><div class="mc-info"><div class="n">Bom</div><div class="d">Hitung mundur per kata, makin banyak kata makin cepat</div></div></div>
+    <div class="mc" data-m="reaktor"><div class="i">⚡</div><div class="mc-info"><div class="n">Reaktor</div><div class="d">HP terus turun otomatis — kata benar mengisi ulang</div></div></div>
+    <div class="mc" data-m="eskalasi"><div class="i">📈</div><div class="mc-info"><div class="n">Eskalasi</div><div class="d">Kata makin panjang seiring streak naik level</div></div></div>
+  </div>
+  <!-- KOGNITIF -->
+  <div class="mpanel" id="p-kog">
+    <div class="mc" data-m="buta"><div class="i">👁️</div><div class="mc-info"><div class="n">Buta</div><div class="d">Kata muncul 1 detik lalu gelap — ketik dari ingatan!</div></div></div>
+    <div class="mc" data-m="balik"><div class="i">🔄</div><div class="mc-info"><div class="n">Balik</div><div class="d">Ketik dari huruf terakhir ke pertama — otak terbalik!</div></div></div>
+    <div class="mc" data-m="sandi"><div class="i">🔒</div><div class="mc-info"><div class="n">Sandi</div><div class="d">Setiap huruf diganti simbol rahasia, gunakan tabel kunci</div></div></div>
+    <div class="mc" data-m="hantu"><div class="i">👻</div><div class="mc-info"><div class="n">Hantu</div><div class="d">Keyboard hilang sejak awal — murni muscle memory!</div></div></div>
+  </div>
+  <!-- SPESIAL -->
+  <div class="mpanel" id="p-spl">
+    <div class="mc" data-m="angka"><div class="i">🔢</div><div class="mc-info"><div class="n">Angka</div><div class="d">Bergantian kata normal dan angka acak 4 digit</div></div></div>
+    <div class="mc" data-m="adaptif"><div class="i">🧠</div><div class="mc-info"><div class="n">Adaptif</div><div class="d">AI lacak huruf terlemahmu via heatmap real-time</div></div></div>
+    <div class="mc" data-m="duel"><div class="i">🤖</div><div class="mc-info"><div class="n">Duel Bot</div><div class="d">Balapan ketik melawan bot AI berkecepatan acak</div></div></div>
+    <div class="mc" data-m="acak"><div class="i">🎲</div><div class="mc-info"><div class="n">Acak</div><div class="d">Mode dipilih random tiap sesi — kejutan total!</div></div></div>
+  </div>
+
+  <div id="mdesc">Ketik sebanyak mungkin dalam <b style="color:var(--cyan)">waktu yang ditentukan</b></div>
+
+  <!-- Dynamic sub-config -->
+  <div id="subcfg">
+    <!-- klasik / badai: time -->
+    <div id="cfg-time" style="display:flex;align-items:center;gap:5px">
+      <span class="sl">DURASI</span>
+      <button class="sp on" data-t="15">15S</button>
+      <button class="sp" data-t="30">30S</button>
+      <button class="sp" data-t="60">60S</button>
+      <button class="sp" data-t="120">2M</button>
+    </div>
+    <!-- nyawa: lives -->
+    <div id="cfg-lives" style="display:none;align-items:center;gap:5px">
+      <span class="sl">NYAWA</span>
+      <button class="sp" data-lv="1">1 ☠️</button>
+      <button class="sp on" data-lv="3">3 ❤️</button>
+      <button class="sp" data-lv="5">5 ❤️</button>
+      <button class="sp" data-lv="10">10 ❤️</button>
+    </div>
+    <!-- bebas: goal -->
+    <div id="cfg-bebas" style="display:none;align-items:center;gap:5px">
+      <span class="sl">TARGET</span>
+      <button class="sp on" data-g="0">∞ BEBAS</button>
+      <button class="sp" data-g="50">50 KATA</button>
+      <button class="sp" data-g="100">100 KATA</button>
+      <button class="sp" data-g="200">200 KATA</button>
+    </div>
+  </div>
+
+  <button class="sbtn" id="sbtn">AKTIFKAN SYNAPSE</button>
+</div>
+
+<!-- RESULT -->
+<div id="RS">
+  <div class="rb" id="rb">MODE</div>
+  <div class="rt"><span class="a">SESI</span> <span class="b">SELESAI</span></div>
+  <div class="rg">
+    <div class="rc"><div class="rv" id="r1">0</div><div class="rl">WPM</div></div>
+    <div class="rc"><div class="rv" id="r2">0%</div><div class="rl">AKURASI</div></div>
+    <div class="rc"><div class="rv" id="r3">0</div><div class="rl" id="r3l">STREAK</div></div>
+  </div>
+  <div class="rmsg" id="rmsg"></div>
+  <div id="rweak">
+    <div id="rwtitle">⚠️ HURUF TERLEMAHMU</div>
+    <div class="wkrow" id="rwkrow"></div>
+  </div>
+  <div style="display:flex;gap:10px">
+    <button class="sbtn" id="rbtn">ULANGI</button>
+    <button class="sbtn sec" id="bbtn">GANTI MODE</button>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="app">
+  <div id="hdr">
+    <div><div class="glogo">SYN<span>APSE</span></div><div id="mbadge"></div></div>
+    <div id="stats">
+      <div><div class="sv" id="wv">0</div><div class="sl2">WPM</div></div>
+      <div><div class="sv am" id="av">100%</div><div class="sl2">AKURASI</div></div>
+      <div id="lvdisp">❤️❤️❤️</div>
+    </div>
+  </div>
+
+  <!-- Side displays -->
+  <div id="rkt-wrap"><div id="rkt-lbl">REAKTOR HP</div><div id="rkt-pct">80%</div><div id="rkt-out"><div id="rkt-in" style="height:80%"></div></div></div>
+  <div id="esc-wrap"><div id="esc-lv">LV 1</div><div id="esc-lb">LEVEL</div><div id="esc-nm">DASAR</div></div>
+  <div id="maut-wrap"><div id="mn">0</div><div id="ml">KATA</div></div>
+  <div id="marat-wrap"><div id="marat-n">0</div><div id="marat-l">/100 kata</div></div>
+  <div id="duel-wrap">
+    <div id="duel-tag">🤖 BOT</div>
+    <div id="duel-sc">
+      <div class="ds" id="duel-you"><div class="dv" id="dys">0</div><div class="dl">KAMU</div></div>
+      <div id="duel-vs">VS</div>
+      <div class="ds" id="duel-bot"><div class="dv" id="dbs">0</div><div class="dl">BOT</div></div>
+    </div>
+    <div id="duel-cur">—</div>
+  </div>
+
+  <div id="ta">
+    <div id="ws">
+      <div id="up"></div>
+      <div id="pw"><div id="pb"></div></div>
+      <div id="wb">
+        <div id="lvbadge">LV 1</div>
+        <div id="bom-tmr">💣 5</div>
+        <div id="angka-badge">ANGKA</div>
+        <div id="buta-ol"><div id="buta-q">????</div><div id="buta-hint">KETIK DARI INGATAN</div></div>
+        <div id="cw"></div>
+      </div>
+    </div>
+
+    <div id="sandi-panel">
+      <div id="sp-title">KUNCI</div>
+      <div class="sg" id="sg"></div>
+    </div>
+
+    <div id="kbs">
+      <div id="kblbl">KEYBOARD MEMUDAR SEIRING AKURASI MENINGKAT</div>
+      <div id="gkb">
+        <div class="kr" id="rn"></div>
+        <div class="kr" id="rq"></div>
+        <div class="kr" id="ra"></div>
+        <div class="kr" id="rz"></div>
+        <div class="kr"><div class="k ws" id="k-space">SPACE</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="stk-wrap"><div id="stk-fire"></div><div id="stk-n">0</div><div id="stk-lb">STREAK</div></div>
+  <div id="ritme-wrap"><div id="ritme-dots"><div class="rd"></div><div class="rd"></div><div class="rd"></div><div class="rd"></div></div><div id="ritme-bpm">120 BPM</div></div>
+
+  <div id="btm">
+    <div id="tmr">-- DETIK</div>
+    <div id="zen-el">00:00</div>
+    <div id="ftip">KEYBOARD: <span class="fp" id="fp">100%</span></div>
+  </div>
+</div>
+
+<button id="zen-btn">🌿 SELESAI</button>
+<button id="marat-btn">🏁 BERHENTI</button>
+<input id="inp" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+
+<script>
+// ═══════════════════════════
+// SPACE BACKGROUND
+// ═══════════════════════════
+(function(){
+  const sl=document.getElementById('stars-layer');
+  for(let i=0;i<160;i++){
+    const s=document.createElement('div');s.className='star';
+    const sz=Math.random()*2.5+.5;
+    s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;animation-delay:${Math.random()*4}s;animation-duration:${(Math.random()*3+2)}s`;
+    sl.appendChild(s);
+  }
+  function shoot(){
+    const s=document.createElement('div');s.className='shooting-star';
+    s.style.left=Math.random()*100+'%';s.style.top=Math.random()*50+'%';
+    s.style.animationDuration=(Math.random()*1.5+1)+'s';
+    sl.appendChild(s);setTimeout(()=>s.remove(),2800);
+  }
+  setInterval(shoot,2800);
+})();
+
+// ═══════════════════════════
+// KEYBOARD
+// ═══════════════════════════
+const KL={n:['1','2','3','4','5','6','7','8','9','0','-'],q:['Q','W','E','R','T','Y','U','I','O','P'],a:['A','S','D','F','G','H','J','K','L'],z:['Z','X','C','V','B','N','M']};
+const FM={'1':'f1','Q':'f1','A':'f1','Z':'f1','2':'f2','W':'f2','S':'f2','X':'f2','3':'f3','E':'f3','D':'f3','C':'f3','4':'f4','R':'f4','F':'f4','V':'f4','5':'f4','T':'f4','G':'f4','B':'f4','6':'f5','Y':'f5','H':'f5','N':'f5','7':'f5','U':'f5','J':'f5','M':'f5','8':'f3','I':'f3','K':'f3','9':'f2','O':'f2','L':'f2','0':'f1','P':'f1','-':'f1'};
+const HOME=['A','S','D','F','J','K','L'];
+(function(){const rows={n:'rn',q:'rq',a:'ra',z:'rz'};Object.entries(rows).forEach(([rn,ri])=>{const row=document.getElementById(ri);KL[rn].forEach(k=>{const el=document.createElement('div');el.className='k'+(HOME.includes(k)?' fh':'');el.id='k-'+k.toLowerCase();el.textContent=k;const d=document.createElement('div');d.className='fd '+(FM[k]||'f3');el.appendChild(d);row.appendChild(el);});});})();
+
+// ═══════════════════════════
+// CURSOR + SCREEN SIZE
+// ═══════════════════════════
+let W=innerWidth,H=innerHeight;
+window.addEventListener('resize',()=>{W=innerWidth;H=innerHeight;});
+function tPulse(){}  // no-op (was canvas pulse)
+const cur=document.getElementById('cursor'),cr=document.getElementById('cring');
+let cx=W/2,cy=H/2;
+document.addEventListener('mousemove',e=>{cx=e.clientX;cy=e.clientY;cur.style.left=cx+'px';cur.style.top=cy+'px';cr.style.left=cx+'px';cr.style.top=cy+'px';});
+
+// ═══════════════════════════
+// WORD DB
+// ═══════════════════════════
+const WDB={
+  id:{flag:'🇮🇩',w:['aku','kamu','dia','ini','itu','ada','bisa','tidak','sudah','dengan','yang','dari','untuk','dalam','akan','telah','lebih','satu','dua','tiga','buku','meja','kursi','pintu','jendela','rumah','jalan','waktu','hari','malam','pagi','siang','bulan','tahun','baru','lama','besar','kecil','tinggi','cepat','lambat','mudah','sulit','baik','buruk','senang','sedih','marah','makan','minum','tidur','bangun','pergi','datang','bicara','dengar','lihat','tulis','baca','kerja','main','belajar','pikir','rasa','tahu','mau','tanah','langit','laut','hutan','gunung','sungai','pohon','bunga','hujan','angin','cinta','harap','mimpi','jiwa','hati','nama','kata','cerita','dunia','hidup']},
+  en:{flag:'🇬🇧',w:['the','and','that','have','for','not','with','you','this','but','his','from','they','say','she','make','like','him','into','time','look','two','more','write','go','see','number','way','could','people','than','first','been','call','who','sit','now','find','long','down','day','did','get','come','made','may','part','over','new','sound','take','only','little','work','know','place','years','live','back','give','most','very','after','thing','name','good','man','think','great','where','help','much','before','line','right','means','old','same','tell','came','want','show','large','often','still','learn','plant','food','sun','four','state','keep','never','start','earth','eye','light','head','under','story','real','life','few','open','together','next','white','children']},
+  zh:{flag:'🇨🇳',w:['wo','ni','ta','men','zhe','na','shi','de','le','yi','ge','ren','shuo','kan','lai','qu','zuo','da','xiao','hao','guo','zhong','ri','nian','yue','tian','fen','dian','jia','mao','gou','ma','niu','yang','ji','yu','hua','shu','shan','shui','huo','tu','jin','mu','ban','men','lu','che','fan','mian','mi','cai','tang','rou','cong','suan','jiang','jiu','ai','xi','nu','rang','yao','gei','bei','dao','hen','tai','zhen','dou','hai','zai','ye','ju','he','pa']},
+  es:{flag:'🇪🇸',w:['uno','dos','tres','casa','mesa','libro','tiempo','agua','ciudad','grande','ser','estar','hacer','decir','ir','ver','dar','saber','poder','querer','hombre','mujer','hijo','vida','mano','vez','dia','parte','mundo','bien','pero','como','mas','que','con','para','por','sin','muy','nuevo','mismo','otro','ese','todo','poco','solo','nada','amor','luz','sol','mar','campo','cielo','tierra','flor','puerta','comer','beber','dormir','hablar','escuchar','mirar','correr','jugar','leer','escribir','bueno','malo','rapido','lento','alto','bajo']},
+  hi:{flag:'🇮🇳',w:['main','tum','aap','yeh','woh','hai','hain','kar','kya','nahi','ghar','kam','din','raat','kal','aaj','accha','bura','bada','chota','khana','pani','roti','chai','doodh','chawal','sabzi','mitha','namak','mirch','mama','papa','bhai','behen','dost','log','desh','shahar','padh','likh','sun','dekh','bol','jao','aao','karo','lena','dena','khush','dukhi','pyar','dard','asha','sapna','zindagi','dil','naam','baat']},
+  ar:{flag:'🇸🇦',w:['ana','anta','huwa','hiya','nahnu','antum','hum','ma','la','na','bayt','kitab','qalam','walad','bint','rajul','mara','akh','ukht','sadiiq','madinah','balad','dunia','yawm','laylah','sabah','masaa','waqt','akala','shariba','dhahaba','jaa','raa','amila','kataba','qaraa','samia','qala','kabir','saghir','jadid','qadim','hasan','sari','bati','tawil','qasir']},
+  pt:{flag:'🇧🇷',w:['um','uma','de','que','em','se','com','para','por','mas','ser','ter','fazer','ir','ver','poder','querer','saber','vir','estar','nao','mais','muito','bem','ainda','ja','sempre','nunca','aqui','la','homem','mulher','filho','vida','mao','vez','dia','parte','mundo','casa','tempo','trabalho','palavra','numero','caminho','agua','cidade','amor','novo','bom','grande','pequeno','velho','jovem','rapido','lento','alto','baixo']},
+  fr:{flag:'🇫🇷',w:['le','la','les','de','un','et','est','que','en','je','tu','il','nous','vous','ils','avoir','faire','dire','aller','voir','savoir','vouloir','venir','prendre','partir','mettre','donner','trouver','penser','croire','temps','homme','femme','jour','main','pays','ville','eau','monde','vie','chose','fait','bien','mal','aussi','plus','tres','alors','mais','donc','bon','grand','petit','vieux','jeune','beau','vite','loin','haut','bas']},
+  de:{flag:'🇩🇪',w:['ich','du','er','sie','es','wir','ihr','haben','sein','werden','machen','sagen','gehen','kommen','sehen','wissen','lassen','geben','nehmen','denken','Zeit','Jahr','Mann','Kind','Hand','Stadt','Land','Haus','Tag','Welt','Wort','Zahl','Weg','Wasser','Leben','Frau','Buch','Nacht','Morgen','gut','gross','alt','neu','gleich','erste','letzte','lang','kurz','hoch','schnell','langsam','jung','schoen','warm','kalt']},
+  ja:{flag:'🇯🇵',w:['watashi','anata','kare','kanojo','kore','sore','are','hai','iie','uchi','ie','hon','mado','doa','tsukue','isu','heya','niwa','nani','dare','doko','itsu','naze','taberu','nomu','neru','okiru','iku','kuru','miru','kiku','yomu','kaku','ookii','chiisai','atarashii','furui','hayai','osoi','nagai','mijikai','umi','yama','kawa','sora','tsuki','hoshi','hana','kaze','ame','yuki','suki','ureshii','kanashii','muzukashii']},
+};
+const SANDI={'a':'@','b':'8','c':'(','d':'|)','e':'3','f':'|=','g':'9','h':'#','i':'!','j':'_|','k':'|<','l':'1','m':'|v|','n':'|n|','o':'0','p':'|>','q':'q','r':'|2','s':'5','t':'+','u':'u','v':'\\/','w':'w','x':'><','y':'y','z':'2'};
+
+let lang='id',wAll=[],wSh=[],wMd=[],wLg=[];
+function setLang(l){
+  lang=l; wAll=WDB[l].w;
+  wSh=wAll.filter(w=>w.length<=4); if(!wSh.length) wSh=wAll;
+  wMd=wAll.filter(w=>w.length>=5&&w.length<=7); if(!wMd.length) wMd=wAll;
+  wLg=wAll.filter(w=>w.length>=7); if(!wLg.length) wLg=wMd;
+}
+setLang('id');
+
+// ═══════════════════════════
+// GAME STATE
+// ═══════════════════════════
+let active=false,wQ=[],cWord='',dWord='',cIdx=0;
+let errs=0,totC=0,okC=0,wCnt=0,streak=0,maxStr=0;
+let tSecs=30,tLeft=30,tInt=null,zenInt=null,zenEl=0;
+let lives=3,maxLives=3,level=1,cfgTime=30,cfgLives=3;
+let rktHP=80,botWC=0,botInt=null,botSpd=2000;
+let bpmRate=120,ritmeInt=null;
+let bomTLeft=5,bomInt=null;
+let angkaIsNum=false,maratStart=0;
+let ks={},badaiEls=[],badaiActive=null,badaiInt=null,butaReveal=null;
+let selMode='klasik',runMode='klasik';
+
+// ═══════════════════════════
+// UTILS
+// ═══════════════════════════
+const $=id=>document.getElementById(id);
+function sh(id,d='block'){$(id).style.display=d;}function hi(id){$(id).style.display='none';}
+function shuf(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+function pts(x,y,col,n){for(let i=0;i<n;i++){const p=document.createElement('div');p.className='pt';const s=Math.random()*5+2;p.style.cssText=`left:${x}px;top:${y}px;width:${s}px;height:${s}px;background:${col};box-shadow:0 0 ${s*2}px ${col};--tx:${(Math.random()-.5)*110}px;--ty:${(Math.random()-.5)*110}px;`;document.body.appendChild(p);setTimeout(()=>p.remove(),1000);}}
+function rpl(x,y,w){const r=document.createElement('div');r.className='rpl'+(w?' wr':'');r.style.left=x+'px';r.style.top=y+'px';document.body.appendChild(r);setTimeout(()=>r.remove(),560);}
+
+// ═══════════════════════════
+// ADAPTIF KEY TRACKING
+// ═══════════════════════════
+function rKS(){ks={};}
+function recK(c,bad){if(!c||c===' ')return;c=c.toLowerCase();if(!ks[c])ks[c]={h:0,e:0};bad?ks[c].e++:ks[c].h++;upHeat(c);}
+function upHeat(c){const el=$('k-'+c);if(!el)return;const s=ks[c];if(!s)return;const t=s.h+s.e;if(!t)return;const r=s.e/t;el.classList.remove('hg','hx','hb','ht');if(r===0&&t>=3)el.classList.add('hx');else if(r===0)el.classList.add('hg');else if(r<.35)el.classList.add('hg');else if(r<.6)el.classList.add('hb');else el.classList.add('ht');}
+function weakKeys(n=5){return Object.entries(ks).filter(([,s])=>s.h+s.e>=2).map(([c,s])=>({c,r:s.e/(s.h+s.e)})).filter(x=>x.r>0).sort((a,b)=>b.r-a.r).slice(0,n);}
+function biasedQ(){const w=weakKeys(4).map(x=>x.c);if(!w.length)return shuf(wAll);const t=wAll.filter(x=>w.some(c=>x.includes(c)));return shuf([...t,...t,...t,...wAll.filter(x=>!t.includes(x))]);}
+
+// ═══════════════════════════
+// MODE INFO
+// ═══════════════════════════
+const MINFO={
+  klasik:{i:'⏱️',n:'KLASIK',c:'var(--cyan)'},bebas:{i:'🌿',n:'BEBAS',c:'var(--grn)'},
+  badai:{i:'🌪️',n:'BADAI',c:'#a29bfe'},ritme:{i:'🎵',n:'RITME',c:'#00cec9'},
+  nyawa:{i:'❤️',n:'NYAWA',c:'var(--pnk)'},bom:{i:'💣',n:'BOM',c:'#fd7843'},
+  reaktor:{i:'⚡',n:'REAKTOR',c:'#55efc4'},eskalasi:{i:'📈',n:'ESKALASI',c:'#ff9f43'},
+  buta:{i:'👁️',n:'BUTA',c:'#fdcb6e'},balik:{i:'🔄',n:'BALIK',c:'#fd79a8'},
+  sandi:{i:'🔒',n:'SANDI',c:'#74b9ff'},hantu:{i:'👻',n:'HANTU',c:'var(--pur)'},
+  angka:{i:'🔢',n:'ANGKA',c:'#00b894'},adaptif:{i:'🧠',n:'ADAPTIF',c:'var(--blu)'},
+  duel:{i:'🤖',n:'DUEL BOT',c:'#e17055'},acak:{i:'🎲',n:'ACAK',c:'#dfe6e9'},
+};
+const MDESC={
+  klasik:'Ketik sebanyak mungkin dalam <b style="color:var(--cyan)">waktu yang ditentukan</b> — pilih dari 15 detik sampai 2 menit',
+  bebas:'Tanpa timer. Pilih target: <b style="color:var(--grn)">tak terbatas</b>, atau selesaikan 50/100/200 kata — kecepatan total dihitung',
+  badai:'Kata-kata <b style="color:#a29bfe">jatuh dari langit</b>! Ketik sebelum keluar dari layar',
+  ritme:'Ketik tepat pada <b style="color:#00cec9">ketukan metronom</b> yang makin cepat — off-beat kena penalti streak',
+  nyawa:'Pilih berapa <b style="color:var(--pnk)">nyawa</b> — 1 nyawa = instant death, 10 = mode santai',
+  bom:'Tiap kata punya <b style="color:#fd7843">bom hitung mundur sendiri</b> — makin banyak kata makin cepat',
+  reaktor:'HP terus <b style="color:#55efc4">turun otomatis</b>, kata benar mengisi ulang. Jaga reaktor tetap hidup!',
+  eskalasi:'Kata makin panjang seiring <b style="color:#ff9f43">streak naik level</b> — sanggup sampai LV3?',
+  buta:'Kata muncul <b style="color:#fdcb6e">hanya 1 detik</b> lalu gelap total — ketik dari ingatan!',
+  balik:'Ketik kata <b style="color:#fd79a8">dari huruf terakhir ke pertama</b> — otak dan jari harus sinkron',
+  sandi:'Setiap huruf diganti <b style="color:#74b9ff">simbol rahasia</b> — gunakan tabel kunci di samping layar',
+  hantu:'Keyboard <b style="color:var(--pur)">menghilang total</b> sejak awal — murni kekuatan muscle memory!',
+  angka:'Bergantian antara <b style="color:#00b894">kata normal dan angka acak</b> — pertahankan akurasi ganda',
+  adaptif:'<b style="color:var(--blu)">AI lacak huruf terlemahmu</b> real-time lewat heatmap dan latih dengan kata yang tepat',
+  duel:'Balapan ketik <b style="color:#e17055">melawan bot AI</b> — bot punya kecepatan acak setiap ronde',
+  acak:'Tiap sesi <b style="color:#dfe6e9">mode dipilih acak</b> dari semua 15 mode — tidak tahu yang datang!',
+};
+
+// ═══════════════════════════
+// START SCREEN LOGIC
+// ═══════════════════════════
+document.querySelectorAll('.lp').forEach(b=>{
+  b.addEventListener('click',()=>{document.querySelectorAll('.lp').forEach(x=>x.classList.remove('on'));b.classList.add('on');setLang(b.dataset.l);});
+});
+document.querySelectorAll('.ct').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.ct').forEach(x=>x.classList.remove('on'));t.classList.add('on');
+    document.querySelectorAll('.mpanel').forEach(p=>p.classList.remove('vis'));
+    $('p-'+t.dataset.c).classList.add('vis');
+    const panel=$('p-'+t.dataset.c);
+    if(!panel.querySelector('.mc.sel')){panel.querySelector('.mc').click();}
+  });
+});
+document.querySelectorAll('.mc').forEach(c=>{
+  c.addEventListener('click',()=>{
+    document.querySelectorAll('.mc').forEach(x=>x.classList.remove('sel'));
+    c.classList.add('sel'); selMode=c.dataset.m;
+    $('mdesc').innerHTML=MDESC[selMode]||'';
+    $('cfg-time').style.display=['klasik','badai'].includes(selMode)?'flex':'none';
+    $('cfg-lives').style.display=selMode==='nyawa'?'flex':'none';
+    $('cfg-bebas').style.display=selMode==='bebas'?'flex':'none';
+  });
+});
+document.querySelectorAll('.sp[data-t]').forEach(b=>{
+  b.addEventListener('click',()=>{document.querySelectorAll('.sp[data-t]').forEach(x=>x.classList.remove('on'));b.classList.add('on');cfgTime=parseInt(b.dataset.t);});
+});
+document.querySelectorAll('.sp[data-lv]').forEach(b=>{
+  b.addEventListener('click',()=>{document.querySelectorAll('.sp[data-lv]').forEach(x=>x.classList.remove('on'));b.classList.add('on');cfgLives=parseInt(b.dataset.lv);});
+});
+let cfgGoal=0; // 0 = infinite
+document.querySelectorAll('.sp[data-g]').forEach(b=>{
+  b.addEventListener('click',()=>{document.querySelectorAll('.sp[data-g]').forEach(x=>x.classList.remove('on'));b.classList.add('on');cfgGoal=parseInt(b.dataset.g);});
+});
+
+$('sbtn').addEventListener('click',startGame);
+$('rbtn').addEventListener('click',startGame);
+$('bbtn').addEventListener('click',()=>{$('RS').style.display='none';sh('SS','flex');});
+$('zen-btn').addEventListener('click',()=>{if(active)endGame();});
+$('marat-btn').addEventListener('click',()=>{if(active)endGame();});
+document.addEventListener('click',()=>{if(active)$('inp').focus();});
+
+// ═══════════════════════════
+// START
+// ═══════════════════════════
+function startGame(){
+  if(selMode==='acak'){
+    const pool=Object.keys(MINFO).filter(m=>m!=='acak');
+    showAcak(pool[Math.floor(Math.random()*pool.length)]); return;
+  }
+  launch(selMode);
+}
+function showAcak(picked){
+  const info=MINFO[picked]||{i:'❓',n:picked.toUpperCase(),c:'var(--cyan)'};
+  $('ar-ic').textContent='🎲';$('ar-ic').className='';$('ar-nm').textContent='';$('ar-nm').className='';
+  $('ar-nm').style.color=info.c;$('ar-cd').textContent='3';
+  sh('acakr','flex');
+  setTimeout(()=>{$('ar-ic').textContent=info.i;$('ar-ic').className='rv';$('ar-nm').textContent=info.n;$('ar-nm').className='sh';pts(W/2,H/2,'#00f5d4',18);},700);
+  let c=3; const cd=setInterval(()=>{c--;$('ar-cd').textContent=c>0?c:'🚀';$('ar-cd').className='pop';setTimeout(()=>$('ar-cd').className='',260);if(c<=0){clearInterval(cd);setTimeout(()=>{$('acakr').style.display='none';launch(picked);},380);}},700);
+}
+
+function launch(m){
+  runMode=m; hi('SS'); $('RS').style.display='none';
+  document.body.dataset.mode=m; // per-mode theming + layout
+  $('ta').style.marginLeft=''; $('ta').style.marginRight=''; $('app').style.paddingTop='';
+  // Reset
+  active=true;wCnt=0;errs=0;totC=0;okC=0;streak=0;maxStr=0;zenEl=0;
+  rktHP=80;botWC=0;angkaIsNum=false;bomTLeft=5;level=1;
+  rKS(); clearAll();
+
+  // Clear badai
+  document.querySelectorAll('.bword').forEach(e=>e.remove());
+  badaiEls=[]; badaiActive=null;
+
+  // Set up lives
+  lives=cfgLives; maxLives=cfgLives;
+
+  // Hide optional UI
+  ['lvdisp','rkt-wrap','esc-wrap','maut-wrap','marat-wrap','duel-wrap',
+   'sandi-panel','bom-tmr','angka-badge','buta-ol','ritme-wrap','zen-btn','marat-btn',
+   'lvbadge','ftip','pw','tmr','zen-el'].forEach(hi);
+  sh('tmr'); sh('ftip'); sh('pw');
+  $('dol').style.opacity='0'; $('blitz-w').style.display='none';
+  $('cw').className=''; $('gkb').className='';
+  document.querySelectorAll('.k').forEach(k=>k.classList.remove('hg','hx','hb','ht'));
+  $('kblbl').textContent='KEYBOARD MEMUDAR SEIRING AKURASI MENINGKAT';
+  sh('kbs'); // show keyboard section
+
+  // Per-mode layout clearance
+  const leftModes=['eskalasi','nyawa'];
+  const rightModes=['reaktor'];
+  const topModes=['duel'];
+  if(leftModes.includes(m)) $('ta').style.marginLeft='130px';
+  if(m==='bebas'&&cfgGoal>0) $('ta').style.marginLeft='130px';
+  if(rightModes.includes(m)) $('ta').style.marginRight='90px';
+  if(topModes.includes(m)) $('app').style.paddingTop='90px';
+  const tips={
+    klasik:'KEYBOARD MEMUDAR SEIRING AKURASI MENINGKAT',
+    bebas:'SESI BEBAS — TANPA BATAS WAKTU',
+    nyawa:'HATI-HATI: SETIAP SALAH = NYAWA BERKURANG',
+    bom:'⚠ KETIK SEBELUM BOM MELEDAK',
+    reaktor:'⚡ HP TERUS TURUN — KETIK CEPAT!',
+    eskalasi:'📈 STREAK NAIK = KATA MAKIN PANJANG',
+    buta:'👁 HAFALKAN KATA SEBELUM GELAP',
+    balik:'🔄 KETIK KATA DARI BELAKANG KE DEPAN',
+    hantu:'👻 KEYBOARD DISEMBUNYIKAN — PERCAYAKAN PADA OTOTMU',
+    angka:'🔢 BERGANTIAN KATA DAN ANGKA 4 DIGIT',
+    adaptif:'🧠 HEATMAP AKTIF — MERAH = HURUF TERLEMAHMU',
+    duel:'🤖 KALAHKAN BOT — LIHAT SKOR DI ATAS',
+    ritme:'🎵 KETIK TEPAT PADA KETUKAN — OFF-BEAT = STREAK RESET',
+    badai:'🌪️ KETIK KATA BERWARNA CYAN — ABAIKAN YANG LAIN',
+    sandi:'KETIK HURUF ASLI, BUKAN SIMBOL — LIHAT TABEL DI KANAN',
+  };
+  $('kblbl').textContent=tips[m]||tips.klasik;
+
+  // Mode badge
+  const info=MINFO[m]||{i:'',n:m.toUpperCase(),c:'var(--cyan)'};
+  const mb=$('mbadge');
+  mb.textContent=WDB[lang].flag+' '+info.i+' '+info.n;
+  mb.style.color=info.c; mb.style.borderColor=info.c; sh('mbadge','block');
+
+  if(m==='klasik'){
+    tSecs=cfgTime; tLeft=tSecs; upTmr(); updProg();
+    tInt=setInterval(()=>{tLeft--;upTmr();updProg();if(tLeft<=0)endGame();},1000);
+    wQ=shuf(wAll);
+
+  }else if(m==='bebas'){
+    // Merged zen+maraton: no timer, optional word-count goal
+    hi('tmr'); sh('zen-el'); sh('zen-btn');
+    hi('ftip'); hi('pw');
+    if(cfgGoal>0){ sh('marat-wrap','block'); $('marat-n').textContent='0'; $('marat-l').textContent='/'+cfgGoal+' kata'; sh('marat-btn'); }
+    maratStart=Date.now();
+    zenInt=setInterval(()=>{zenEl++;const mm=Math.floor(zenEl/60).toString().padStart(2,'0'),ss=(zenEl%60).toString().padStart(2,'0');$('zen-el').textContent=mm+':'+ss;},1000);
+    wQ=shuf(wAll);
+
+  }else if(m==='badai'){
+    tSecs=cfgTime; tLeft=tSecs;
+    hi('tmr'); hi('ftip'); hi('pw');
+    hi('kbs');
+    badaiInt=setInterval(spawnBadai,1800);
+    tInt=setInterval(()=>{tLeft--;if(tLeft<=0)endGame();},1000);
+    setTimeout(()=>spawnBadai(),100);
+    updStr(); updStats();$('inp').value='';$('inp').focus();return;
+
+  }else if(m==='nyawa'){
+    hi('tmr'); hi('ftip'); hi('pw');
+    sh('lvdisp','flex'); upLives();
+    wQ=shuf(wAll);
+
+  }else if(m==='bom'){
+    hi('tmr'); hi('ftip'); hi('pw');
+    sh('bom-tmr','flex'); bomTLeft=6; $('bom-tmr').className=''; $('bom-tmr').textContent='💣 '+bomTLeft;
+    bomInt=setInterval(bomTick,1000);
+    wQ=shuf(wAll);
+
+  }else if(m==='reaktor'){
+    hi('tmr'); hi('ftip'); hi('pw');
+    sh('rkt-wrap','flex'); setHP(80);
+    tInt=setInterval(()=>{setHP(rktHP-1.1);},280);
+    wQ=shuf(wAll);
+
+  }else if(m==='eskalasi'){
+    tSecs=90; tLeft=tSecs; upTmr(); updProg();
+    tInt=setInterval(()=>{tLeft--;upTmr();updProg();if(tLeft<=0)endGame();},1000);
+    sh('esc-wrap','block'); sh('lvbadge','block'); upEscLv();
+    hi('ftip'); wQ=shuf(wSh);
+
+  }else if(m==='buta'){
+    tSecs=60; tLeft=tSecs; upTmr();
+    hi('ftip'); hi('pw');
+    tInt=setInterval(()=>{tLeft--;upTmr();if(tLeft<=0)endGame();},1000);
+    wQ=shuf(wAll);
+
+  }else if(m==='balik'){
+    tSecs=60; tLeft=tSecs; upTmr(); updProg();
+    tInt=setInterval(()=>{tLeft--;upTmr();updProg();if(tLeft<=0)endGame();},1000);
+    wQ=shuf(wAll.filter(w=>w.length>=3));
+
+  }else if(m==='sandi'){
+    tSecs=90; tLeft=tSecs; upTmr(); updProg();
+    tInt=setInterval(()=>{tLeft--;upTmr();updProg();if(tLeft<=0)endGame();},1000);
+    hi('ftip'); buildSandiPanel(); sh('sandi-panel','flex');
+    wQ=shuf(wAll);
+
+  }else if(m==='hantu'){
+    tSecs=60; tLeft=tSecs; upTmr();
+    hi('ftip'); $('gkb').classList.add('ghost');
+    wQ=shuf(wAll);
+
+  }else if(m==='angka'){
+    tSecs=60; tLeft=tSecs; upTmr(); updProg();
+    tInt=setInterval(()=>{tLeft--;upTmr();updProg();if(tLeft<=0)endGame();},1000);
+    hi('ftip'); angkaIsNum=false; wQ=shuf(wAll);
+
+  }else if(m==='adaptif'){
+    tSecs=90; tLeft=tSecs; upTmr(); updProg();
+    tInt=setInterval(()=>{tLeft--;upTmr();updProg();if(tLeft<=0)endGame();},1000);
+    hi('ftip'); wQ=shuf(wAll);
+
+  }else if(m==='duel'){
+    tSecs=60; tLeft=tSecs; upTmr();
+    hi('ftip'); hi('pw');
+    sh('duel-wrap','block'); $('dys').textContent='0'; $('dbs').textContent='0'; $('duel-cur').textContent='—';
+    botSpd=1600+Math.random()*1400;
+    botInt=setInterval(botTick,botSpd);
+    tInt=setInterval(()=>{tLeft--;upTmr();if(tLeft<=0)endGame();},1000);
+    wQ=shuf(wAll);
+
+  }else if(m==='ritme'){
+    tSecs=60; tLeft=tSecs; upTmr();
+    hi('ftip'); hi('pw');
+    bpmRate=100; sh('ritme-wrap','flex'); $('ritme-bpm').textContent=bpmRate+' BPM';
+    ritmeInt=setInterval(ritmeBeat,60000/bpmRate);
+    tInt=setInterval(()=>{tLeft--;upTmr();if(tLeft<=0)endGame();},1000);
+    wQ=shuf(wSh);
+  }
+
+  updStr(); updStats(); nextWord();
+  $('inp').value=''; $('inp').focus();
+}
+function clearAll(){
+  clearInterval(tInt);clearInterval(zenInt);clearInterval(bomInt);
+  clearInterval(botInt);clearInterval(ritmeInt);clearInterval(badaiInt);
+  clearTimeout(butaReveal); tInt=zenInt=bomInt=botInt=ritmeInt=badaiInt=butaReveal=null;
+}
+
+// ═══════════════════════════
+// MODE MECHANICS
+// ═══════════════════════════
+function setHP(v){
+  rktHP=Math.max(0,Math.min(100,v));
+  $('rkt-in').style.height=rktHP+'%';
+  $('rkt-pct').textContent=Math.round(rktHP)+'%';
+  if(rktHP<=0) endGame();
+}
+function upLives(){
+  const el=$('lvdisp');
+  el.textContent='❤️'.repeat(Math.max(0,lives))+'🖤'.repeat(Math.max(0,maxLives-lives));
+}
+function upEscLv(){
+  const prev=level;
+  level=streak>=15?3:streak>=7?2:1;
+  const nm={1:'DASAR',2:'MENENGAH',3:'MASTER'};
+  const cl={1:'var(--cyan)',2:'var(--amb)',3:'var(--red)'};
+  $('esc-lv').textContent='LV '+level; $('esc-lv').style.color=cl[level];
+  $('esc-nm').textContent=nm[level]; $('esc-nm').style.color=cl[level];
+  $('lvbadge').textContent='LEVEL '+level; $('lvbadge').style.color=cl[level]; $('lvbadge').style.borderColor=cl[level];
+  if(level>prev){ pts(W/2,H/2,cl[level],16); tPulse(W/2,H/2,'rgba(0,245,212,'); }
+}
+function lvPool(){return level===1?wSh:level===2?wMd:wLg;}
+
+function bomTick(){
+  if(!active)return;
+  bomTLeft--;
+  $('bom-tmr').textContent='💣 '+bomTLeft;
+  if(bomTLeft<=2) $('bom-tmr').className='danger';
+  if(bomTLeft<=0){clearInterval(bomInt);bomInt=null;pts(W/2,H*.5,'#fd7843',30);pts(W/2,H*.5,'#f7b731',18);tPulse(W/2,H/2,'rgba(253,120,67,');$('dol').style.opacity='1';setTimeout(()=>{$('dol').style.opacity='0';endGame();},450);}
+}
+function resetBom(){
+  clearInterval(bomInt);
+  bomTLeft=Math.max(3,7-Math.floor(wCnt/4));
+  $('bom-tmr').className=''; $('bom-tmr').textContent='💣 '+bomTLeft;
+  bomInt=setInterval(bomTick,1000);
+}
+
+let ritmeLastBeat=0,ritmeBeatOn=false;
+let ritmeDotIdx=0;
+function ritmeBeat(){
+  ritmeBeatOn=true; ritmeLastBeat=Date.now();
+  const dots=document.querySelectorAll('.rd');
+  dots.forEach(d=>d.classList.remove('beat'));
+  dots[ritmeDotIdx%dots.length].classList.add('beat'); ritmeDotIdx++;
+  setTimeout(()=>ritmeBeatOn=false,280);
+}
+function onBeat(){return Math.abs(Date.now()-ritmeLastBeat)<=300;}
+
+function botTick(){
+  if(!active)return;
+  botWC++;
+  $('dbs').textContent=botWC;
+  $('duel-cur').textContent=wAll[Math.floor(Math.random()*wAll.length)];
+}
+
+// BUTA: flash word briefly then hide
+function doButa(){
+  const cw=$('cw'),ol=$('buta-ol');
+  $('buta-q').textContent='?'.repeat(dWord.length);
+  ol.style.display='none'; // show word
+  clearTimeout(butaReveal);
+  butaReveal=setTimeout(()=>{
+    // hide: show blank overlay
+    ol.style.display='flex';
+  }, 1000+dWord.length*60);
+}
+
+// SANDI panel
+function buildSandiPanel(){
+  const g=$('sg'); g.innerHTML='';
+  'abcdefghijklmnopqrstuvwxyz'.split('').forEach(c=>{
+    const d=document.createElement('div'); d.className='sk';
+    d.innerHTML=`<span class="sym">${SANDI[c]||c}</span><span>${c.toUpperCase()}</span>`; g.appendChild(d);
+  });
+}
+
+// BADAI
+function spawnBadai(){
+  if(!active)return;
+  const w=wAll[Math.floor(Math.random()*wAll.length)];
+  const x=Math.random()*(W*.75)+W*.08;
+  const el=document.createElement('div');
+  el.className='bword'; el.dataset.word=w; el.textContent=w;
+  el.style.cssText=`left:${x}px;top:-60px;color:var(--dim)`;
+  document.body.appendChild(el);
+  const dur=(cfgTime+4)*1000;
+  el.style.transition=`top ${dur}ms linear`;
+  setTimeout(()=>el.style.top=H+80+'px',50);
+  badaiEls.push(el);
+  if(!badaiActive) setBadaiTarget(el,w);
+  setTimeout(()=>{el.remove();badaiEls=badaiEls.filter(x=>x!==el);if(badaiActive===el)nextBadai();},dur+200);
+}
+function setBadaiTarget(el,w){
+  badaiActive=el; cWord=w; dWord=w; cIdx=0;
+  el.style.color='var(--cyan)'; renderWord(); updUpcoming();
+}
+function nextBadai(){
+  badaiActive=null;
+  const alive=badaiEls.filter(e=>document.body.contains(e));
+  if(alive.length) setBadaiTarget(alive[0],alive[0].dataset.word);
+}
+
+// ═══════════════════════════
+// NEXT WORD
+// ═══════════════════════════
+function nextWord(){
+  if(runMode==='badai') return;
+  if(runMode==='bebas'&&cfgGoal>0&&wCnt>=cfgGoal){endGame();return;}
+  if(runMode==='eskalasi'){upEscLv();if(!wQ.length)wQ=shuf(lvPool());}
+  if(runMode==='adaptif'&&wCnt>0&&wCnt%5===0) wQ=biasedQ();
+  if(!wQ.length) wQ=shuf(runMode==='eskalasi'?lvPool():runMode==='bom'?wMd:wAll);
+
+  cWord=wQ.shift().toLowerCase();
+
+  if(runMode==='angka'){
+    angkaIsNum=!angkaIsNum;
+    if(angkaIsNum){
+      cWord=Math.floor(1000+Math.random()*9000).toString();
+      $('angka-badge').textContent='ANGKA → '+cWord; sh('angka-badge','block');
+    }else{ hi('angka-badge'); }
+    dWord=cWord;
+  }else if(runMode==='balik'){
+    dWord=cWord.split('').reverse().join('');
+  }else{
+    dWord=cWord;
+  }
+
+  cIdx=0; renderWord(); updUpcoming();
+
+  if(runMode==='buta'){ $('buta-ol').style.display='none'; doButa(); }
+  if(runMode==='bom') resetBom();
+  if(runMode==='ritme'){
+    bpmRate=Math.min(220,100+wCnt*4);
+    clearInterval(ritmeInt); ritmeInt=setInterval(ritmeBeat,60000/bpmRate);
+    $('ritme-bpm').textContent=bpmRate+' BPM';
+  }
+}
+
+function renderWord(){
+  const el=$('cw'); el.innerHTML='';
+  for(let i=0;i<dWord.length;i++){
+    const s=document.createElement('span'); s.className='lt'+(i===0?' cur':'');
+    if(runMode==='sandi') s.textContent=SANDI[dWord[i]]||dWord[i];
+    else s.textContent=dWord[i];
+    s.dataset.r=dWord[i]; el.appendChild(s);
+  }
+  hiKey(dWord[0]);
+}
+function updUpcoming(){
+  const up=$('up'); up.innerHTML='';
+  wQ.slice(0,5).forEach(w=>{
+    const s=document.createElement('span'); s.className='uw';
+    s.textContent=runMode==='balik'?w.split('').reverse().join(''):w;
+    up.appendChild(s);
+  });
+}
+function hiKey(c){
+  document.querySelectorAll('.k.act').forEach(k=>k.classList.remove('act'));
+  if(!c||runMode==='hantu') return;
+  const k=c===' '?'space':c.toLowerCase();
+  const el=document.getElementById('k-'+k); if(el) el.classList.add('act');
+}
+
+// ═══════════════════════════
+// TYPING INPUT
+// ═══════════════════════════
+$('inp').addEventListener('keydown',e=>{
+  if(!active) return;
+  $('inp').focus();
+  const key=e.key;
+
+  if(key==='Backspace'){
+    e.preventDefault();
+    const noBack=['nyawa','bom','buta'];
+    if(cIdx>0&&!noBack.includes(runMode)){
+      cIdx--;
+      const ls=document.querySelectorAll('#cw .lt');
+      ls.forEach(l=>l.classList.remove('cur'));
+      ls[cIdx].classList.add('cur'); hiKey(dWord[cIdx]);
+    }
+    return;
+  }
+  if(key.length!==1) return;
+  e.preventDefault();
+
+  const ls=document.querySelectorAll('#cw .lt');
+  const expected=ls[cIdx]?.dataset.r||dWord[cIdx];
+  totC++;
+
+  if(key===expected){
+    okC++;
+    if(runMode==='adaptif') recK(expected,false);
+    ls[cIdx].className='lt ok'; cIdx++;
+
+    const kEl=document.getElementById('k-'+(expected===' '?'space':expected.toLowerCase()));
+    if(kEl){const r=kEl.getBoundingClientRect();pts(r.left+r.width/2,r.top+r.height/2,'#00f5d4',3);}
+    rpl(cx,cy,false);
+
+    if(cIdx>=dWord.length){
+      // Word complete
+      wCnt++; streak++; if(streak>maxStr)maxStr=streak;
+      updStr(); updStats();
+
+      if(runMode==='nyawa'){$('dol').style.opacity='0';}
+      if(runMode==='reaktor'){setHP(rktHP+8+streak*.4);}
+      if(runMode==='duel'){$('dys').textContent=wCnt;}
+      if(runMode==='bebas'&&cfgGoal>0){$('marat-n').textContent=wCnt;if(wCnt>=cfgGoal){endGame();return;}}
+      if(runMode==='maut'){$('mn').textContent=wCnt;$('dol').style.opacity='0';}
+      if(runMode==='badai'){
+        badaiActive&&badaiActive.remove(); badaiEls=badaiEls.filter(x=>x!==badaiActive);
+        pts(cx,cy,'#a29bfe',12); nextBadai(); updStr(); updStats(); return;
+      }
+
+      const we=$('cw'); we.classList.add('wf');
+      tPulse(W/2,H/2,'rgba(0,245,212,'); pts(W/2,H*.55,'#00f5d4',9);
+      setTimeout(()=>{we.classList.remove('wf');nextWord();},340);
+
+    }else{
+      ls[cIdx]&&ls[cIdx].classList.add('cur'); hiKey(dWord[cIdx]);
+    }
+
+  }else{
+    // Wrong
+    errs++; streak=0; updStr();
+    if(runMode==='adaptif') recK(expected,true);
+    if(runMode==='eskalasi') level=Math.max(1,level);
+    if(runMode==='ritme'&&!onBeat()) streak=0; // extra streak reset
+
+    ls[cIdx].classList.add('no');
+    rpl(cx,cy,true); pts(cx,cy,'#ff3864',3);
+
+    if(runMode==='nyawa'){
+      // 1 mistake mode check
+      lives--;
+      upLives();
+      const ld=$('lvdisp'); ld.classList.add('shake'); setTimeout(()=>ld.classList.remove('shake'),360);
+      $('dol').style.opacity='.6'; setTimeout(()=>$('dol').style.opacity='0',260);
+      if(lives<=0){ setTimeout(()=>endGame(),250); return; }
+    }
+    if(runMode==='maut'){
+      $('dol').style.opacity='1';
+      setTimeout(()=>{$('dol').style.opacity='0';endGame();},360); return;
+    }
+    if(runMode==='reaktor'){setHP(rktHP-10);}
+
+    setTimeout(()=>{if(ls[cIdx])ls[cIdx].className='lt cur';},185);
+  }
+
+  updStats();
+  if(runMode!=='hantu'&&runMode!=='adaptif') updKBFade();
+  if(['klasik','eskalasi','balik','adaptif','sandi','angka','maraton'].includes(runMode)) updProg();
+});
+
+// ═══════════════════════════
+// STATS
+// ═══════════════════════════
+function updStats(){
+  const el=runMode==='zen'?zenEl:runMode==='maut'?(wCnt*2):(tSecs-tLeft);
+  const mins=Math.max(el,1)/60;
+  const wpm=Math.round(wCnt/mins)||0;
+  const acc=totC>0?Math.round(okC/totC*100):100;
+  const wd=$('wv'); wd.textContent=wpm; wd.classList.remove('pulse'); void wd.offsetWidth; wd.classList.add('pulse');
+  const ad=$('av'); ad.textContent=acc+'%'; ad.className='sv '+(acc>=90?'am':acc>=70?'':'rd');
+}
+function updStr(){
+  $('stk-n').textContent=streak;
+  $('stk-fire').textContent=streak>=20?'🔥🔥🔥':streak>=10?'🔥🔥':streak>=5?'🔥':'';
+}
+function upTmr(){$('tmr').textContent=tLeft+' DETIK';$('tmr').style.color=tLeft<=10?'var(--red)':'';}
+function updProg(){
+  const tot=runMode==='maraton'?100:runMode==='eskalasi'?90:(tSecs||60);
+  const pct=runMode==='maraton'?(wCnt/100*100):((tot-tLeft)/tot*100);
+  $('pb').style.width=Math.min(100,pct)+'%';
+}
+function updKBFade(){
+  const acc=totC>0?(okC/totC*100):100;
+  const kb=$('gkb'); kb.className='';
+  let c='',p='100%';
+  if(acc>=98){c='gf5';p='3%';}else if(acc>=93){c='gf4';p='10%';}else if(acc>=87){c='gf3';p='25%';}else if(acc>=80){c='gf2';p='45%';}else if(acc>=70){c='gf1';p='65%';}
+  if(c) kb.classList.add(c);
+  $('fp').textContent=p;
+}
+
+// ═══════════════════════════
+// END GAME
+// ═══════════════════════════
+function endGame(){
+  active=false; clearAll();
+  delete document.body.dataset.mode;
+  $('ta').style.marginLeft=''; $('ta').style.marginRight=''; $('app').style.paddingTop='';
+  document.querySelectorAll('.bword').forEach(e=>e.remove());
+  ['zen-btn','marat-btn','mbadge','blitz-w','esc-wrap','maut-wrap','marat-wrap','duel-wrap',
+   'sandi-panel','bom-tmr','buta-ol','ritme-wrap','rkt-wrap'].forEach(id=>{ const el=$(id); if(el) el.style.display='none'; });
+  sh('kbs'); $('dol').style.opacity='0'; $('cw').classList.remove('bu');
+
+  const acc=totC>0?Math.round(okC/totC*100):100;
+  let elapsed=runMode==='bebas'?zenEl/60:runMode==='maut'?Math.max(totC,1)/60:tSecs/60;
+  const wpm=Math.round(wCnt/Math.max(elapsed,.05));
+
+  // Result badge
+  const info=MINFO[runMode]||{i:'',n:runMode.toUpperCase(),c:'var(--cyan)'};
+  const rb=$('rb'); rb.textContent=WDB[lang].flag+' '+info.i+' '+info.n; rb.style.color=info.c; rb.style.borderColor=info.c;
+
+  $('r1').textContent=wpm; $('r2').textContent=acc+'%';
+
+  const extras={
+    nyawa:['NYAWA TERSISA',lives],maut:['KATA SELAMAT',wCnt],bebas:['KATA DIKETIK',wCnt],
+    duel:['SELISIH',wCnt>botWC?'+'+(wCnt-botWC):wCnt-botWC],
+    eskalasi:['LEVEL MAKS','LV'+level],bom:['KATA SELAMAT',wCnt],reaktor:['HP SISA',Math.round(rktHP)+'%'],
+    badai:['KATA TANGKAP',wCnt],adaptif:['STREAK',maxStr],ritme:['STREAK',maxStr],
+  };
+  const em=extras[runMode]||['STREAK',maxStr];
+  $('r3l').textContent=em[0]; $('r3').textContent=em[1];
+
+  if(runMode==='adaptif'){
+    const wk=weakKeys(5);
+    if(wk.length){ sh('rweak','block'); $('rwkrow').innerHTML=wk.map(x=>`<div class="wk"><div class="wkc">${x.c}</div><div class="wkp">${Math.round(x.r*100)}%</div></div>`).join(''); }
+    else hi('rweak');
+  } else hi('rweak');
+
+  const msgs={
+    klasik:wpm>=80&&acc>=95?'⚡ LUAR BIASA! Neural pathway-mu terkoneksi sempurna.':wpm>=60&&acc>=90?'🎯 Sangat bagus! Terus tingkatkan.':wpm>=40?'💪 Progres bagus!':'🧠 Terus berlatih!',
+    bebas:cfgGoal>0?`🌿 ${wCnt}/${cfgGoal} kata selesai, ${Math.round(zenEl)}s. Akurasi ${acc}%.`:`🌿 Sesi bebas selesai. ${wCnt} kata, akurasi ${acc}%.`,
+    badai:`🌪️ ${wCnt} kata ditangkap dari badai! Akurasi ${acc}%.`,
+    ritme:acc>=85?`🎵 ON BEAT! ${acc}% akurasi, ${wpm} WPM.`:acc>=70?'🎵 Ritme cukup baik!':'🎵 Terus latih timing!',
+    nyawa:lives>=maxLives-1?`❤️ SEMPURNA! Hanya ${maxLives-lives} kesalahan.`:lives>0?`❤️ ${lives} nyawa tersisa.`:'❤️ Semua nyawa habis. Coba lagi!',
+    bom:wCnt>=20?`💣 AHLI PELEDAK! ${wCnt} kata tanpa meledak!`:wCnt>=10?`💣 ${wCnt} kata sebelum meledak!`:`💣 ${wCnt} kata. Ketik lebih cepat!`,
+    reaktor:rktHP>50?`⚡ REAKTOR STABIL! HP: ${Math.round(rktHP)}%.`:`⚡ ${Math.round(rktHP)}% HP tersisa. Hampir padam!`,
+    eskalasi:level===3?'📈 MASTER LEVEL! Taklukkan semua tingkat!':level===2?'📈 Level menengah! Terus build streak.':'📈 Terus build streak untuk naik level!',
+    buta:acc>=85?'👁️ MEMORI TAJAM! Kamu sangat mengingat kata itu.':acc>=70?'👁️ Ingatan cukup baik! Terus asah.':'👁️ Latih memori jangka pendekmu!',
+    balik:`🔄 ${wpm} WPM membalik kata! Akurasi ${acc}%.`,
+    sandi:acc>=90?'🔒 MASTER SANDI! Hapal semua simbol.':acc>=75?'🔒 Sandi cukup dikuasai!':'🔒 Terus lihat tabel kunci!',
+    hantu:acc>=90&&wpm>=40?'👻 MASTER HANTU! Muscle memory-mu sempurna.':acc>=80?'👻 Muscle memory mulai terbentuk!':'👻 Terus latih tanpa melihat keyboard!',
+    angka:`🔢 ${wCnt} kata+angka selesai! Akurasi ${acc}%.`,
+    adaptif:acc>=90?'🧠 Performa luar biasa! Semua huruf sudah kuat.':acc>=75?'🧠 Bagus! Latih terus huruf merah.':'🧠 Fokus pada huruf terlemahmu.',
+    duel:wCnt>botWC?`🤖 MENANG! ${wCnt} vs ${botWC} kata.`:wCnt===botWC?`🤖 SERI! ${wCnt} kata.`:`🤖 Bot menang ${botWC} vs ${wCnt}. Coba lagi!`,
+  };
+  $('rmsg').textContent=msgs[runMode]||msgs.klasik;
+  sh('RS','flex');
+  pts(W/2,H/2,'#00f5d4',26); pts(W/2,H/2,'#9b5de5',16);
+}
+
+// ═══════════════════════════
+// KEEP FOCUS
+// ═══════════════════════════
+setInterval(()=>{if(active)$('inp').focus();},500);
+document.addEventListener('keydown',e=>{
+  if(!active) return;
+  const k=e.key.toLowerCase();
+  const el=document.getElementById('k-'+(k===' '?'space':k));
+  if(el&&runMode!=='hantu'){el.classList.add('act');setTimeout(()=>el.classList.remove('act'),130);}
+});
+</script>
+</body>
+</html>
